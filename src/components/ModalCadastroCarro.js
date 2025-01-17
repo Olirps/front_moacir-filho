@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastroCarro.css';
-import { getMarcas } from '../services/api';
+import { getMarcas, getTipoVeiculo } from '../services/api';
 
 const ModalCadastroCarro = ({ isOpen, onClose, onSubmit, carro }) => {
   const [modelo, setModelo] = useState('');
-  const [placa, setPlaca] = useState( '');
+  const [placa, setPlaca] = useState('');
   const [quilometragem, setQuilometragem] = useState('');
   const [marcaId, setMarcaId] = useState('');
+  const [tipoVeiculoId, setTipoVeiculoId] = useState('');
   const [marcas, setMarcas] = useState([]);
+  const [tiposVeiculo, setTiposVeiculo] = useState([]);
 
   useEffect(() => {
     if (carro) {
@@ -15,12 +17,14 @@ const ModalCadastroCarro = ({ isOpen, onClose, onSubmit, carro }) => {
       setPlaca(carro.placa || '');
       setQuilometragem(carro.quilometragem || '');
       setMarcaId(carro.marcaId || '');
-    }else{
-      // Limpar os campos quando não há pessoa selecionada
+      setTipoVeiculoId(carro.tipoveiculoId || '');
+    } else {
+      // Limpar os campos quando não há veículo selecionado
       setModelo('');
       setPlaca('');
       setQuilometragem('');
       setMarcaId('');
+      setTipoVeiculoId('');
     }
   }, [carro]);
 
@@ -34,26 +38,26 @@ const ModalCadastroCarro = ({ isOpen, onClose, onSubmit, carro }) => {
       }
     };
 
+    const fetchTiposVeiculo = async () => {
+      try {
+        const response = await getTipoVeiculo();
+        setTiposVeiculo(response.data);
+      } catch (err) {
+        console.error('Erro ao buscar tipos de veículo', err);
+      }
+    };
+
     fetchMarcas();
+    fetchTiposVeiculo();
   }, []);
 
   if (!isOpen) return null;
 
-  const handleModeloChange = (e) => {
-    setModelo(e.target.value);
-  };
-
-  const handlePlacaChange = (e) => {
-    setPlaca(e.target.value);
-  };
-
-  const handleQuilometragemChange = (e) => {
-    setQuilometragem(e.target.value);
-  };
-
-  const handleMarcaChange = (e) => {
-    setMarcaId(e.target.value);
-  };
+  const handleModeloChange = (e) => setModelo(e.target.value);
+  const handlePlacaChange = (e) => setPlaca(e.target.value);
+  const handleQuilometragemChange = (e) => setQuilometragem(e.target.value);
+  const handleMarcaChange = (e) => setMarcaId(e.target.value);
+  const handleTipoVeiculoChange = (e) => setTipoVeiculoId(e.target.value);
 
   return (
     <div className="modal-overlay">
@@ -109,6 +113,23 @@ const ModalCadastroCarro = ({ isOpen, onClose, onSubmit, carro }) => {
               {marcas.map((marca) => (
                 <option key={marca.id} value={marca.id}>
                   {marca.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="input-group">
+            <label htmlFor="tipoVeiculo">Tipo de Veículo</label>
+            <select
+              id="tipoVeiculo"
+              name="tipoVeiculoId"
+              value={tipoVeiculoId}
+              onChange={handleTipoVeiculoChange}
+              required
+            >
+              <option value="">Selecione o Tipo de Veículo</option>
+              {tiposVeiculo.map((tipo) => (
+                <option key={tipo.id} value={tipo.id}>
+                  {tipo.nome}
                 </option>
               ))}
             </select>

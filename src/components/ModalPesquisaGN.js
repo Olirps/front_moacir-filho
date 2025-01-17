@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getProdutos } from '../services/api'; // Importa a função que busca fornecedores
 import '../styles/ModalPesquisaGN.css'; // Certifique-se de criar este CSS também
+import Toast from '../components/Toast';
 
 
 const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
@@ -8,6 +9,9 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
   const [cEAN, setcEAN] = useState(''); // Estado para filtro por CPF/CNPJ
   const [id, setId] = useState(''); // Estado para filtro por CPF/CNPJ
   const [nome, setNome] = useState(''); // Estado para filtro por nome
+  const [toastMessage, setToastMessage] = useState(''); // Estado para mensagem do Toast
+
+
 
   useEffect(() => {
     handleClear()
@@ -15,10 +19,15 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
 
   const fetchProdutos = async () => {
     try {
-      const response = await getProdutos({ cEAN, nome, id }); // Passa os filtros na requisição
-      setProdutos(response.data); // Atualiza os produtos
+      const response = await getProdutos({ cEAN, nome, id });
+      setProdutos(response.data);
+
+      if (response.data.length === 0) {
+        setToastMessage('Nenhum produto encontrado.');
+      }
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
+      setToastMessage('Erro ao buscar produtos.');
     }
   };
 
@@ -29,7 +38,8 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchProdutos(); // Recarrega a lista de fornecedores com os filtros aplicados
+    setToastMessage(''); // Limpa o toast antes da busca
+    fetchProdutos();
   };
 
   const handleClear = () => {
@@ -94,6 +104,8 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
             </li>
           ))}
         </ul>
+        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
+
       </div>
     </div>
   );

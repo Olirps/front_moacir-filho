@@ -20,10 +20,6 @@ function Produtos() {
     const [isEdit, setIsEdit] = useState(false);
     const [importSuccess, setCadastroSuccess] = useState(false);
 
-
-
-
-
     useEffect(() => {
         const fetchProdutos = async () => {
             try {
@@ -81,10 +77,12 @@ function Produtos() {
             cEAN: e.cEAN,
             qtdMinima: e.qtdMinima,
             qCom:e.qCom,
-            valor_unit: e.valor_unit
+            valor_unit: e.valor_unit,
+            tipoProduto: e.tipo
         };
 
         try {
+            console.log('Produtos Novo: '+JSON.stringify(newProduto));
             const newProd = await addProdutos(newProduto);
             setToast({ message: `Produto: ${newProd.data.id} - ${newProd.data.xProd}`, type: "success" });  
             const response = await getProdutos();
@@ -156,7 +154,7 @@ function Produtos() {
 
     return (
         <div id="produtos-container">
-            <h1 id="produtos-title">Consulta de Produtos</h1>
+            <h1 id="produtos-title">Consulta de Produtos/Serviços</h1>
             {loading ? (
                 <div className="spinner-container">
                     <div className="spinner"></div>

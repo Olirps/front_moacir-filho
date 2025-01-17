@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getCarros, addCarro, updateCarro, getCarroById, getMarcas } from '../services/api';
-import '../styles/Carros.css';
+import { getVeiculos, addVeiculos, updateVeiculos, getVeiculosById, getMarcas } from '../services/api';
+import '../styles/Veiculos.css';
 import Modal from '../components/ModalCadastroCarro';
 import Toast from '../components/Toast';
 
-function Carros() {
+function Veiculos() {
   const [carros, setCarros] = useState([]);
   const [filteredCarros, setFilteredCarros] = useState([]);
   const [modelo, setModelo] = useState('');
@@ -22,7 +22,7 @@ function Carros() {
   useEffect(() => {
     const fetchCarros = async () => {
       try {
-        const response = await getCarros();
+        const response = await getVeiculos();
         setCarros(response.data);
         setFilteredCarros(response.data);
       } catch (err) {
@@ -79,13 +79,14 @@ function Carros() {
       placa: formData.get('placa'),
       quilometragem: formData.get('quilometragem'),
       marcaId: formData.get('marcaId'),
+      tipoveiculoId: formData.get('tipoVeiculoId'),
     };
 
     try {
-      await addCarro(newCarro);
+      await addVeiculos(newCarro);
       setToast({ message: "Veículo cadastrado com sucesso!", type: "success" });
       setIsModalOpen(false);
-      const response = await getCarros();
+      const response = await getVeiculos();
       setCarros(response.data);
       setFilteredCarros(response.data);
     } catch (err) {
@@ -96,7 +97,8 @@ function Carros() {
 
   const handleEditClick = async (carro) => {
     try {
-      const response = await getCarroById(carro.id);
+      console.log('Entrou no EditClick', carro);
+      const response = await getVeiculosById(carro.id);
       setSelectedCarro(response.data);
       setIsEdit(true);
       setIsModalOpen(true);
@@ -117,12 +119,12 @@ function Carros() {
     };
 
     try {
-      await updateCarro(selectedCarro.id, updatedCarro);
+      await addVeiculos(selectedCarro.id, updatedCarro);
       setToast({ message: "Veículo atualizado com sucesso!", type: "success" });
       setIsModalOpen(false);
       setSelectedCarro(null);
       setIsEdit(false);
-      const response = await getCarros();
+      const response = await getVeiculos();
       setCarros(response.data);
       setFilteredCarros(response.data);
     } catch (err) {
@@ -248,6 +250,12 @@ function Carros() {
                           >
                             Editar
                           </button>
+                          <button
+                            onClick={() =>alert('Deseja realmente excluir?')}
+                            className="lancto-button"
+                          >
+                            Editar
+                          </button>
                         </td>
                       </tr>
                     );
@@ -280,7 +288,7 @@ function Carros() {
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
               onSubmit={isEdit ? handleEditSubmit : handleAddCarro}
-              defaultValues={selectedCarro}
+              carro={selectedCarro}
               marcas={marcas}
               isEdit={isEdit}
             />
@@ -292,4 +300,4 @@ function Carros() {
   );
 }
 
-export default Carros;
+export default Veiculos;

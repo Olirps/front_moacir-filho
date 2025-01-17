@@ -1,4 +1,4 @@
-import { getFornecedores,getCarros } from '../services/api';
+import { getFornecedores,getVeiculos } from '../services/api';
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastroLocacao.css';
 
@@ -19,7 +19,7 @@ function ModalCadastroLocacao({ closeModal, refreshLocacoes }) {
 
     const fetchVeiculos = async () => {
         try {
-            const response = await getCarros({ placa });
+            const response = await getVeiculos({ placa });
             setVeiculos(response.data);
         } catch (error) {
             console.error('Erro ao buscar veículos:', error);

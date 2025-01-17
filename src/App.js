@@ -5,11 +5,11 @@ import Fornecedores from './pages/Fornecedores';
 import SubgrupoPage from './pages/SubgrupoPage';
 import GrupoPage from './pages/GrupoPage';
 import Produtos from './pages/Produtos';
-import Carros from './pages/Carros';
 import LancaNFe from './pages/LancaNFe';
-import Locacoes from './pages/Locacoes';
+import MovimentacaoProdutos from './pages/MovimentacaoProdutos';
 import Layout from './components/Layout'; // Importar o novo componente Layout
 import { useAuth } from './context/AuthContext'; // Importe o hook useAuth
+import Veiculos from './pages/Veiculos';
 
 function App() {
   const { isAuthenticated } = useAuth(); // Use o contexto de autenticação
@@ -25,9 +25,9 @@ function App() {
           <Route path="/grupoproduto" element={isAuthenticated ? <GrupoPage /> : <Navigate to="/login" />} />
           <Route path="/subgrupoproduto" element={isAuthenticated ? <SubgrupoPage /> : <Navigate to="/login" />} />
           <Route path="/produtos" element={isAuthenticated ? <Produtos /> : <Navigate to="/login" />} />
-          <Route path="/carros" element={isAuthenticated ? <Carros /> : <Navigate to="/login" />} />
+          <Route path="/veiculos" element={isAuthenticated ? <Veiculos /> : <Navigate to="/login" />} />
           <Route path="/notafiscal" element={isAuthenticated ? <LancaNFe /> : <Navigate to="/login" />} />
-          <Route path="/locacao" element={isAuthenticated ? <Locacoes /> : <Navigate to="/login" />} />
+          <Route path="/movimentacaoprodutos" element={isAuthenticated ? <MovimentacaoProdutos /> : <Navigate to="/login" />} />
         </Route>
       </Routes>
     </Router>

@@ -69,6 +69,7 @@ function Fornecedores() {
     const formData = new FormData(e.target);
     const newFornecedor = {
       nome: formData.get('nome'),
+      nomeFantasia: formData.get('nomeFantasia'),
       cpfCnpj: formData.get('cpfCnpj'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),

@@ -4,6 +4,7 @@ import { cpfCnpjMask } from './utils';
 
 const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const [nome, setNome] = useState('');
+  const [nomeFantasia, setNomeFantasia] = useState('');
   const [cpfCnpj, setCpf] = useState('');
   const [email, setEmail] = useState('');
   const [celular, setCelular] = useState('');
@@ -18,6 +19,7 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
     if (fornecedor) {
       // Preencher os campos com os dados da pessoa selecionada para edição
       setNome(fornecedor.nome || '');
+      setNomeFantasia(fornecedor.nomeFantasia || '');
       setCpf(fornecedor.cpfCnpj || '');
       setEmail(fornecedor.email || '');
       setCelular(fornecedor.celular || '');
@@ -32,6 +34,7 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
     } else {
       // Limpar os campos quando não há pessoa selecionada
       setNome('');
+      setNomeFantasia('');
       setCpf('');
       setEmail('');
       setCelular('');
@@ -54,6 +57,10 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
 
   const handleNomeChange = (e) => {
     setNome(e.target.value); // Atualiza o estado do nome
+  };
+  
+  const handleNomeFantasiaChange = (e) => {
+    setNomeFantasia(e.target.value); // Atualiza o estado do nome
   };
 
   const handleEmailChange = (e) => {
@@ -104,6 +111,19 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
                 name="nome"
                 value={nome}
                 onChange={handleNomeChange} // Adiciona o onChange para atualizar o estado
+                maxLength="150"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="nome">Nome Fantasia</label>
+              <input
+                className='input-geral'
+                type="text"
+                id="nomeFantasia"
+                name="nomeFantasia"
+                value={nomeFantasia}
+                onChange={handleNomeFantasiaChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
                 required
               />

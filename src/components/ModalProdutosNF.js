@@ -3,16 +3,19 @@ import '../styles/ModalProdutosNF.css';
 import ModalTratarProdutosNF from '../components/ModalTratarProdutosNF';
 import ModalDetalhesProdutosNF from '../components/ModalDetalhesProdutosNF';
 import Toast from '../components/Toast';
-import { getNFeById, getProdutoNFById, updateNFe, vinculaProdutoNF, desvinculaProdutoNF } from '../services/api';
+import { getNFeById, getProdutoNFById,getQuantidadeRestanteProdutoNF, updateNFe, vinculaProdutoNF, desvinculaProdutoNF } from '../services/api';
 import ModalCadastraProduto from '../components/ModalCadastraProduto';
 import lixeiraIcon from '../img/lixeira.png';
 import ConfirmDialog from '../components/ConfirmDialog'; // Importe o ConfirmDialog
 import ModalPesquisaGN from '../components/ModalPesquisaGN';
+import ModalVinculaProdVeiculo from '../components/ModalVinculaProdVeiculo'; // Importe o modal de vinculação de veículos
+
 
 
 const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
   const [produtos, setProdutos] = useState([]);
   const [quantidade, setQuantidade] = useState([]);
+  const [quantidadeVinculada, setQuantidadeVinculada] = useState('');
   const [valor_unit, setValorUnitario] = useState([]);
   const [formError, setFormError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +38,10 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
   const [isPesquisaGNModalOpen, setIsPesquisaGNModalOpen] = useState(false);
 
   const [isNFClosed, setIsNFClosed] = useState(false);
+
+  const [isVinculaVeiculoModalOpen, setIsVinculaVeiculoModalOpen] = useState(false);
+  const [produtoParaVincular, setProdutoParaVincular] = useState(null);
+
 
 
   const handleQuantidadeChange = (e) => {
@@ -71,7 +78,17 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
       setLoading(false);
     }
   };
-
+  const fetchQuantidadeRestanteProdutoNF = async (produtoId) => {
+    try {
+      const response = await getQuantidadeRestanteProdutoNF(produtoId);
+      setQuantidadeVinculada(response.data.quantidadeVinculada);
+      return response.data.quantidadeRestante;
+    } catch (err) {
+      console.error('Erro ao buscar quantidade restante do produto na nota fiscal', err);
+      setToast({ message: "Erro ao buscar quantidade restante do produto na nota fiscal.", type: "error" });
+      return null;
+    }
+  };
   const fetchNFeStatus = async (notaId) => {
     try {
       const response = await getNFeById(notaId); // Supondo que essa função retorne os detalhes atualizados da NF
@@ -202,14 +219,23 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
     setProduto(selectedProduto.xProd);
     setProdutoId(selectedProduto.id);
   };
+  const handleVincularVeiculo = (produto) => {
+    fetchQuantidadeRestanteProdutoNF(produto.id);
+    setProdutoParaVincular(produto); // Define o produto selecionado
+    setIsVinculaVeiculoModalOpen(true); // Abre o modal
+  };
 
+  const closeVinculaVeiculoModal = () => {
+    setIsVinculaVeiculoModalOpen(false);
+    setProdutoParaVincular(null);
+  };
   // Função para abrir o modal de pesquisa
   const openPesquisaGNModal = () => setIsPesquisaGNModalOpen(true);
   const closePesquisaGNModal = () => setIsPesquisaGNModalOpen(false);
 
   // Função para vincular produto
   const handleVincular = async () => {
-    if (!produtoId ) {
+    if (!produtoId) {
       setToast({ message: "Selecione um produto antes de vincular.", type: "error" });
       return;
     }
@@ -231,17 +257,17 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
       await updateNFe(prod.id, { status: 'andamento' });
 
     } catch (err) {
-      if(!quantidade == false){
+      if (!quantidade == false) {
         let errorMessage = err.response.data;
         errorMessage = errorMessage.toString() + ': quantidade vazia'
         setToast({ message: errorMessage, type: "error" });
-  
-      }else{
+
+      } else {
         const errorMessage = err.response.data;
         setToast({ message: errorMessage, type: "error" });
-  
+
       }
-      
+
       /*const errorMessage = err.response?.data?.error || err.message || "Erro ao atualizar produto.";
       setToast({ message: errorMessage, type: "error" });*/
     }
@@ -272,7 +298,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                   <input
                     id='quantidade'
                     type="text"
-                    value={quantidade}
+                    value={quantidade.replace(',', '.')}
                     onChange={handleQuantidadeChange}
                     placeholder='Quantidade'
                     required
@@ -281,7 +307,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                   <input
                     id='valor_unit'
                     type="text"
-                    value={valor_unit}
+                    value={valor_unit.replace(',', '.')}
                     onChange={handleValorUnitChange}
                     placeholder='Valor Unitário'
                     required
@@ -351,8 +377,19 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                                 style={{ cursor: 'pointer', width: '20px', height: '20px' }}
                               />
                             )}
+
+                            {/* Novo botão Vincular Veículo */}
+                            {produto.identificador == 1 && (
+                              <button
+                                className="vincular-veiculo-button acao_prod"
+                                onClick={() => handleVincularVeiculo(produto)}
+                                disabled={produto.status == 1} // Desabilitar botão se o produto estiver inativo
+                              >
+                                Vincular Veículo
+                              </button>)}
                           </div>
                         </td>
+
                       </tr>
                     ))}
                   </tbody>
@@ -420,6 +457,16 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
         onClose={closePesquisaGNModal}
         onSelectProduto={handleSelectProduto}
       />
+      {/* Modal de Vinculação de Veículos */}
+      {isVinculaVeiculoModalOpen && (
+        <ModalVinculaProdVeiculo
+          isOpen={isVinculaVeiculoModalOpen}
+          onClose={closeVinculaVeiculoModal}
+          produto={produtoParaVincular}
+          quantidadeRestante={quantidadeVinculada}
+          onVinculoSuccess={handleVinculoSuccess} // Atualiza lista de produtos ao sucesso
+        />
+      )}
     </div>
   );
 

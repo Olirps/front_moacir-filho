@@ -3,42 +3,70 @@
     background: #fff;
     padding: 20px;
     border-radius: 8px;
-    /* Aumentado o raio para um efeito mais suave */
     width: 85%;
     max-height: 90vh;
-    /* Limita a altura do modal para 90% da altura da viewport */
     overflow-y: auto;
-    /* Adiciona rolagem vertical se necessário */
     position: relative;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* Adicionada sombra para profundidade */
 }
 
+/* Layout do Formulário */
+/* Mantém os campos do formulário organizados em duas colunas */
 #cadastro-produto {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* Duas colunas */
     gap: 20px;
-    /* Espaçamento entre os elementos */
     width: 100%;
     position: relative;
 }
 
+/* Organiza os Inputs */
 #cadastro-produto div {
     display: flex;
     flex-direction: column;
 }
 
+/* Ajusta o tamanho dos Inputs */
 #cadastro-produto input {
     width: 100%;
-    /* Ou o tamanho desejado */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     box-sizing: border-box;
-    /* Garante que o padding seja incluído no tamanho total */
 }
 
+/* Ajusta o tamanho do botão */
 #cadastro-produto button {
     width: 25%;
-    /* Ou o tamanho desejado */
-    box-sizing: border-box;
-    /* Garante que o padding seja incluído no tamanho total */
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Grupo de RadioButtons agora está FORA da estrutura de grid */
+.radio-group-container {
+    display: flex;
+    justify-content: flex-start; /* Alinha os radios à esquerda */
+    margin-bottom: 15px;
+}
+
+/* RadioGroup em linha */
+.radio-group {
+    display: flex;
+    gap: 20px; /* Espaço entre os radios */
+}
+
+/* Ajuste do tamanho e espaçamento dos labels */
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Ajuste do tamanho dos RadioButtons */
+.radio-group input {
+    transform: scale(1.2);
+    cursor: pointer;
 }

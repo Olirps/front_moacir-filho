@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crie uma instância do axios com a URL base
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: 'http://3.143.233.203:3001/api',
 });
 
 // Função para definir o token de autenticação no header
@@ -54,22 +54,42 @@ export const getFornecedorById = async (id) => {
 };
 
 // Funções para gerenciar carros
-export const getCarros = async (filters = {}) => {
-  const response = await api.get('/carros', { params: filters });
+export const getVeiculos = async (filters = {}) => {
+  const response = await api.get('/veiculos', { params: filters });
   return response;
 };
 
-export const addCarro = async (carro) => {
-  return api.post('/carros', carro);
+export const addVeiculos = async (carro) => {
+  return api.post('/veiculos', carro);
 };
 
-export const updateCarro = async (id, carro) => {
-  return api.put(`/carros/${id}`, carro);
+export const updateVeiculos = async (id, carro) => {
+  return api.put(`/veiculos/${id}`, carro);
 };
 
-export const getCarroById = async (id) => {
-  return api.get(`/carros/${id}`);
+export const getVeiculosById = async (id) => {
+  return api.get(`/veiculos/${id}`);
 };
+
+// Funções para gerenciar tipo veiculo
+export const getTipoVeiculo = async () => {
+  return api.get('/tipoveiculo');
+};
+
+
+// Funções para gerenciar vinculo de produtos com veiculos
+export const vinculoProdVeiculo = async (carro) => {
+  return api.post('/vinculoprodveiculo', carro);
+};
+
+export const getVinculosProdutoVeiculo = async () => {
+  return api.get('/vinculoprodveiculo-lista');
+};
+
+export const obterVinculoPorProdutoId = async (produtoId) => {
+  return api.get(`/vinculoprodveiculo/produto/${produtoId}`);
+};
+
 
 // Funções para gerenciar marcas
 export const getMarcas = async () => {
@@ -117,6 +137,9 @@ export const updateNFe = async (id, notafiscal) => {
 
 export const getProdutoNFById = async (id) => {
   return api.get(`/produtosnf/${id}`);
+};
+export const getQuantidadeRestanteProdutoNF = async (id) => {
+  return api.get(`/produtosnf/quantidadeRestante/${id}`);
 };
 
 export const vinculaProdutoNF = async (id, produto) => {
