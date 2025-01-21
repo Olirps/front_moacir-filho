@@ -75,6 +75,7 @@ const ModalVinculaProdVeiculo = ({ isOpen, onClose, produto,produtoquantidadeRes
         const dataVinculo = converterData(new Date().toLocaleString().replace(',', ''));
         const dadosVinculo = {
             produto_id: produto.id,
+            movimentacao_id: produto.idx,
             veiculo_id: selectedVeiculo,
             nota_id: produto.nota_id,
             quantidade,

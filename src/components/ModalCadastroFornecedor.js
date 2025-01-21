@@ -5,6 +5,7 @@ import { cpfCnpjMask } from './utils';
 const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const [nome, setNome] = useState('');
   const [nomeFantasia, setNomeFantasia] = useState('');
+  const [fornecedorContato, setfornecedorContato] = useState('');
   const [cpfCnpj, setCpf] = useState('');
   const [email, setEmail] = useState('');
   const [celular, setCelular] = useState('');
@@ -15,11 +16,13 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const [uf, setUf] = useState('');
   const [cep, setCep] = useState('');
 
+
   useEffect(() => {
     if (fornecedor) {
       // Preencher os campos com os dados da pessoa selecionada para edição
       setNome(fornecedor.nome || '');
       setNomeFantasia(fornecedor.nomeFantasia || '');
+      setfornecedorContato(fornecedor.fornecedor_contato || '');
       setCpf(fornecedor.cpfCnpj || '');
       setEmail(fornecedor.email || '');
       setCelular(fornecedor.celular || '');
@@ -29,12 +32,11 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
       setMunicipio(fornecedor.municipio || '');
       setUf(fornecedor.uf || '');
       setCep(fornecedor.cep || '');
-
-
     } else {
       // Limpar os campos quando não há pessoa selecionada
       setNome('');
       setNomeFantasia('');
+      setfornecedorContato('');
       setCpf('');
       setEmail('');
       setCelular('');
@@ -58,9 +60,12 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const handleNomeChange = (e) => {
     setNome(e.target.value); // Atualiza o estado do nome
   };
-  
+
   const handleNomeFantasiaChange = (e) => {
     setNomeFantasia(e.target.value); // Atualiza o estado do nome
+  };
+  const handleFornecedorContatoChange = (e) => {
+    setfornecedorContato(e.target.value); // Atualiza o estado do nome
   };
 
   const handleEmailChange = (e) => {
@@ -124,6 +129,19 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
                 name="nomeFantasia"
                 value={nomeFantasia}
                 onChange={handleNomeFantasiaChange} // Adiciona o onChange para atualizar o estado
+                maxLength="150"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="fornecedorContato">Contato Fornecedor</label>
+              <input
+                className='input-geral'
+                type="text"
+                id="fornecedorContato"
+                name="fornecedorContato"
+                value={fornecedorContato}
+                onChange={handleFornecedorContatoChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
                 required
               />
