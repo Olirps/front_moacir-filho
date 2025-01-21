@@ -77,7 +77,7 @@ function LancaNFe() {
       setFilteredNotasFiscais(response.data);
 
       // Buscar informações do fornecedor para cada nota fiscal
-      const fornecedoresPromises = await response.data.map(nota =>
+      /*const fornecedoresPromises = await response.data.map(nota =>
         getFornecedorById(nota.codFornecedor).catch(() => null)
       );
       const fornecedoresArray = await Promise.all(fornecedoresPromises);
@@ -91,7 +91,7 @@ function LancaNFe() {
         }
       });
 
-      setFornecedores(fornecedoresMap);
+      setFornecedores(fornecedoresMap);*/
     } catch (err) {
       console.error('Erro ao buscar notas fiscais', err);
     } finally {
@@ -246,9 +246,9 @@ function LancaNFe() {
   const handleDetalhes= async (nfe) => {
     try {
       let response = await getNFeById(nfe.id);
-      const fornecedor = fornecedores[nfe.codFornecedor];
-      response.data.fornecedor = fornecedor.nome
-      response.data.codFornecedor = fornecedor.id
+      //const fornecedor = fornecedores[nfe.codFornecedor];
+      response.data.fornecedor = nfe.nomeFornecedor
+      response.data.codFornecedor = nfe.codFornecedor
       const uf = await getUFIBGE(nfe.cUF);
       const mun = await getMunicipiosIBGE(nfe.cMunFG);
       response.data.sigla = uf.data.nome;
@@ -376,8 +376,8 @@ function LancaNFe() {
                       <tr key={notaFiscal.id}>
                         <td>{notaFiscal.id}</td>
                         <td>{notaFiscal.nNF}</td>
-                        <td>{fornecedores[notaFiscal.codFornecedor]?.nome || 'Nome do Fornecedor não disponível'}</td>
-                        <td>{cpfCnpjMask(fornecedores[notaFiscal.codFornecedor]?.cpfCnpj || 'CNPJ não disponível')}</td>
+                        <td>{notaFiscal.nomeFornecedor|| 'Nome do Fornecedor não disponível'}</td>
+                        <td>{cpfCnpjMask(notaFiscal.cpfCnpj || 'CNPJ não disponível')}</td>
                         <td>{new Date(notaFiscal.dhEmi).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                         <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(notaFiscal.vNF)}</td>
                         <td id="button-action">

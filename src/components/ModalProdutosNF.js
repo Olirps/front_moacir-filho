@@ -14,9 +14,9 @@ import ModalVinculaProdVeiculo from '../components/ModalVinculaProdVeiculo'; // 
 
 const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
   const [produtos, setProdutos] = useState([]);
-  const [quantidade, setQuantidade] = useState([]);
+  const [quantidade, setQuantidade] = useState('');
   const [quantidadeVinculada, setQuantidadeVinculada] = useState('');
-  const [valor_unit, setValorUnitario] = useState([]);
+  const [valor_unit, setValorUnitario] = useState('');
   const [formError, setFormError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -48,7 +48,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
     //setQuantidade(e.target.value); // Atualiza o estado do nome
     const value = e.target.value;
     setQuantidade(value);
-    if (!value || isNaN(value) || value <= 0) {
+    if (!value || value <= 0) {
       setFormError(true);
     } else {
       setFormError(false);
@@ -121,6 +121,9 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
 
     setVinculoSuccess(prev => !prev);
     setModalKey(prev => prev + 1);
+    setProduto('');
+    setQuantidade('');
+    setValorUnitario('');
   };
 
   const handleFechadoSuccess = (message) => {
@@ -298,7 +301,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                   <input
                     id='quantidade'
                     type="text"
-                    value={quantidade.replace(',', '.')}
+                    value={quantidade.replace(',', '.')} // Substitui vírgula por ponto
                     onChange={handleQuantidadeChange}
                     placeholder='Quantidade'
                     required
@@ -317,7 +320,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
 
                   <div className='button-lancto-prod'>
                     <button className="button" onClick={openPesquisaGNModal}>Pesquisar Produto</button>
-                    <button className="button" onClick={handleVincular}>Vincular</button>
+                    <button className="button" onClick={handleVincular}>Inserir</button>
                   </div>
                 </div>
 

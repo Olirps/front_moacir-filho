@@ -202,7 +202,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                             {[
                                 { label: 'Número', id: 'nNF', value: nNF, setter: setNNF },
                                 { label: 'Série', id: 'serie', value: serie, setter: setSerie },
-                                { label: 'Valor Nota Fiscal', id: 'vNF', value: vNF, setter: setvNF },
+                                { label: 'Valor Nota Fiscal', id: 'vNF', value: vNF.replace(',','.'), setter: setvNF },
                                 { label: 'cNF', id: 'cNF', value: cNF, setter: setCNF },
                                 { label: 'tpNF', id: 'tpNF', value: tpNF, setter: setTPNF },
                             ].map(({ label, id, value, setter }) => (

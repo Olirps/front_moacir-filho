@@ -9,6 +9,7 @@ function Fornecedores() {
   const [fornecedores, setFornecedores] = useState([]);
   const [filteredFornecedores, setFilteredFornecedores] = useState([]);
   const [nome, setNome] = useState('');
+  const [fornecedorContato, setfornecedorContato] = useState('');
   const [cpfCnpj, setCpf] = useState('');
   const [loading, setLoading] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -70,6 +71,7 @@ function Fornecedores() {
     const newFornecedor = {
       nome: formData.get('nome'),
       nomeFantasia: formData.get('nomeFantasia'),
+      fornecedor_contato: formData.get('fornecedorContato'),
       cpfCnpj: formData.get('cpfCnpj'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
@@ -111,7 +113,9 @@ function Fornecedores() {
     const formData = new FormData(e.target);
     const updatedFornecedor = {
       nome: formData.get('nome'),
+      nomeFantasia: formData.get('nomeFantasia'),
       cpfCnpj: formData.get('cpfCnpj'),
+      fornecedor_contato: formData.get('fornecedorContato'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
       logradouro: formData.get('logradouro'),
@@ -213,6 +217,7 @@ function Fornecedores() {
                   <tr>
                     <th>ID</th>
                     <th>Nome</th>
+                    <th>Contato</th>
                     <th>CPF/CNPJ</th>
                     <th>Email</th>
                     <th>Data Criação</th>
@@ -224,6 +229,7 @@ function Fornecedores() {
                     <tr key={fornecedor.id}>
                       <td>{fornecedor.id}</td>
                       <td>{fornecedor.nome}</td>
+                      <td>{fornecedor.fornecedor_contato}</td>
                       <td>{cpfCnpjMask(fornecedor.cpfCnpj)}</td>
                       <td>{fornecedor.email}</td>
                       <td>{new Date(fornecedor.createdAt).toLocaleDateString('pt-BR')}</td>

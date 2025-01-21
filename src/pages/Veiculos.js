@@ -164,12 +164,12 @@ function Veiculos() {
           <div className="spinner"></div>
         </div>) : (
         <>
-          <div id="search-container">
-            <div id="search-fields">
+          <div id="search-veiculos-container">
+            <div id="search-veiculos-fields">
               <div>
                 <label htmlFor="modelo">Modelo</label>
                 <input
-                className='input-geral'
+                className='input-veiculos-geral'
                   type="text"
                   id="modelo"
                   value={modelo}
@@ -177,10 +177,10 @@ function Veiculos() {
                   maxLength="150"
                 />
               </div>
-              <div className="input-group">
+              <div className="input-veiculos-group">
                 <label htmlFor="placa">Placa</label>
                 <input
-                className='input-geral'
+                className='input-veiculos-geral'
                   type="text"
                   id="placa"
                   value={placa}
@@ -191,7 +191,7 @@ function Veiculos() {
               <div>
                 <label htmlFor="marcaId">Marca</label>
                 <select
-                  className="select-geral"
+                  className="select-veiculos-geral"
                   id="marcaId"
                   value={marcaId}
                   onChange={(e) => setMarcaId(e.target.value)}
