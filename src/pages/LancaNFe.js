@@ -75,23 +75,6 @@ function LancaNFe() {
       const response = await getNotafiscal();
       setNotasFiscais(response.data);
       setFilteredNotasFiscais(response.data);
-
-      // Buscar informações do fornecedor para cada nota fiscal
-      /*const fornecedoresPromises = await response.data.map(nota =>
-        getFornecedorById(nota.codFornecedor).catch(() => null)
-      );
-      const fornecedoresArray = await Promise.all(fornecedoresPromises);
-
-      // Filtrar e criar um mapa de fornecedores
-      const fornecedoresMap = {};
-      fornecedoresArray.forEach(fornecedor => {
-        if (fornecedor && fornecedor.data) {  // Verifica se fornecedor e fornecedor.data estão definidos
-          fornecedoresMap[fornecedor.data.id] = fornecedor.data;
-          fornecedoresMap[fornecedor.data.nome] = fornecedor.data;
-        }
-      });
-
-      setFornecedores(fornecedoresMap);*/
     } catch (err) {
       console.error('Erro ao buscar notas fiscais', err);
     } finally {
@@ -99,36 +82,34 @@ function LancaNFe() {
     }
   };
 
+
   const handleSearch = () => {
-    const lowerNNF = nNF.toLowerCase();
-    const lowerCodFornecedor = codFornecedor.toLowerCase();
-    const lowerCnpjFornecedor = cnpjFornecedor.toLowerCase();
-    const lowerNomeFornecedor = nomeFornecedor.toLowerCase();
-
-    const results = notasFiscais.filter(notaFiscal => {
-      const fornecedor = fornecedores[notaFiscal.codFornecedor];
-
-      // Verifica se o fornecedor foi encontrado antes de tentar acessar suas propriedades
-      if (!fornecedor) return false;
-
-      const fornecedorNome = fornecedor.nome ? fornecedor.nome.toLowerCase() : '';
-      const fornecedorCnpj = fornecedor.cpfCnpj ? fornecedor.cpfCnpj.toLowerCase() : '';
-      // Remove a máscara do CNPJ do fornecedor e da busca
-      const cleanCnpjFornecedor = cpfCnpjMask(fornecedorCnpj);
-      const cleanCnpjSearch = cpfCnpjMask(lowerCnpjFornecedor);
-
-      return (
-        (lowerNNF ? notaFiscal.nNF.toLowerCase().includes(lowerNNF) : true) &&
-        (lowerCodFornecedor ? notaFiscal.codFornecedor.toString().includes(lowerCodFornecedor) : true) &&
-        (lowerCnpjFornecedor ? cleanCnpjFornecedor.includes(cleanCnpjSearch) : true) &&
-        (lowerNomeFornecedor ? fornecedorNome.trim().includes(lowerNomeFornecedor) : true)
-      );
-    });
-
-    setFilteredNotasFiscais(results);
-    setCurrentPage(1);
-  };
-
+      const lowerNNF = nNF.toLowerCase();
+      const lowerCodFornecedor = codFornecedor.toLowerCase();
+      const lowerCnpjFornecedor = cnpjFornecedor.toLowerCase();
+      const lowerNomeFornecedor = nomeFornecedor.toLowerCase();
+  
+      const results = notasFiscais.filter(notaFiscal => {
+        // Acessa diretamente os dados do fornecedor dentro de notaFiscal
+        const fornecedorNome = notaFiscal.nomeFornecedor ? notaFiscal.nomeFornecedor.toLowerCase() : '';
+        const fornecedorCnpj = notaFiscal.cnpjFornecedor ? notaFiscal.cnpjFornecedor.toLowerCase() : '';
+        const codFornecedorNota = notaFiscal.codFornecedor ? notaFiscal.codFornecedor.toString() : '';
+  
+        // Remove a máscara do CNPJ do fornecedor e da busca
+        const cleanCnpjFornecedor = cpfCnpjMask(fornecedorCnpj);
+        const cleanCnpjSearch = cpfCnpjMask(lowerCnpjFornecedor);
+  
+        return (
+          (lowerNNF ? notaFiscal.nNF.toLowerCase().includes(lowerNNF) : true) &&
+          (lowerCodFornecedor ? codFornecedorNota.includes(lowerCodFornecedor) : true) &&
+          (lowerCnpjFornecedor ? cleanCnpjFornecedor.includes(cleanCnpjSearch) : true) &&
+          (lowerNomeFornecedor ? fornecedorNome.trim().includes(lowerNomeFornecedor) : true)
+        );
+      });
+  
+      setFilteredNotasFiscais(results);
+      setCurrentPage(1);
+    };
 
   const handleClear = () => {
     setNNF('');
@@ -161,7 +142,6 @@ function LancaNFe() {
     formData.forEach((value, key) => {
     });*/
     const vlrNf =  parseFloat(e.vNF.replace(',', '.'));
-    console.log(JSON.stringify(e));
     const newNf = {
       codFornecedor: e.fornecedorId,
       nNF: e.nNF,
@@ -230,9 +210,8 @@ function LancaNFe() {
   const handleEditar = async (nfe) => {
     try {
       let response = await getNFeById(nfe.id);
-      const fornecedor = fornecedores[nfe.codFornecedor];
-      response.data.fornecedor = fornecedor.nome
-      response.data.codFornecedor = fornecedor.id
+      response.data.fornecedor = nfe.nome
+      response.data.codFornecedor = nfe.id
 
       setSelectedNFe(response.data);
       setIsEdit(true);
@@ -287,7 +266,7 @@ function LancaNFe() {
 
   return (
     <div id="notas-fiscais-container">
-      <h1 id="notas-fiscais-title">Consulta de Notas Fiscais</h1>
+      <h1 className='title-page'>Consulta de Notas Fiscais</h1>
       {loading ? (
         <div className="spinner-container">
           <div className="spinner"></div>
@@ -354,8 +333,8 @@ function LancaNFe() {
           <div id="separator-bar"></div>
 
           <div id="results-container">
-            <div id="notas-fiscais-grid-container">
-              <table id="notas-fiscais-grid">
+            <div id="grid-padrao-container">
+              <table id="grid-padrao">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -452,7 +431,6 @@ function LancaNFe() {
           notaFiscal={selectedNFe}
           isReadOnly={isReadOnly}  // Passa o estado isReadOnly para o modal
           isEdit={isEdit}  // Passa o estado isReadOnly para o modal
-
         />
       )}
     </div>

@@ -78,54 +78,67 @@ const MovimentacaoProdutos = () => {
 
     return (
         <div className="movimentacao-produtos-container">
-            <h1>Movimentação de Produtos</h1>
+            <h1 className='title-page'>Movimentação de Produtos</h1>
 
             {/* Filtros */}
-            <div className="filtros-container">
-                <input type="text" placeholder="Filtrar por Produto" value={filtroProduto} onChange={(e) => setFiltroProduto(e.target.value)} />
-                <input type="text" placeholder="Filtrar por Veículo" value={filtroVeiculo} onChange={(e) => setFiltroVeiculo(e.target.value)} />
-                <input type="text" placeholder="Filtrar por Nota Fiscal" value={filtroNota} onChange={(e) => setFiltroNota(e.target.value)} />
-                <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} placeholder="Data Início" />
-                <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} placeholder="Data Fim" />
-                <button onClick={fetchVinculos}>Filtrar</button>
-                <button onClick={handleImprimir} className="botao-imprimir">Imprimir</button>
+            <div id='search-container'>
+                <div id='search-fields'>
+                    <div>
+                        <input className='input-geral' type="text" placeholder="Filtrar por Produto" value={filtroProduto} onChange={(e) => setFiltroProduto(e.target.value)} />
+                        <input className='input-geral' type="text" placeholder="Filtrar por Veículo" value={filtroVeiculo} onChange={(e) => setFiltroVeiculo(e.target.value)} />
+                        <input className='input-geral' type="text" placeholder="Filtrar por Nota Fiscal" value={filtroNota} onChange={(e) => setFiltroNota(e.target.value)} />
+                        <input className='input-geral' type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} placeholder="Data Início" />
+                        <input className='input-geral' type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} placeholder="Data Fim" />
+                    </div>
+                    <div id='button-group'>
+                        <button className="button" onClick={fetchVinculos}>Filtrar</button>
+                        <button className="button" onClick={handleImprimir} >Imprimir</button>
+                    </div>
+                </div>
+
             </div>
 
             {/* Tabela */}
-            <table className="vinculos-tabela">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nota Fiscal</th>
-                        <th>Data Emissão</th>
-                        <th>Produto</th>
-                        <th>Valor Unitário</th>
-                        <th>Quantidade</th>
-                        <th>Valor Total</th>
-                        <th>Veículo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filtrarVinculos().length > 0 ? (
-                        filtrarVinculos().map((vinculo, index) => (
-                            <tr key={index}>
-                                <td>{vinculo.id}</td>
-                                <td>{vinculo.numeroNota}</td>
-                                <td>{formatarDataResumida(vinculo.dtaEmissaoNF)}</td>
-                                <td>{vinculo.xProd}</td>
-                                <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(vinculo.valorUnitario)}</td>
-                                <td>{vinculo.quantidade}</td>
-                                <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((vinculo.quantidade * vinculo.valorUnitario))}</td>
-                                <td>{vinculo.modeloVeiculo}</td>
+            <div id="results-container">
+                <div id='grid-padrao-container'>
+                    <table id="grid-padrao">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nota Fiscal</th>
+                                <th>Data Emissão</th>
+                                <th>Produto</th>
+                                <th>Valor Unitário</th>
+                                <th>Quantidade</th>
+                                <th>Valor Total</th>
+                                <th>Veículo</th>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="8">Nenhum vínculo encontrado.</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {filtrarVinculos().length > 0 ? (
+                                filtrarVinculos().map((vinculo, index) => (
+                                    <tr key={index}>
+                                        <td>{vinculo.id}</td>
+                                        <td>{vinculo.numeroNota}</td>
+                                        <td>{formatarDataResumida(vinculo.dtaEmissaoNF)}</td>
+                                        <td>{vinculo.xProd}</td>
+                                        <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(vinculo.valorUnitario)}</td>
+                                        <td>{vinculo.quantidade}</td>
+                                        <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((vinculo.quantidade * vinculo.valorUnitario))}</td>
+                                        <td>{vinculo.modeloVeiculo}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="8">Nenhum vínculo encontrado.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
         </div>
     );
 };

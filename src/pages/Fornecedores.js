@@ -69,10 +69,12 @@ function Fornecedores() {
     e.preventDefault();
     const formData = new FormData(e.target);
     const newFornecedor = {
+      tipo_fornecedor: formData.get('tipofornecedor'),
       nome: formData.get('nome'),
       nomeFantasia: formData.get('nomeFantasia'),
       fornecedor_contato: formData.get('fornecedorContato'),
       cpfCnpj: formData.get('cpfCnpj'),
+      inscricaoestadual: formData.get('inscricaoestadual'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
       logradouro: formData.get('logradouro'),
@@ -112,9 +114,11 @@ function Fornecedores() {
     e.preventDefault();
     const formData = new FormData(e.target);
     const updatedFornecedor = {
+      tipo_fornecedor: formData.get('tipofornecedor'),
       nome: formData.get('nome'),
       nomeFantasia: formData.get('nomeFantasia'),
       cpfCnpj: formData.get('cpfCnpj'),
+      inscricaoestadual: formData.get('inscricaoestadual'),
       fornecedor_contato: formData.get('fornecedorContato'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
@@ -166,7 +170,7 @@ function Fornecedores() {
 
   return (
     <div id="fornecedores-container">
-      <h1 id="fornecedores-title">Consulta de Fornecedores</h1>
+      <h1 className='title-page'>Consulta de Fornecedores</h1>
       {loading ? (
         <div className="spinner-container">
           <div className="spinner"></div>
@@ -211,8 +215,8 @@ function Fornecedores() {
           <div id="separator-bar"></div>
 
           <div id="results-container">
-            <div id="fornecedores-grid-container">
-              <table id="fornecedores-grid">
+            <div id="grid-padrao-container">
+              <table id="grid-padrao">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -277,6 +281,7 @@ function Fornecedores() {
           onClose={() => setIsModalOpen(false)}
           onSubmit={isEdit ? handleEditSubmit : handleAddFornecedor}
           fornecedor={selectedFornecedor}
+          isEdit={isEdit}
         />
       )}
     </div>

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroFornecedor.css'; // Certifique-se de criar este CSS também
 import { cpfCnpjMask } from './utils';
 
-const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
+const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor }) => {
+  const [tipofornecedor, setTipoFornecedor] = useState('');
   const [nome, setNome] = useState('');
   const [nomeFantasia, setNomeFantasia] = useState('');
   const [fornecedorContato, setfornecedorContato] = useState('');
   const [cpfCnpj, setCpf] = useState('');
+  const [inscricaoestadual, setInscricaoEstadual] = useState('');
   const [email, setEmail] = useState('');
   const [celular, setCelular] = useState('');
   const [logradouro, setLogradouro] = useState('');
@@ -17,13 +19,24 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const [cep, setCep] = useState('');
 
 
+  // Lista fixa de tipos de fornecedor
+  const tiposFornecedor = [
+    { id: 'maquinario', nome: 'Maquinário' },
+    { id: 'peça', nome: 'Peça' },
+    { id: 'servico', nome: 'Serviço' },
+    { id: 'suplemento', nome: 'Suplemento' },
+    { id: 'transporte', nome: 'Transporte' },
+  ];
+
   useEffect(() => {
     if (fornecedor) {
       // Preencher os campos com os dados da pessoa selecionada para edição
+      setTipoFornecedor(fornecedor.tipo_fornecedor || '');
       setNome(fornecedor.nome || '');
       setNomeFantasia(fornecedor.nomeFantasia || '');
       setfornecedorContato(fornecedor.fornecedor_contato || '');
       setCpf(fornecedor.cpfCnpj || '');
+      setInscricaoEstadual(fornecedor.inscricaoestadual || '');
       setEmail(fornecedor.email || '');
       setCelular(fornecedor.celular || '');
       setLogradouro(fornecedor.logradouro || '');
@@ -34,10 +47,12 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
       setCep(fornecedor.cep || '');
     } else {
       // Limpar os campos quando não há pessoa selecionada
+      setTipoFornecedor('');
       setNome('');
       setNomeFantasia('');
       setfornecedorContato('');
       setCpf('');
+      setInscricaoEstadual('');
       setEmail('');
       setCelular('');
       setLogradouro('');
@@ -55,6 +70,11 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
   const handleCpfChange = (e) => {
     const { value } = e.target;
     setCpf(cpfCnpjMask(value)); // Aplica a máscara ao CPF e atualiza o estado
+  };
+
+  const handleInscricaoEstadualChange = (e) => {
+    const { value } = e.target;
+    setInscricaoEstadual(value); // Aplica a máscara ao CPF e atualiza o estado
   };
 
   const handleNomeChange = (e) => {
@@ -102,11 +122,28 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content-cad-for">
+      <div className="modal-content">
         <button className="modal-close" onClick={onClose}>X</button>
-        <h2>Cadastro de Fornecedor</h2>
+        <h2>{isEdit ? 'Editar Fornecedor' : 'Cadastrar Cadastro de Fornecedor'}</h2>
         <form onSubmit={onSubmit}>
-          <div id='cadastro-fornecedor'>
+          <div id='cadastro-padrão'>
+            <div>
+              <label htmlFor="tipofornecedor">Selecione um Tipo de Fornecedor:</label>
+              <select
+                id="tipofornecedor"
+                name="tipofornecedor"
+                value={tipofornecedor}
+                onChange={(e) => setTipoFornecedor(e.target.value)}
+                required
+              >
+                <option value="">Selecione um Tipo</option>
+                {tiposFornecedor.map((tipo) => (
+                  <option key={tipo.id} value={tipo.id}>
+                    {tipo.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label htmlFor="nome">Nome</label>
               <input
@@ -130,7 +167,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
                 value={nomeFantasia}
                 onChange={handleNomeFantasiaChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
-                required
               />
             </div>
             <div>
@@ -155,7 +191,21 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, onSubmit, fornecedor }) => {
                 name="cpfCnpj"
                 value={cpfCnpjMask(cpfCnpj)} // Controlado pelo estado
                 onChange={handleCpfChange}
+                disabled={isEdit}
                 required
+              />
+              {isEdit && <input type="hidden" name="cpfCnpj" value={cpfCnpj} />}
+
+            </div>
+            <div>
+              <label htmlFor="inscricaoestadual">Inscrição Estadual</label>
+              <input
+                className='input-geral'
+                type="text"
+                id="inscricaoestadual"
+                name="inscricaoestadual"
+                value={inscricaoestadual} // Controlado pelo estado
+                onChange={handleInscricaoEstadualChange}
               />
             </div>
             <div>

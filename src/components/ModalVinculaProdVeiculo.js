@@ -4,7 +4,7 @@ import { converterData } from '../utils/functions';
 import { getVeiculos, vinculoProdVeiculo, obterVinculoPorProdutoId } from '../services/api';
 import Toast from '../components/Toast';
 
-const ModalVinculaProdVeiculo = ({ isOpen, onClose, produto,produtoquantidadeRestante,onVincular }) => {
+const ModalVinculaProdVeiculo = ({ isOpen, onClose, produto, produtoquantidadeRestante, onVincular }) => {
     const [veiculos, setVeiculos] = useState([]);
     const [filteredVeiculos, setFilteredVeiculos] = useState([]);
     const [selectedVeiculo, setSelectedVeiculo] = useState('');
@@ -104,53 +104,59 @@ const ModalVinculaProdVeiculo = ({ isOpen, onClose, produto,produtoquantidadeRes
     }
 
     return (
-        <div className="modal-vincula-prod-veiculo-overlay">
-            <div className="modal-vincula-prod-veiculo">
-                <button className="modal-close-button" onClick={onClose}>×</button>
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <button className="modal-close" onClick={onClose}>×</button>
                 <h2 className='h2-veiculo'>Vincular Produto a Veículo</h2>
                 {loading ? (
                     <p>Carregando veículos...</p>
                 ) : (
                     <form onSubmit={(e) => e.preventDefault()}>
-                        <input
-                            type="text"
-                            placeholder="Filtrar por modelo ou placa"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="filter-input"
-                        />
-                        <select
-                            className='select-veiculo'
-                            value={selectedVeiculo}
-                            onChange={(e) => setSelectedVeiculo(e.target.value)}
-                        >
-                            <option value="">Selecione um veículo</option>
-                            {filteredVeiculos.map((veiculo) => (
-                                <option key={veiculo.id} value={veiculo.id}>
-                                    {`${veiculo.modelo} - ${veiculo.placa}`}
-                                </option>
-                            ))}
-                        </select>
+                        <div>
+                            <input
+                                type="text"
+                                placeholder="Filtrar por modelo ou placa"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="input-geral"
+                            />
+                        </div>
+                        <div>
+                            <select
+                                className='input-geral'
+                                value={selectedVeiculo}
+                                onChange={(e) => setSelectedVeiculo(e.target.value)}
+                            >
+                                <option value="">Selecione um veículo</option>
+                                {filteredVeiculos.map((veiculo) => (
+                                    <option key={veiculo.id} value={veiculo.id}>
+                                        {`${veiculo.modelo} - ${veiculo.placa}`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            {/* Input para quantidade */}
+                            <input
+                                type="number"
+                                min="0.001"  // Permite valores pequenos
+                                step="any"   // Aceita qualquer número decimal
+                                value={quantidade}
+                                onChange={(e) => setQuantidade(parseFloat(e.target.value) || '')}
+                                className="input-geral"
+                                placeholder="Quantidade"
+                            />
+                        </div>
+                        <div id='button-group'>
+                            <button
+                                className="button"
+                                onClick={handleVincular}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'Vinculando...' : 'Vincular'}
+                            </button>
 
-                        {/* Input para quantidade */}
-                        <input
-                            type="number"
-                            min="0.001"  // Permite valores pequenos
-                            step="any"   // Aceita qualquer número decimal
-                            value={quantidade}
-                            onChange={(e) => setQuantidade(parseFloat(e.target.value) || '')}
-                            className="quantidade-input"
-                            placeholder="Quantidade"
-                        />
-
-
-                        <button
-                            className="button"
-                            onClick={handleVincular}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Vinculando...' : 'Vincular'}
-                        </button>
+                        </div>
                     </form>
                 )}
             </div>

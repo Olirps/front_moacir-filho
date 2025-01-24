@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroNFe.css';
 import ModalPesquisaFornecedor from './ModalPesquisaFornecedor';
-import { getUfs, getMunicipios } from '../services/api';
+import { getUfs, getMunicipios, getUFIBGE } from '../services/api';
 
-const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfChange, isReadOnly }) => {
+const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfChange, isReadOnly }) => {
     const [isPesquisaModalOpen, setIsPesquisaModalOpen] = useState(false);
     const [fornecedor, setFornecedor] = useState('');
     const [fornecedorId, setFornecedorId] = useState('');
@@ -11,7 +11,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
     const [serie, setSerie] = useState('');
     const [vNF, setvNF] = useState('');
     const [uf, setUF] = useState('');
-    const [ufId, setUfId] = useState('');
+    const [ufId, setUfId] = useState(notaFiscal ? notaFiscal.cUF : '');
     const [municipio, setMunicipio] = useState('');
     const [dataEmissao, setDataEmissao] = useState('');
     const [dataSaida, setDataSaida] = useState('');
@@ -19,52 +19,83 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
     const [tpNF, setTPNF] = useState('');
 
     const [ufs, setUfs] = useState([]);
+    const [estados, setEstados] = useState([]);
     const [municipios, setMunicipios] = useState([]);
     const [selectedUfCodIBGE, setSelectedUfCodIBGE] = useState(null);
     const [selectedMunicipioCodIBGE, setSelectedMunicipioCodIBGE] = useState(null);
 
     useEffect(() => {
-        if (notaFiscal) {
-            console.log('Dados NF Modal Cadastro: ' + JSON.stringify(notaFiscal));
-            console.log('mun. nome: ' + notaFiscal.municipio)
-            console.log('uf. nome: ' + notaFiscal.sigla)
-            setFornecedorId(notaFiscal.fornecedorId || '');
-            setFornecedor(notaFiscal.fornecedor || '');
-            setNNF(notaFiscal.nNF || '');
-            setSerie(notaFiscal.serie || '');
-            setvNF(notaFiscal.vNF || '');
-            setUF(notaFiscal.sigla || '');
-            setUfId(notaFiscal.ufId || '');
-            setSelectedUfCodIBGE(notaFiscal.cUF || '');
-            setMunicipio(notaFiscal.municipio || '');
-            setDataEmissao(formatDate(notaFiscal.dhEmi) || '');
-            setDataSaida(formatDate(notaFiscal.dhSaiEnt) || '');
-            setCNF(notaFiscal.cNF || '');
-            setTPNF(notaFiscal.tpNF || '');
-            //setSelectedMunicipioCodIBGE(notaFiscal.cMunFG || ''); // Código IBGE do município
-        }
-    }, [notaFiscal]);
-
-    useEffect(() => {
         const fetchUfs = async () => {
             try {
-                if (notaFiscal) {
-                    handleUfChange(notaFiscal)
-                    const response = await getUfs();
-                    setUfs(response.data || []);
-                } else {
-                    console.log('entrou aqui fetchUfs Else')
-                    const response = await getUfs();
-                    setUfs(response.data || []);
-                }
-
+                const response = await getUfs();
+                setUfs(response.data || []);
             } catch (error) {
                 console.error('Erro ao buscar UFs:', error);
                 setUfs([]);
             }
         };
+
         fetchUfs();
     }, []);
+
+    useEffect(() => {
+        const loadNotaFiscalData = async () => {
+            if (notaFiscal && (isEdit || isReadOnly) ) {
+                try {
+                    const ufResponse = await getUFIBGE(notaFiscal.cUF);
+                    const ufData = ufResponse?.data;
+
+                    if (ufData) {
+                        setUF(ufData.sigla);
+                        setUfId(ufData.id);
+                        setSelectedUfCodIBGE(ufData.codIBGE);
+
+                        try {
+                            const municipiosResponse = await getMunicipios(ufData.codIBGE);
+                            setMunicipios(municipiosResponse.data || []);
+                            // Buscar o nome do município correspondente ao código
+                            const municipioEncontrado = municipiosResponse.data?.find(m => m.codMunIBGE === notaFiscal.cMunFG);
+                            setMunicipio(municipioEncontrado?.nome || '');
+                        } catch (error) {
+                            console.error('Erro ao buscar municípios:', error);
+                            setMunicipios([]);
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao buscar dados da nota fiscal:', error);
+                }
+
+                setFornecedorId(notaFiscal.codFornecedor || '');
+                setFornecedor(notaFiscal.nomeFornecedor || '');
+                setNNF(notaFiscal.nNF || '');
+                setSerie(notaFiscal.serie || '');
+                setvNF(notaFiscal.vNF || '');
+                setDataEmissao(formatDate(notaFiscal.dhEmi) || '');
+                setDataSaida(formatDate(notaFiscal.dhSaiEnt) || '');
+                setCNF(notaFiscal.cNF || '');
+                setTPNF(notaFiscal.tpNF || '');
+            } else if (!isEdit) {
+                // Limpar os campos quando for cadastro
+                setFornecedor('');
+                setFornecedorId('');
+                setNNF('');
+                setSerie('');
+                setvNF('');
+                setUF('');
+                setUfId('');
+                setMunicipio('');
+                setDataEmissao('');
+                setDataSaida('');
+                setCNF('');
+                setTPNF('');
+                setSelectedUfCodIBGE(null);
+                setMunicipios([]);
+            }
+        };
+
+        loadNotaFiscalData();
+    }, [notaFiscal, isEdit]);
 
     useEffect(() => {
         const fetchMunicipios = async () => {
@@ -76,42 +107,42 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                     console.error('Erro ao buscar municípios:', error);
                     setMunicipios([]);
                 }
+            } else {
+                setMunicipios([]); // Limpa os municípios se nenhuma UF estiver selecionada
             }
         };
 
         fetchMunicipios();
     }, [selectedUfCodIBGE]);
 
-    const handleUfChange = (e) => {
-        console.log('entrou no change')
-        //console.log('entrou handleUfChange: '+JSON.stringify(e))
-        if (notaFiscal && isReadOnly) {
-            const selectedUf = e;
-            //console.log('UFs: ' + JSON.stringify(selectedUf))
-           // console.log('entrou handleUfChange: ' + JSON.stringify(e))
-            setUF(e.sigla);
-            setSelectedUfCodIBGE(e.cUF)
-            setUfId(e.ufId);
+    const handleUfChange = async (e) => {
+        const selectedUf = ufs.find((uf) => uf.sigla === e.target.value);
+        if (selectedUf) {
+            setUF(selectedUf.sigla);
+            setUfId(selectedUf.id);
+            setSelectedUfCodIBGE(selectedUf.codIBGE); // Esta linha é importante!
 
-        } else {
-            const selectedUf = ufs.find(uf => uf.sigla === e.target.value);
-
-            if (selectedUf) {
-                console.log('UF IBGE: ' + JSON.stringify(selectedUf));
-                setUF(selectedUf.sigla);
-                setSelectedUfCodIBGE(selectedUf.codIBGE);
-                setUfId(selectedUf.id);
+            // Força a atualização dos municípios imediatamente após setar o selectedUfCodIBGE
+            try {
+                const response = await getMunicipios(selectedUf.codIBGE);
+                setMunicipios(response.data || []);
+            } catch (error) {
+                console.error('Erro ao buscar municípios:', error);
+                setMunicipios([]);
             }
+        } else {
+            setMunicipios([]); // Limpa os municipios caso nenhuma UF seja selecionada
+            setSelectedUfCodIBGE(null);
+            setUF('');
+            setUfId('');
         }
     };
 
     const handleMunicipioChange = (e) => {
-        //setMunicipio(e.target.value);
-        const selectedMunicipio = municipios.find(mun => mun.nome == e.target.value);
+        const selectedMunicipio = municipios.find(mun => mun.nome === e.target.value);
         if (selectedMunicipio) {
             setMunicipio(selectedMunicipio.nome);
-            setSelectedMunicipioCodIBGE(selectedMunicipio.codMunIBGE); // Armazena o codIBGE do município
-            console.log('Código IBGE do município: ' + selectedMunicipio.codMunIBGE);
+            setSelectedMunicipioCodIBGE(selectedMunicipio.codMunIBGE);
         }
     };
 
@@ -145,7 +176,6 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
             return; // Parar a submissão se a validação falhar
         }
         // Se as validações passarem, continue com a submissão
-        console.log('Select mun. ibge: ' + selectedMunicipioCodIBGE);
         onSubmit({
             fornecedorId,
             nNF,
@@ -168,22 +198,22 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
-    
+
     return (
         <div className="modal-overlay">
-            <div className="modal-cadastra-nf">
+            <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <>{!isEdit ? <h2>Cadastro de Nota Fiscal</h2>:<h2>Cadastro de Nota Fiscal - Edição</h2>}
+                <>{!isEdit ? <h2>Cadastro de Nota Fiscal</h2> : <h2>Cadastro de Nota Fiscal - Edição</h2>}
                 </>
                 <form onSubmit={handleSubmit}>
-                    <div id='cadastro-nf'>
+                    <div id='cadastro-padrão'>
                         <input type="hidden" name="fornecedorId" value={fornecedorId} />
                         <input type="hidden" name="ufId" value={ufId} />
                         <div className="input-group">
                             <div id='pesquisa_fornecedor'>
                                 <label htmlFor="fornecedor">Fornecedor</label>
                                 <input
-                                    className='input-cadastra-nf'
+                                    className='input-geral'
                                     type="text"
                                     id="fornecedor"
                                     name="fornecedor"
@@ -192,24 +222,26 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                                     required
                                     disabled={isReadOnly}
                                 />
-                                <button className="button" type="button" onClick={openPesquisaModal} disabled={isReadOnly}
-                                >
-                                    Pesquisar Fornecedor
-                                </button>
+                                <div id='button-group'>
+                                    <button className="button" type="button" onClick={openPesquisaModal} disabled={isReadOnly}>
+                                        Pesquisar Fornecedor
+                                    </button>
+                                </div>
+
                             </div>
                         </div>
-                        <div id='itens-nota-fiscal'>
+                        <div >
                             {[
                                 { label: 'Número', id: 'nNF', value: nNF, setter: setNNF },
                                 { label: 'Série', id: 'serie', value: serie, setter: setSerie },
-                                { label: 'Valor Nota Fiscal', id: 'vNF', value: vNF.replace(',','.'), setter: setvNF },
+                                { label: 'Valor Nota Fiscal', id: 'vNF', value: vNF.replace(',', '.'), setter: setvNF },
                                 { label: 'cNF', id: 'cNF', value: cNF, setter: setCNF },
                                 { label: 'tpNF', id: 'tpNF', value: tpNF, setter: setTPNF },
                             ].map(({ label, id, value, setter }) => (
                                 <div key={id}>
                                     <label htmlFor={id}>{label}</label>
                                     <input
-                                        className='input-cadastra-nf'
+                                        className='input-geral'
                                         type="text"
                                         id={id}
                                         name={id}
@@ -223,7 +255,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                             <div>
                                 <label htmlFor="uf">Estado/UF</label>
                                 <select
-                                    className='input-cadastra-nf'
+                                    className='input-geral'
                                     id="uf"
                                     name="uf"
                                     value={uf}
@@ -232,29 +264,19 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                                     disabled={isReadOnly}
                                 >
                                     <option value="">Selecione uma UF</option>
-                                    disabled={isReadOnly}
-                                    {ufs.length > 0 && !isReadOnly? (
+                                    {ufs.length > '0'&& (
                                         ufs.map((uf) => (
                                             <option key={uf.codIBGE} value={uf.sigla}>
                                                 {uf.nome}
                                             </option>
                                         ))
-                                    ) : (
-                                        <>
-                                            {notaFiscal && isReadOnly == true ? (
-                                                <option disabled key="readonly-uf" value={notaFiscal.sigla}>{notaFiscal.sigla}</option>
-                                            )
-                                            : (
-                                                <option disabled key="loading-ufs">Carregando UFs...</option>
-                                            )}
-                                        </>
                                     )}
                                 </select>
                             </div>
                             <div>
                                 <label htmlFor="municipio">Município</label>
                                 <select
-                                    className='input-cadastra-nf'
+                                    className='input-geral'
                                     id="municipio"
                                     name="municipio"
                                     value={municipio}
@@ -262,13 +284,14 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                                     required
                                     disabled={!municipios.length || isReadOnly}
                                 >
-                                    <option value="">Selecione um município</option>
+                                    <option key="default-municipio" value="">Selecione um município</option>
                                     {municipios.map((mun) => (
-                                        <option key={mun.codIBGE} value={mun.nome}>
+                                        <option key={mun.codMunIBGE} value={mun.nome}>
                                             {mun.nome}
                                         </option>
                                     ))}
                                 </select>
+
                             </div>
                             {[
                                 { label: 'Data de Emissão', id: 'dataEmissao', value: dataEmissao, setter: setDataEmissao, type: 'date' },
@@ -278,7 +301,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                                 <div key={id}>
                                     <label htmlFor={id}>{label}</label>
                                     <input
-                                        className='input-cadastra-nf'
+                                        className='input-geral'
                                         type={type}
                                         id={id}
                                         name={id}
@@ -290,8 +313,12 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal,isEdit, onUfCh
                                 </div>
                             ))}
                         </div>
-                        <button className='button' type="submit" disabled={isReadOnly}
-                        >Salvar</button>
+                        <div id='button-group'>
+                            <button className='button' type="submit" disabled={isReadOnly}>
+                                Salvar
+                            </button>
+                        </div>
+
                     </div>
                 </form>
             </div>

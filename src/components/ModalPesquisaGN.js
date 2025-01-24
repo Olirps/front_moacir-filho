@@ -9,7 +9,7 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
   const [cEAN, setcEAN] = useState(''); // Estado para filtro por CPF/CNPJ
   const [id, setId] = useState(''); // Estado para filtro por CPF/CNPJ
   const [nome, setNome] = useState(''); // Estado para filtro por nome
-  const [toastMessage, setToastMessage] = useState(''); // Estado para mensagem do Toast
+  const [toast, setToast] = useState({ message: '', type: '' });
 
 
 
@@ -17,17 +17,23 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
     handleClear()
   }, [isOpen]);
 
+  useEffect(() => {
+    if (toast.message) {
+      const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const fetchProdutos = async () => {
     try {
       const response = await getProdutos({ cEAN, nome, id });
-      setProdutos(response.data);
-
       if (response.data.length === 0) {
-        setToastMessage('Nenhum produto encontrado.');
+        setToast({ message: 'Produto não Localizado !', type: 'error' });
       }
+      setProdutos(response.data);
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
-      setToastMessage('Erro ao buscar produtos.');
+      setToast('Erro ao buscar produtos.');
     }
   };
 
@@ -38,7 +44,7 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setToastMessage(''); // Limpa o toast antes da busca
+    setToast(''); // Limpa o toast antes da busca
     fetchProdutos();
   };
 
@@ -60,7 +66,7 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
           <div>
             <label htmlFor="cEAN">Código de Barras</label>
             <input
-              className="input-pesquisa-produto"
+              className="input-geral"
               type="text"
               id="cEAN"
               value={cEAN}
@@ -71,7 +77,7 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
           <div>
             <label htmlFor="nome">Nome:</label>
             <input
-              className="input-pesquisa-produto"
+              className="input-geral"
               type="text"
               id="nome"
               value={nome}
@@ -82,7 +88,7 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
           <div>
             <label htmlFor="id">Código Produto:</label>
             <input
-              className="input-pesquisa-produto"
+              className="input-geral"
               type="text"
               id="id"
               value={id}
@@ -90,22 +96,23 @@ const ModalPesquisaGN = ({ isOpen, onClose, onSelectProduto }) => {
               placeholder="Digite código do produto"
             />
           </div>
-          <button className="button" onClick={handleSearch}>Buscar</button> {/* Botão para acionar a busca */}
+          <div id='button-group'>
+            <button className="button" onClick={handleSearch}>Buscar</button> {/* Botão para acionar a busca */}
+          </div>
         </div>
 
-        <ul className="produtos-list">
+        <ul className="list-resultado">
           {produtos.map((produto) => (
             <li
               key={produto.id}
-              className="produto-item"
+              className="list-resultado-item"
               onClick={() => handleSelectProduto(produto)}
             >
               {produto.id} - {produto.cEAN} - {produto.xProd}
             </li>
           ))}
         </ul>
-        {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage('')} />}
-
+        {toast.message && <Toast type={toast.type} message={toast.message} />}
       </div>
     </div>
   );

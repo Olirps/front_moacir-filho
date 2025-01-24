@@ -82,7 +82,6 @@ function Produtos() {
         };
 
         try {
-            console.log('Produtos Novo: '+JSON.stringify(newProduto));
             const newProd = await addProdutos(newProduto);
             setToast({ message: `Produto: ${newProd.data.id} - ${newProd.data.xProd}`, type: "success" });  
             const response = await getProdutos();
@@ -154,7 +153,7 @@ function Produtos() {
 
     return (
         <div id="produtos-container">
-            <h1 id="produtos-title">Consulta de Produtos/Serviços</h1>
+            <h1 className='title-page'>Consulta de Produtos/Serviços</h1>
             {loading ? (
                 <div className="spinner-container">
                     <div className="spinner"></div>
@@ -202,8 +201,8 @@ function Produtos() {
                     <div id="separator-bar"></div>
 
                     <div id="results-container">
-                        <div id="produtos-grid-container">
-                            <table id="produtos-grid">
+                        <div id="grid-padrao-container">
+                            <table id="grid-padrao">
                                 <thead>
                                     <tr>
                                         <th>ID</th>

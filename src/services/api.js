@@ -82,12 +82,16 @@ export const vinculoProdVeiculo = async (carro) => {
   return api.post('/vinculoprodveiculo', carro);
 };
 
+export const vinculoByProdutoId = async (veiculo_id) => {
+  return api.post(`/vinculoprodveiculo/produto/${veiculo_id}`);
+};
+
 export const getVinculosProdutoVeiculo = async () => {
   return api.get('/vinculoprodveiculo-lista');
 };
 
-export const obterVinculoPorProdutoId = async (produtoId) => {
-  return api.get(`/vinculoprodveiculo/produto/${produtoId}`);
+export const obterVinculoPorProdutoId = async (produtoId, notaFiscalId) => {
+  return api.get(`/vinculoprodveiculo/produto/${produtoId}/nota/${notaFiscalId}`);
 };
 
 
@@ -225,6 +229,6 @@ export const getMunicipiosIBGE = async (id, codMunIBGE) => {
   return api.get(`/municipios/mun/${id}`, codMunIBGE);
 };
 
-export const getUFIBGE = async (id, codIBGE) => {
-  return api.get(`/uf/uf/${id}`, codIBGE);
+export const getUFIBGE = async (codIBGE) => {
+  return api.get(`/uf/uf/${codIBGE}`);
 };

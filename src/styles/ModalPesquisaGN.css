@@ -8,27 +8,6 @@
     width: 100%;
     position: relative;
 }
-
-.produtos-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-    max-height: 200px; /* Limite de altura para a lista */
-    overflow-y: auto; /* Barra de rolagem quando a lista ultrapassa o limite */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .produto-item {
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .produto-item:hover {
-    background-color: #f0f0f0;
-  }
-
   
 .input-pesquisa-produto {
     padding: 6px; /* Diminuir o padding */

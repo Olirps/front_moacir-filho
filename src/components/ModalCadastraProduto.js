@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastraProduto.css';
 import Toast from '../components/Toast';
+import { addProdutos, updateNFe } from '../services/api';
 
-const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
+
+const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additionalFields = [] }) => {
   const [tipoProduto, setTipoProduto] = useState(
     produto?.tipo_produto === 'produto' || produto?.tipo_produto === 'servico'
       ? produto.tipo_produto
@@ -13,6 +15,12 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
   const [qtdMinima, setqtdMinima] = useState('');
   const [qCom, setqCom] = useState('');
   const [toast, setToast] = useState({ message: '', type: '' });
+  const [valor_unit, setUnit] = useState('');
+  const [produtos, setProdutos] = useState([]);
+  const [formData, setFormData] = React.useState({});
+
+
+
 
   useEffect(() => {
     if (produto) {
@@ -25,24 +33,80 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    onSubmit({
-      tipo: tipoProduto,
-      xProd,
-      ...(tipoProduto === 'produto' && { cEAN, qtdMinima, qCom }), // Só envia esses campos se for produto
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
     });
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Evita o comportamento padrão de recarregar a página
+
+    if (prod?.nNF) {
+      const nota_id = 0
+      const formData = new FormData(e.target);
+      const newProduto = {
+        tipoProduto:tipoProduto,
+        xProd: formData.get('xProd'),
+        cEAN: formData.get('cEAN'),
+        qtdMinima: formData.get('qtdMinima'),
+        qCom: formData.get('qCom'),
+        vUnCom: formData.get('valor_unit'),           //valor_unit: formData.get('valor_unit'),  ajustado para tratar produtos cadastrados manual na nf 24/09/2024
+        nota_id: prod?.id
+      };
+
+      // Adiciona os campos adicionais
+      additionalFields.forEach((field) => {
+        newProduto[field.name] = formData.get(field.name);
+      });
+
+      handleaddProdutos(newProduto); // Chama a função handleaddProdutos se prod.nNF não for nulo
+    } else {
+      const dados = {
+        tipo: tipoProduto,
+        xProd,
+        ...(tipoProduto === 'produto' && { cEAN, qtdMinima, qCom }),
+      };
+      onSubmit({
+        tipoProduto,
+        xProd,
+        cEAN,
+        qtdMinima,
+        qCom,
+        valor_unit
+      });// Continua com o comportamento original se prod.nNF for nulo
+    }
+  };
+
+  const handleaddProdutos = async (new_produto) => {
+    try {
+      const response = await addProdutos(new_produto);
+      await updateNFe(prod.id, { status: 'andamento' });
+
+      setProdutos(response.data);
+      setToast({ message: "Produto cadastrado com sucesso!", type: "success" });
+      onClose(); // Usando o onClose passado como prop para fechar o modal
+      onSubmit();
+    } catch (err) {
+
+      const errorMessage = err.response.data.erro;
+      setToast({ message: errorMessage, type: "error" });
+
+    }
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content-cad-prod">
+      <div className="modal-content">
         <button className="modal-close" onClick={onClose}>X</button>
-        <h2>{produto ? 'Editar Cadastro de' : 'Cadastro de'} {tipoProduto === 'produto' ? 'Produtos' : 'Serviços'} {prod?.nNF ? ` - Nota Fiscal Nº ${prod.nNF}` : ''}</h2>
+        <h2>
+          {produto ? 'Editar ' : 'Cadastro de'} {tipoProduto === 'produto' ? 'Produto' : 'Serviços'}{' '}
+          {prod?.nNF ? ` - Nota Fiscal Nº ${prod.nNF}` : ''}
+        </h2>
 
         <form onSubmit={handleSubmit}>
-          {/* Radio Button para escolher Produto ou Serviço */}
           <div className="radio-group">
             <label>
               <input
@@ -66,7 +130,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
             </label>
           </div>
 
-          <div id="cadastro-produto">
+          <div id="cadastro-padrao">
             <div>
               <label htmlFor="xProd">Nome</label>
               <input
@@ -81,7 +145,6 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
               />
             </div>
 
-            {/* Apenas exibe os campos abaixo se for um Produto */}
             {tipoProduto === 'produto' && (
               <>
                 <div>
@@ -122,6 +185,16 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
                 </div>
               </>
             )}
+            {prod && additionalFields.map((field, index) => (
+              <input
+                className='input-geral'
+                key={index}
+                type={field.type}
+                name={field.name}
+                placeholder={field.placeholder}
+                onChange={handleInputChange}
+              />
+            ))}
           </div>
 
           <div id="botao-salva">
@@ -129,6 +202,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod }) => {
           </div>
         </form>
       </div>
+
       {toast.message && <Toast type={toast.type} message={toast.message} onClose={() => setToast({ message: '', type: '' })} />}
     </div>
   );

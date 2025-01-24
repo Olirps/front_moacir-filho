@@ -20,4 +20,18 @@ function formatarDataResumida(dataString) {
     return `${dia}/${mes}/${ano}`;
 }
 
-module.exports = {converterData,formatarDataResumida};
+function formatPlaca(placa) {
+    // Remove todos os caracteres não numéricos ou letras
+    const placaLimpa = placa.replace(/[^A-Za-z0-9]/g,'');
+    // Adiciona a máscara de placa '000-0000' (com 7 caracteres no total)
+    if (placaLimpa.length <= 3) {
+      return placaLimpa.toUpperCase();
+    } else if (placaLimpa.length <= 6) {
+      return placaLimpa.substring(0, 3) + '-' + placaLimpa.substring(3, 6).toUpperCase();
+    } else {
+      return placaLimpa.substring(0, 3) + '-' + placaLimpa.substring(3, 7).toUpperCase();
+    }
+  };
+  
+
+module.exports = {converterData,formatarDataResumida,formatPlaca};

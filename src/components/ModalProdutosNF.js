@@ -3,7 +3,7 @@ import '../styles/ModalProdutosNF.css';
 import ModalTratarProdutosNF from '../components/ModalTratarProdutosNF';
 import ModalDetalhesProdutosNF from '../components/ModalDetalhesProdutosNF';
 import Toast from '../components/Toast';
-import { getNFeById, getProdutoNFById,getQuantidadeRestanteProdutoNF, updateNFe, vinculaProdutoNF, desvinculaProdutoNF } from '../services/api';
+import { getNFeById, getProdutoNFById, getQuantidadeRestanteProdutoNF, updateNFe, vinculaProdutoNF, desvinculaProdutoNF,obterVinculoPorProdutoId } from '../services/api';
 import ModalCadastraProduto from '../components/ModalCadastraProduto';
 import lixeiraIcon from '../img/lixeira.png';
 import ConfirmDialog from '../components/ConfirmDialog'; // Importe o ConfirmDialog
@@ -115,7 +115,17 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
     }
   }, [toast]);
 
-  const handleVinculoSuccess = (message) => {
+  const handleVinculoSuccess = (e) => {
+
+    const newProduto = {
+      xProd: e.xProd,
+      cEAN: e.cEAN,
+      qtdMinima: e.qtdMinima,
+      qCom: e.qCom,
+      valor_unit: e.valor_unit,
+      tipoProduto: e.tipo
+    };
+
     //setToast({ message, type: "success" });
     setToast({ message: 'Produto Adicionada na Nota Fiscal', type: "success" });
 
@@ -167,15 +177,20 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   const additionalFields = [
+    { name: 'qCom', type: 'text', placeholder: 'Quantidade' },
     { name: 'valor_unit', type: 'text', placeholder: 'Valor do Unitário' },
   ];
 
   const handleFecharNF = async (nfe) => {
     try {
       const status = { status: 'fechada' }
-      await updateNFe(nfe.id, status);
-      handleFechadoSuccess(nfe)
-      await fetchNFeStatus(nfe.id); // Atualiza o status da NF no estado local
+      if (window.confirm('Deseja realmente fechar a nota fiscal?')) {
+        await updateNFe(nfe.id, status);
+        handleFechadoSuccess(nfe);
+        await fetchNFeStatus(nfe.id); // Atualiza o status da NF no estado local
+      } else {
+        setToast({ message: "Nota Fiscal não foi fechada", type: "error" });
+      }
     } catch (err) {
       console.error('Erro ao fechar a nota fiscal', err);
       setToast({ message: "Erro ao fechar a nota fiscal.", type: "error" });
@@ -191,6 +206,13 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
     try {
       if (produtoToDelete) {
         // Atualize o status do produto para 'desabilitado' ou 'inativo' (exemplo: status: false)
+        const retornaVinculo = await obterVinculoPorProdutoId(produtoToDelete.id,produtoToDelete.nota_id)
+        if(retornaVinculo.data.length >0){
+            setToast({ message: 'Não é possível excluir o produto pois ele possui vínculos.', type: 'error' });
+            setIsConfirmDialogOpen(false);
+            setProdutoToDelete(null);
+            return;
+        }
         const updateData = { nota_id: prod.id, status: 1, id: produtoToDelete.idx }; // ou 'false', dependendo de como está modelado no backend
         await desvinculaProdutoNF(produtoToDelete.id, updateData);
 
@@ -201,6 +223,7 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
           prod.id === produtoToDelete.id ? { ...prod, status: 1 } : prod
         );
         setProdutos(updatedProducts);
+        fetchProdutosNF(produtoToDelete.nota_id)
       }
     } catch (error) {
       console.error('Erro ao desabilitar o produto', error);
@@ -270,9 +293,6 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
         setToast({ message: errorMessage, type: "error" });
 
       }
-
-      /*const errorMessage = err.response?.data?.error || err.message || "Erro ao atualizar produto.";
-      setToast({ message: errorMessage, type: "error" });*/
     }
   };
 
@@ -283,8 +303,8 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
   const hasProdutos = produtos.length > 0;
 
   return (
-    <div id='results-container-nf' className="modal-overlay">
-      <div className="modal-content-nf">
+    <div className="modal-overlay">
+      <div className="modal-content">
         <button className="modal-close" onClick={onClose}>X</button>
         <h2>Produtos da Nota Fiscal {prod?.nNF ? ` - Nº ${prod.nNF}` : ''}</h2>
 
@@ -295,10 +315,30 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
         ) : (
           <>
             {canCadastrarProdutos && !isNFClosed && (
-              <div id='lancto-prod-nf'>
-                <div id='vincula-prod'>
-                  <label className='label-prod'>{produto ? produto : 'Produto a Ser Adicionado'}</label>
+              <div id='cadastro-padrão'>
+                <div id='button-group'>
+                  <button className='button' onClick={() => handleCadastraProdClick(prod)}>Cadastrar Produtos</button>
+                  {hasProdutos && !isNFClosed && (
+                    <button className='button' onClick={() => handleFecharNF(prod)} disabled={isNFClosed}>
+                      Fechar NF
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="produto">Produto</label>
                   <input
+                    className='input-geral'
+                    id='produto'
+                    type="text"
+                    value={produto ? produto : 'Produto a Ser Adicionado'} // Substitui vírgula por ponto
+                    required
+                    disabled
+                  />
+                </div>
+                <div>
+                  <label htmlFor="quantidade">Quantidade</label>
+                  <input
+                    className='input-geral'
                     id='quantidade'
                     type="text"
                     value={quantidade.replace(',', '.')} // Substitui vírgula por ponto
@@ -307,7 +347,11 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                     required
                     aria-required="true" // Para acessibilidade
                   />
+                </div>
+                <div>
+                  <label htmlFor="valor_unit">Valor Unitário</label>
                   <input
+                    className='input-geral'
                     id='valor_unit'
                     type="text"
                     value={valor_unit.replace(',', '.')}
@@ -316,21 +360,13 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
                     required
                     aria-required="true" // Para acessibilidade
                   />
-                  {formError && <div className='error-message'>O campo quantidade é obrigatório.</div>}
-
-                  <div className='button-lancto-prod'>
-                    <button className="button" onClick={openPesquisaGNModal}>Pesquisar Produto</button>
-                    <button className="button" onClick={handleVincular}>Inserir</button>
-                  </div>
                 </div>
 
-                <div>
-                  <button className="button-cad" onClick={() => handleCadastraProdClick(prod)}>Cadastrar Produtos</button>
-                  {hasProdutos && !isNFClosed && (
-                    <button className="button-fec close-nf-button" onClick={() => handleFecharNF(prod)} disabled={isNFClosed}>
-                      Fechar NF
-                    </button>
-                  )}
+                {formError && <div className='error-message'>O campo quantidade é obrigatório.</div>}
+
+                <div id='button-group'>
+                  <button className="button" onClick={openPesquisaGNModal}>Pesquisar Produto</button>
+                  <button className="button" onClick={handleVincular}>Inserir</button>
                 </div>
               </div>
             )}
@@ -341,63 +377,67 @@ const ModalProdutosNF = ({ isOpen, onClose, prod, onVinculoSuccess }) => {
 
             {hasProdutos && (
               <>
-                <table id='produtos-grid'>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Descrição</th>
-                      <th>Quantidade</th>
-                      <th>Valor Unitário</th>
-                      <th>Ação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentProducts.map((produto, index) => (
-                      <tr
-                        key={`${produto.id}-${index}`}
-                        className={produto.identificador == 0 ? 'highlight-red' : produto.status == 1 ? 'disabled-row' : ''}
-                      >
-                        <td>{produto.id}</td>
-                        <td className="descricao-col">{produto.descricao}</td>
-                        <td>{produto.quantidade}</td>
-                        <td>{produto.valor_unit}</td>
-                        <td>
-                          <div id="acao_prod" className="acao-prod-container">
-                            <button
-                              className="edit-button-prod-nf acao_prod"
-                              onClick={() => handleActionClick(produto)}
-                              disabled={produto.status == 1} // Desabilitar botão se o produto estiver inativo
-                            >
-                              {produto.identificador == 0 ? 'Tratar' : 'Detalhes'}
-                            </button>
+                <div id="results-container">
+                  <div id="grid-padrao-container">
+                    <table id='grid-padrao'>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Descrição</th>
+                          <th>Quantidade</th>
+                          <th>Valor Unitário</th>
+                          <th>Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentProducts.map((produto, index) => (
+                          <tr
+                            key={`${produto.id}-${index}`}
+                            className={produto.identificador == 0 ? 'highlight-red' : produto.status == 1 ? 'disabled-row' : ''}
+                          >
+                            <td>{produto.id}</td>
+                            <td className="descricao-col">{produto.descricao}</td>
+                            <td>{parseFloat(produto.quantidade).toFixed(3)}</td>
+                            <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.valor_unit)}</td>
+                            <td>
+                              <div id="button-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <button
+                                  className="button-detalhes"
+                                  onClick={() => handleActionClick(produto)}
+                                  disabled={produto.status == 1} // Desabilitar botão se o produto estiver inativo
+                                >
+                                  {produto.identificador == 0 ? 'Tratar' : 'Detalhes'}
+                                </button>
+                                {/* Novo botão Vincular Veículo */}
+                                {produto.identificador == 1 && (
+                                  <div id='button-group'>
+                                    <button
+                                      className="button"
+                                      onClick={() => handleVincularVeiculo(produto)}
+                                      disabled={produto.status == 1} // Desabilitar botão se o produto estiver inativo
+                                    >
+                                      Vincular Veículo
+                                    </button>
+                                  </div>
+                                )}
+                                {produto.identificador == 1 && produto.status !== 1 && prod.lancto !== 'automatico' && !isNFClosed && (
+                                  <img
+                                    src={lixeiraIcon}
+                                    alt="Excluir"
+                                    className="lixeira-icon"
+                                    onClick={() => handleExcluirProdNf(produto)}
+                                    style={{ cursor: 'pointer', width: '20px', height: '20px' }}
+                                    />
+                                )}
+                              </div>
+                            </td>
 
-                            {produto.identificador == 1 && produto.status !== 1 && prod.lancto !== 'automatico' && !isNFClosed && (
-                              <img
-                                src={lixeiraIcon}
-                                alt="Excluir"
-                                className="lixeira-icon acao_prod"
-                                onClick={() => handleExcluirProdNf(produto)}
-                                style={{ cursor: 'pointer', width: '20px', height: '20px' }}
-                              />
-                            )}
-
-                            {/* Novo botão Vincular Veículo */}
-                            {produto.identificador == 1 && (
-                              <button
-                                className="vincular-veiculo-button acao_prod"
-                                onClick={() => handleVincularVeiculo(produto)}
-                                disabled={produto.status == 1} // Desabilitar botão se o produto estiver inativo
-                              >
-                                Vincular Veículo
-                              </button>)}
-                          </div>
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
                 <div className="pagination">
                   {pageNumbers.map((number) => (
                     <button

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getVeiculos, addVeiculos, updateVeiculos, getVeiculosById, getMarcas } from '../services/api';
+import { formatPlaca } from '../utils/functions' ;
+
 import '../styles/Veiculos.css';
 import Modal from '../components/ModalCadastroCarro';
 import Toast from '../components/Toast';
+
 
 function Veiculos() {
   const [carros, setCarros] = useState([]);
@@ -50,7 +53,7 @@ function Veiculos() {
     const lowerPlaca = placa.toLowerCase();
     const results = carros.filter(carro =>
       (lowerModelo ? carro.modelo.toLowerCase().includes(lowerModelo) : true) &&
-      (lowerPlaca ? carro.placa.toLowerCase().includes(lowerPlaca) : true) &&
+      (lowerPlaca ? carro.placa?.toLowerCase().includes(lowerPlaca) : true) &&
       (marcaId ? carro.marcaId == marcaId : true)
     );
 
@@ -97,7 +100,6 @@ function Veiculos() {
 
   const handleEditClick = async (carro) => {
     try {
-      console.log('Entrou no EditClick', carro);
       const response = await getVeiculosById(carro.id);
       setSelectedCarro(response.data);
       setIsEdit(true);
@@ -116,10 +118,11 @@ function Veiculos() {
       placa: formData.get('placa'),
       quilometragem: formData.get('quilometragem'),
       marcaId: formData.get('marcaId'),
+      tipoveiculoId: formData.get('tipoVeiculoId')
     };
 
     try {
-      await addVeiculos(selectedCarro.id, updatedCarro);
+      await updateVeiculos(selectedCarro.id, updatedCarro);
       setToast({ message: "Veículo atualizado com sucesso!", type: "success" });
       setIsModalOpen(false);
       setSelectedCarro(null);
@@ -158,18 +161,18 @@ function Veiculos() {
 
   return (
     <div id="carro-container">
-      <h1 id="carro-title">Consulta de Veículos</h1>
+      <h1 className='title-page'>Consulta de Veículos</h1>
       {loading ? (
         <div className="spinner-container">
           <div className="spinner"></div>
         </div>) : (
         <>
-          <div id="search-veiculos-container">
-            <div id="search-veiculos-fields">
+          <div id="search-container">
+            <div id="search-fields">
               <div>
                 <label htmlFor="modelo">Modelo</label>
                 <input
-                className='input-veiculos-geral'
+                className='input-geral'
                   type="text"
                   id="modelo"
                   value={modelo}
@@ -177,13 +180,13 @@ function Veiculos() {
                   maxLength="150"
                 />
               </div>
-              <div className="input-veiculos-group">
+              <div>
                 <label htmlFor="placa">Placa</label>
                 <input
-                className='input-veiculos-geral'
+                className='input-geral'
                   type="text"
                   id="placa"
-                  value={placa}
+                  value={formatPlaca(placa)}
                   onChange={(e) => setPlaca(e.target.value)}
                   maxLength="7"
                 />
@@ -221,8 +224,8 @@ function Veiculos() {
           <div id="separator-bar"></div>
 
           <div id="results-container">
-            <div id="carro-grid-container">
-              <table id="carro-grid">
+            <div id="grid-padrao-container">
+              <table id="grid-padrao">
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -247,12 +250,6 @@ function Veiculos() {
                           <button
                             onClick={() => handleEditClick(carro)}
                             className="edit-button"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() =>alert('Deseja realmente excluir?')}
-                            className="lancto-button"
                           >
                             Editar
                           </button>
