@@ -1,61 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { getFornecedores, addFornecedor, updateFornecedor, getFornecedorById } from '../services/api';
-import '../styles/Fornecedores.css';
-import Modal from '../components/ModalCadastroFornecedor';
+import { getClientes, addCliente, updateCliente, getClienteById } from '../services/api';
+import '../styles/Clientes.css';
+import ModalCliente from '../components/ModalCadastraCliente';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import Toast from '../components/Toast';
-import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
-function Fornecedores() {
-  const [fornecedores, setFornecedores] = useState([]);
-  const [filteredFornecedores, setFilteredFornecedores] = useState([]);
+function Clientes() {
+  const [clientes, setClientes] = useState([]);
+  const [filteredClientes, setFilteredClientes] = useState([]);
   const [nome, setNome] = useState('');
-  const [fornecedorContato, setfornecedorContato] = useState('');
+  const [nomeFantasia, setNomeFantasia] = useState('');
   const [cpfCnpj, setCpf] = useState('');
   const [loading, setLoading] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
-  const [selectedFornecedor, setSelectedFornecedor] = useState(null);
+  const [selectedCliente, setSelectedCliente] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
-  const { permissions } = useAuth();
-
 
   useEffect(() => {
-    const fetchFornecedores = async () => {
+    const fetchClientes = async () => {
       try {
-        const response = await getFornecedores();
-        setFornecedores(response.data);
-        setFilteredFornecedores(response.data);
+        const response = await getClientes();
+        setClientes(response.data);
+        setFilteredClientes(response.data);
       } catch (err) {
-        console.error('Erro ao buscar fornecedores', err);
+        console.error('Erro ao buscar clientes', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFornecedores();
+    fetchClientes();
   }, []);
 
   const handleSearch = () => {
     const lowerNome = nome.toLowerCase();
+    const lowerNomeFantasia = nomeFantasia.toLowerCase();
     let lowerCpf = cpfCnpj.toLowerCase();
     lowerCpf = removeMaks(lowerCpf);
-    const results = fornecedores.filter(fornecedor =>
-      (lowerNome ? fornecedor.nome.toLowerCase().includes(lowerNome) : true) &&
-      (lowerCpf ? fornecedor.cpfCnpj.toLowerCase().includes(lowerCpf) : true)
+    const results = clientes.filter(cliente =>
+      (lowerNome ? cliente.nome.toLowerCase().includes(lowerNome) : true) &&
+      (lowerNomeFantasia ? cliente.nomeFantasia.toLowerCase().includes(lowerNomeFantasia) : true) &&
+      (lowerCpf ? cliente.cpfCnpj.toLowerCase().includes(lowerCpf) : true)
     );
 
-    setFilteredFornecedores(results);
+    setFilteredClientes(results);
     setCurrentPage(1); // Resetar para a primeira página após a busca
   };
 
   const handleClear = () => {
     setNome('');
+    setNomeFantasia('');
     setCpf('');
-    setFilteredFornecedores(fornecedores);
+    setFilteredClientes(clientes);
     setCurrentPage(1); // Resetar para a primeira página ao limpar a busca
   };
 
@@ -69,99 +68,76 @@ function Fornecedores() {
     setCpf(cpfCnpjMask(value));
   };
 
-  const handleOpenModal = () => {
-    if (!hasPermission(permissions, 'fornecedores', 'insert')) {
-      setToast({ message: "Você não tem permissão para cadastrar fornecedores.", type: "error" });
-      return; // Impede a abertura do modal
-    }
-    setIsModalOpen(true);
-    setIsEdit(false);
-    setSelectedFornecedor(null);
-  };
-
-  const handleAddFornecedor = async (e) => {
+  const handleAddCliente = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const newFornecedor = {
-      tipo_fornecedor: formData.get('tipofornecedor'),
+    const newCliente = {
       nome: formData.get('nome'),
       nomeFantasia: formData.get('nomeFantasia'),
-      fornecedor_contato: formData.get('fornecedorContato'),
       cpfCnpj: formData.get('cpfCnpj'),
-      inscricaoestadual: formData.get('inscricaoestadual'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
       logradouro: formData.get('logradouro'),
       numero: formData.get('numero'),
       bairro: formData.get('bairro'),
-      municipio: formData.get('municipio'),
-      uf: formData.get('uf'),
-      cep: formData.get('cep').replace(/\D/g, '')
+      municipio_id: formData.get('municipio'),
+      uf_id: formData.get('uf'),
+      cep: formData.get('cep').replace(/\D/g, ''),
     };
 
     try {
-      await addFornecedor(newFornecedor);
-      setToast({ message: "Fornecedor cadastrado com sucesso!", type: "success" });
+      await addCliente(newCliente);
+      setToast({ message: "Cliente cadastrado com sucesso!", type: "success" });
       setIsModalOpen(false);
-      const response = await getFornecedores();
-      setFornecedores(response.data);
-      setFilteredFornecedores(response.data);
+      const response = await getClientes();
+      setClientes(response.data);
+      setFilteredClientes(response.data);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || "Erro ao cadastrar fornecedor.";
+      const errorMessage = err.response?.data?.error || "Erro ao cadastrar cliente.";
       setToast({ message: errorMessage, type: "error" });
     }
   };
 
-  const handleEditClick = async (fornecedor) => {
+  const handleEditClick = async (cliente) => {
     try {
-      if (!hasPermission(permissions, 'fornecedores', 'edit')) {
-        setToast({ message: "Você não tem permissão para editar fornecedores.", type: "error" });
-        return; // Impede a abertura do modal
-      }
-      setIsModalOpen(true);
-      setIsEdit(false);
-      setSelectedFornecedor(null);
-      const response = await getFornecedorById(fornecedor.id);
-      setSelectedFornecedor(response.data);
+      const response = await getClienteById(cliente.id);
+      setSelectedCliente(response.data);
       setIsEdit(true);
       setIsModalOpen(true);
     } catch (err) {
-      console.error('Erro ao buscar detalhes do fornecedor', err);
-      setToast({ message: "Erro ao buscar detalhes do fornecedor.", type: "error" });
+      console.error('Erro ao buscar detalhes do cliente', err);
+      setToast({ message: "Erro ao buscar detalhes do cliente.", type: "error" });
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const updatedFornecedor = {
-      tipo_fornecedor: formData.get('tipofornecedor'),
+    const updatedCliente = {
       nome: formData.get('nome'),
       nomeFantasia: formData.get('nomeFantasia'),
       cpfCnpj: formData.get('cpfCnpj'),
-      inscricaoestadual: formData.get('inscricaoestadual'),
-      fornecedor_contato: formData.get('fornecedorContato'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
       logradouro: formData.get('logradouro'),
       numero: formData.get('numero'),
       bairro: formData.get('bairro'),
-      municipio: formData.get('municipio'),
-      uf: formData.get('uf'),
+      municipio_id: formData.get('municipio'),
+      uf_id: formData.get('uf'),
       cep: formData.get('cep').replace(/\D/g, '')
     };
 
     try {
-      await updateFornecedor(selectedFornecedor.id, updatedFornecedor);
-      setToast({ message: "Fornecedor atualizado com sucesso!", type: "success" });
+      await updateCliente(selectedCliente.id, updatedCliente);
+      setToast({ message: "Cliente atualizado com sucesso!", type: "success" });
       setIsModalOpen(false);
-      setSelectedFornecedor(null);
+      setSelectedCliente(null);
       setIsEdit(false);
-      const response = await getFornecedores();
-      setFornecedores(response.data);
-      setFilteredFornecedores(response.data);
+      const response = await getClientes();
+      setClientes(response.data);
+      setFilteredClientes(response.data);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || "Erro ao atualizar fornecedor.";
+      const errorMessage = err.response?.data?.error || "Erro ao atualizar cliente.";
       setToast({ message: errorMessage, type: "error" });
     }
   };
@@ -173,9 +149,9 @@ function Fornecedores() {
     }
   }, [toast]);
 
-  const totalPages = Math.ceil(filteredFornecedores.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredClientes.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const currentFornecedores = filteredFornecedores.slice(startIndex, startIndex + rowsPerPage);
+  const currentClientes = filteredClientes.slice(startIndex, startIndex + rowsPerPage);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -190,8 +166,8 @@ function Fornecedores() {
   };
 
   return (
-    <div id="fornecedores-container">
-      <h1 className='title-page'>Consulta de Fornecedores</h1>
+    <div id="clientes-container">
+      <h1 className="title-page">Consulta de Clientes</h1>
       {loading ? (
         <div className="spinner-container">
           <div className="spinner"></div>
@@ -206,6 +182,14 @@ function Fornecedores() {
                   id="nome"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
+                  maxLength="150"
+                />
+                <label htmlFor="nomeFantasia">Nome Fantasia</label>
+                <input className="input-geral"
+                  type="text"
+                  id="nomeFantasia"
+                  value={nomeFantasia}
+                  onChange={(e) => setNomeFantasia(e.target.value)}
                   maxLength="150"
                 />
               </div>
@@ -224,7 +208,11 @@ function Fornecedores() {
               <div id="button-group">
                 <button onClick={handleSearch} className="button">Pesquisar</button>
                 <button onClick={handleClear} className="button">Limpar</button>
-                <button onClick={handleOpenModal} className="button">Cadastrar</button>
+                <button onClick={() => {
+                  setIsModalOpen(true);
+                  setIsEdit(false);
+                  setSelectedCliente(null);
+                }} className="button">Cadastrar</button>
               </div>
             </div>
           </div>
@@ -238,25 +226,23 @@ function Fornecedores() {
                   <tr>
                     <th>ID</th>
                     <th>Nome</th>
-                    <th>Contato</th>
                     <th>CPF/CNPJ</th>
                     <th>Email</th>
-                    <th>Data Criação</th>
+                    <th>Celular</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentFornecedores.map((fornecedor) => (
-                    <tr key={fornecedor.id}>
-                      <td>{fornecedor.id}</td>
-                      <td>{fornecedor.nome}</td>
-                      <td>{fornecedor.fornecedor_contato}</td>
-                      <td>{cpfCnpjMask(fornecedor.cpfCnpj)}</td>
-                      <td>{fornecedor.email}</td>
-                      <td>{new Date(fornecedor.createdAt).toLocaleDateString('pt-BR')}</td>
+                  {currentClientes.map((cliente) => (
+                    <tr key={cliente.id}>
+                      <td>{cliente.id}</td>
+                      <td>{cliente.nome}</td>
+                      <td>{cpfCnpjMask(cliente.cpfCnpj)}</td>
+                      <td>{cliente.email}</td>
+                      <td>{cliente.celular}</td>
                       <td>
                         <button
-                          onClick={() => handleEditClick(fornecedor)}
+                          onClick={() => handleEditClick(cliente)}
                           className="edit-button"
                         >
                           Editar
@@ -293,16 +279,16 @@ function Fornecedores() {
 
       {toast.message && <Toast type={toast.type} message={toast.message} />}
       {isModalOpen && (
-        <Modal
+        <ModalCliente
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={isEdit ? handleEditSubmit : handleAddFornecedor}
-          fornecedor={selectedFornecedor}
-          isEdit={isEdit}
+          onSubmit={isEdit ? handleEditSubmit : handleAddCliente}
+          cliente={selectedCliente}
+          edit={isEdit}
         />
       )}
     </div>
   );
 }
 
-export default Fornecedores;
+export default Clientes;

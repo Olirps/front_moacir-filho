@@ -1,0 +1,172 @@
+import React, { useState, useEffect } from 'react';
+import { getFuncionarios, addFuncionario, updateFuncionario, getFuncionarioById } from '../services/api';
+import '../styles/Funcionarios.css';
+import ModalFuncionario from '../components/ModalCadastraFuncionario';
+import { cpfCnpjMask, removeMaks } from '../components/utils';
+import Toast from '../components/Toast';
+
+function Funcionarios() {
+  const [funcionarios, setFuncionarios] = useState([]);
+  const [filteredFuncionarios, setFilteredFuncionarios] = useState([]);
+  const [nome, setNome] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState({ message: '', type: '' });
+  const [selectedFuncionario, setSelectedFuncionario] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
+
+  useEffect(() => {
+    const fetchFuncionarios = async () => {
+      try {
+        const response = await getFuncionarios();
+        setFuncionarios(response.data);
+        setFilteredFuncionarios(response.data);
+      } catch (err) {
+        console.error('Erro ao buscar funcionários', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFuncionarios();
+  }, []);
+
+  const handleSearch = () => {
+    const lowerNome = nome.toLowerCase();
+    let lowerCpf = cpf.toLowerCase();
+    lowerCpf = removeMaks(lowerCpf);
+    const results = funcionarios.filter(funcionario =>
+      (lowerNome ? funcionario.nome.toLowerCase().includes(lowerNome) : true) &&
+      (lowerCpf ? funcionario.cpf.toLowerCase().includes(lowerCpf) : true)
+    );
+
+    setFilteredFuncionarios(results);
+    setCurrentPage(1);
+  };
+
+  const handleClear = () => {
+    setNome('');
+    setCpf('');
+    setFilteredFuncionarios(funcionarios);
+    setCurrentPage(1);
+  };
+
+  const handleCpfChange = (e) => {
+    setCpf(cpfCnpjMask(e.target.value));
+  };
+
+  const handleAddFuncionario = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newFuncionario = {
+      nome: formData.get('nome'),
+      cpf: formData.get('cpf'),
+      email: formData.get('email'),
+      celular: formData.get('celular').replace(/\D/g, ''),
+      cargo: formData.get('cargo')
+    };
+
+    try {
+      await addFuncionario(newFuncionario);
+      setToast({ message: "Funcionário cadastrado com sucesso!", type: "success" });
+      setIsModalOpen(false);
+      const response = await getFuncionarios();
+      setFuncionarios(response.data);
+      setFilteredFuncionarios(response.data);
+    } catch (err) {
+      setToast({ message: "Erro ao cadastrar funcionário.", type: "error" });
+    }
+  };
+
+  const handleEditClick = async (funcionario) => {
+    try {
+      const response = await getFuncionarioById(funcionario.id);
+      setSelectedFuncionario(response.data);
+      setIsEdit(true);
+      setIsModalOpen(true);
+    } catch (err) {
+      setToast({ message: "Erro ao buscar detalhes do funcionário.", type: "error" });
+    }
+  };
+
+  useEffect(() => {
+    if (toast.message) {
+      const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  return (
+    <div id="funcionarios-container">
+      <h1 className="title-page">Consulta de Funcionários</h1>
+      {loading ? (
+        <div className="spinner-container">
+          <div className="spinner"></div>
+        </div>
+      ) : (
+        <>
+          <div id="search-container">
+            <label>Nome</label>
+            <input type="text" value={nome} className="input-geral" onChange={(e) => setNome(e.target.value)} />
+            <label>CPF</label>
+            <input type="text" value={cpf} className="input-geral" onChange={handleCpfChange} />
+            <div id="button-group">
+
+              <button onClick={handleSearch} className="button">Pesquisar</button>
+              <button onClick={handleClear} className="button">Limpar</button>
+              <button className="button" onClick={() => { setIsModalOpen(true); setIsEdit(false); }}>Cadastrar</button>
+            </div>
+          </div>
+          <div id="separator-bar"></div>
+          <div id="results-container">
+            <div id="grid-padrao-container">
+              <table id="grid-padrao">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Email</th>
+                    <th>Celular</th>
+                    <th>Cargo</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFuncionarios.map((funcionario) => (
+                    <tr key={funcionario.id}>
+                      <td>{funcionario.id}</td>
+                      <td>{funcionario.nome}</td>
+                      <td>{cpfCnpjMask(funcionario.cpf)}</td>
+                      <td>{funcionario.email}</td>
+                      <td>{funcionario.celular}</td>
+                      <td>{funcionario.cargo}</td>
+                      <td>
+                        <button className="edit-button" onClick={() => handleEditClick(funcionario)}>Editar</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+      {toast.message && <Toast type={toast.type} message={toast.message} />}
+      {isModalOpen && (
+        <ModalFuncionario
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={isEdit ? handleAddFuncionario : handleAddFuncionario}
+          funcionario={selectedFuncionario}
+          edit={isEdit}
+        />
+      )}
+    </div>
+  );
+}
+
+export default Funcionarios;

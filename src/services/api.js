@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crie uma instância do axios com a URL base
 const api = axios.create({
-  baseURL: 'http://3.143.233.203:3002/api',
+  baseURL: 'http://localhost:3003/api',
 });
 
 // Função para definir o token de autenticação no header
@@ -22,8 +22,13 @@ setAuthToken(token);
 export { api, setAuthToken };
 
 // Funções de autenticação
-export const login = (username, password) => {
-  return api.post('/auth/login', { username, password });
+export const login = async (username, password) => {
+  try {
+    const response = await api.post('/auth/login', { username, password });
+    return response.data;  
+  } catch (error) {
+    throw error;
+  }
 };
 
 // Funções para gerenciar pessoas
@@ -105,14 +110,53 @@ export const getMarcasById = async () => {
   return api.get('/marcas');
 };
 
-// Locação
-export const getLocacoes = async () => {
-  return api.get('/locacao');
+// Funções para gerenciar Clientes
+export const getClientes = async (filters = {}) => {
+  try {
+    const response = await api.get('/clientes', { params: filters });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar clientes:', error);
+    throw error; // Repassa o erro para tratamento
+  }
 };
 
-export const addLocacao = async (carro) => {
-  return api.post('/carros', carro);
+export const addCliente = async (cliente) => {
+  return api.post('/clientes', cliente);
 };
+
+export const updateCliente = async (id, cliente) => {
+  return api.put(`/clientes/${id}`, cliente);
+};
+
+export const getClienteById = async (id) => {
+  return api.get(`/clientes/${id}`);
+};
+
+// Funções para gerenciar Funcionarios
+export const getFuncionarios = async (filters = {}) => {
+  try {
+    const response = await api.get('/funcionarios', { params: filters });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar funcionarios:', error);
+    throw error; // Repassa o erro para tratamento
+  }
+};
+
+export const addFuncionario = async (cliente) => {
+  return api.post('/funcionarios', cliente);
+};
+
+export const updateFuncionario = async (id, cliente) => {
+  return api.put(`/funcionarios/${id}`, cliente);
+};
+
+export const getFuncionarioById = async (id) => {
+  return api.get(`/funcionarios/${id}`);
+};
+
+
 
 // Nota Fiscal Eletronica
 export const getNotafiscal = async () => {
@@ -219,6 +263,10 @@ export const getProdutoById = async(id) => {
 // UFs e Municípios
 export const getUfs =async () => {
   return api.get('/uf');
+};
+
+export const getMunicipiosUfId = async(id) => {
+  return api.get(`/municipios/${id}`);
 };
 
 export const getMunicipios = async(id) => {
