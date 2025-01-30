@@ -159,6 +159,26 @@ select {
   transform: scale(1.05);
 }
 
+#button-group .cancel-button {
+  padding: 10px 15px;
+  border: 1px solid #ff0000;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  background: none;
+  /* Remove fundo */
+  color: #ff0000;
+}
+
+#button-group .cancel-button:hover {
+  background-color: #ff0000;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+
+
 #button-group .button-detalhes {
   padding: 10px 15px;
   border: 1px solid #27bd08;

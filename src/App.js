@@ -13,11 +13,12 @@ import { useAuth } from './context/AuthContext';
 import Veiculos from './pages/Veiculos';
 import Clientes from './pages/Clientes';
 import Funcionarios from './pages/Funcionarios';
+import Permissoes from './pages/Permissoes';
 
 import { hasPermission } from './utils/hasPermission'; // Importar a função
 
 function App() {
-  const { isAuthenticated, user, permissions } = useAuth(); // Pega o estado de autenticação e as permissões do usuário
+  const { isAuthenticated, permissions } = useAuth(); // Pega o estado de autenticação e as permissões do usuário
 
   return (
     <Router>
@@ -28,6 +29,10 @@ function App() {
           <Route
             path="/home"
             element={isAuthenticated && hasPermission(permissions, 'home', 'view') ? <Home /> : null} // Condicionalmente não renderiza
+          />
+          <Route
+            path="/permissoes"
+            element={isAuthenticated && hasPermission(permissions, 'permissoes', 'view') ? <Permissoes /> : null} // Condicionalmente não renderiza
           />
           <Route
             path="/clientes"

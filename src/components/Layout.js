@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Importar a função para checar permissões
 
 function Layout() {
-  const { user, permissions } = useAuth(); // Pega as permissões do usuário
+  const {permissions } = useAuth(); // Pega as permissões do usuário
 
   const [username, setUser] = useState('');
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -59,10 +59,11 @@ function Layout() {
             {canViewMenuItem('home') && <Link to="/home" className="menu-item">Home</Link>}
 
             {/* Cadastros menu item with a submenu */}
-            {canViewMenuItem('clientes') || canViewMenuItem('funcionarios')|| canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos') ? (
+            {canViewMenuItem('permissoes') ||canViewMenuItem('clientes') || canViewMenuItem('funcionarios')|| canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos') ? (
               <div id="cadastros" className="menu-item" onClick={toggleCadastros}>
                 <span>Cadastros</span>
                 <div id="cadastros-submenu" className={isCadastrosOpen ? 'submenu' : ''}>
+                  {canViewMenuItem('permissoes') && <Link to="/permissoes" className="submenu-item">Permissões</Link>}
                   {canViewMenuItem('clientes') && <Link to="/clientes" className="submenu-item">Clientes</Link>}
                   {canViewMenuItem('funcionarios') && <Link to="/funcionarios" className="submenu-item">Funcionários</Link>}
                   {canViewMenuItem('fornecedores') && <Link to="/fornecedores" className="submenu-item">Fornecedores</Link>}

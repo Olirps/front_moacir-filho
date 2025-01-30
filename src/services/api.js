@@ -31,6 +31,37 @@ export const login = async (username, password) => {
   }
 };
 
+// Funções para gerenciar Permissões de acesso
+export const addGrupoAcesso = async (grupoacesso) => {
+  return api.post('/grupoacesso', grupoacesso);
+};
+
+export const getAllGrupoAcesso = async (filters = {}) => {
+  const response = await api.get('/grupoacesso', { params: filters });
+  return response;
+};
+
+export const getGrupoAcessoById = async (id) => {
+  return api.get(`/grupoacesso/${id}`);
+};
+
+
+export const addPermissoes = async (permissoes) => {
+  return api.post('/permissoes', permissoes);
+};
+
+export const getPermissoes = async (filters = {}) => {
+  const response = await api.get('/permissoes', { params: filters });
+  return response;
+};
+
+export const updatePermissoes = async (id, permissoes) => {
+  return api.put(`/permissoes/${id}`, permissoes);
+};
+
+
+
+
 // Funções para gerenciar pessoas
 /*export const getPessoas = () => {
   return api.get('/pessoas');
