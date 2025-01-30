@@ -129,47 +129,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
 
     if (!isOpen) return null;
 
-    const handleCpfChange = (e) => {
-        const { value } = e.target;
-        setCpf(cpfCnpjMask(value)); // Aplica a máscara ao CPF e atualiza o estado
-    };
-
-    const handleNomeChange = (e) => {
-        setNome(e.target.value); // Atualiza o estado do nome
-    };
-
-    const handleNomeFantasiaChange = (e) => {
-        setNomeFantasia(e.target.value); // Atualiza o estado do nome
-    };
-
-    const handleEmailChange = (e) => {
-        setEmail(e.target.value); // Atualiza o estado do email
-    };
-
-    const handleCelularChange = (e) => {
-        setCelular(e.target.value); // Atualiza o estado do email
-    };
-
-    const handleLogradouroChange = (e) => {
-        setLogradouro(e.target.value); // Atualiza o estado do logradouro
-    };
-
-    const handleNumeroChange = (e) => {
-        setNumero(e.target.value); // Atualiza o estado do número
-    };
-
-    const handleBairroChange = (e) => {
-        setBairro(e.target.value); // Atualiza o estado do bairro
-    };
-
-    const handleMunicipioChange = (e) => {
-        setMunicipio(e.target.value); // Atualiza o estado do município
-    };
-
-
-    const handleCepChange = (e) => {
-        setCep(e.target.value); // Atualiza o estado do CEP
-    };
+   
 
     return (
         <div className="modal-overlay">
@@ -186,7 +146,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="nome"
                                 name="nome"
                                 value={nome}
-                                onChange={handleNomeChange} // Adiciona o onChange para atualizar o estado
+                                onChange={(e)=>{setNome(e.target.value)}} //forma resumida de atualizar o input
                                 maxLength="150"
                                 required
                             />
@@ -197,7 +157,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="nomeFantasia"
                                 name="nomeFantasia"
                                 value={nomeFantasia}
-                                onChange={handleNomeFantasiaChange} // Adiciona o onChange para atualizar o estado
+                                onChange={(e)=>{setNomeFantasia(e.target.value)}} //forma resumida de atualizar o input
                                 maxLength="150"
                             />
                         </div>
@@ -209,7 +169,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="cpfCnpj"
                                 name="cpfCnpj"
                                 value={cpfCnpjMask(cpfCnpj)} // Controlado pelo estado
-                                onChange={handleCpfChange}
+                                onChange={(e)=>{setCpf(cpfCnpjMask(e.target.value))}} //forma resumida de atualizar o input
                                 required
                             />
                         </div>
@@ -221,7 +181,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="email"
                                 name="email"
                                 value={email}
-                                onChange={handleEmailChange} // Adiciona o onChange para atualizar o estado
+                                onChange={(e)=>{setEmail(e.target.value)}}
                                 maxLength="50"
                                 required
                             />
@@ -234,7 +194,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="celular"
                                 name="celular"
                                 value={celular}
-                                onChange={handleCelularChange} // Adiciona o onChange para atualizar o estado
+                                onChange={(e)=>{setCelular(e.target.value)}}
                                 maxLength="150"
                                 required
                             />
@@ -247,7 +207,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="logradouro"
                                 name="logradouro"
                                 value={logradouro}
-                                onChange={handleLogradouroChange}
+                                onChange={(e)=>{setLogradouro(e.target.value)}}
                                 required
                             />
                         </div>
@@ -259,7 +219,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="numero"
                                 name="numero"
                                 value={numero}
-                                onChange={handleNumeroChange}
+                                onChange={(e)=>{setNumero(e.target.value)}}
                                 required
                             />
                         </div>
@@ -271,7 +231,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="bairro"
                                 name="bairro"
                                 value={bairro}
-                                onChange={handleBairroChange}
+                                onChange={(e)=>{setBairro(e.target.value)}}
                                 required
                             />
                         </div>
@@ -283,7 +243,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="cep"
                                 name="cep"
                                 value={cep}
-                                onChange={handleCepChange}
+                                onChange={(e)=>{setCep(e.target.value)}}
                                 required
                             />
                         </div>
@@ -312,7 +272,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="municipio"
                                 name="municipio"
                                 value={municipio}
-                                onChange={handleMunicipioChange}
+                                onChange={(e)=>{setMunicipio(e.target.value)}}
                                 required
                             >
                                 <option value="">Selecione um município</option>

@@ -4,6 +4,9 @@ import '../styles/Funcionarios.css';
 import ModalFuncionario from '../components/ModalCadastraFuncionario';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 function Funcionarios() {
   const [funcionarios, setFuncionarios] = useState([]);
@@ -17,6 +20,8 @@ function Funcionarios() {
   const [toast, setToast] = useState({ message: '', type: '' });
   const [selectedFuncionario, setSelectedFuncionario] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const { permissions } = useAuth();
+
 
   useEffect(() => {
     const fetchFuncionarios = async () => {
@@ -57,6 +62,16 @@ function Funcionarios() {
   const handleCpfChange = (e) => {
     setCpf(cpfCnpjMask(e.target.value));
   };
+
+  const handleOpenModal = () => {
+    if (!hasPermission(permissions, 'funcionarios', 'insert')) {
+      setToast({ message: "Você não tem permissão para cadastrar funcionarios.", type: "error" });
+      return; // Impede a abertura do modal
+    }
+    setIsModalOpen(true);
+    setIsEdit(false);
+  };
+
 
   const handleAddFuncionario = async (e) => {
     e.preventDefault();
@@ -117,7 +132,7 @@ function Funcionarios() {
 
               <button onClick={handleSearch} className="button">Pesquisar</button>
               <button onClick={handleClear} className="button">Limpar</button>
-              <button className="button" onClick={() => { setIsModalOpen(true); setIsEdit(false); }}>Cadastrar</button>
+              <button className="button" onClick={handleOpenModal}>Cadastrar</button>
             </div>
           </div>
           <div id="separator-bar"></div>
