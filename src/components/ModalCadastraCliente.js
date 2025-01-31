@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastraCliente.css'; // Certifique-se de criar este CSS também
 import { cpfCnpjMask } from './utils';
-import { getUfs, getMunicipiosUfId, getMunicipiosIBGE } from '../services/api';
+import { getUfs, getMunicipiosUfId } from '../services/api';
 import Toast from '../components/Toast';
+import { formatarCelular } from '../utils/functions';
 
 
 const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
@@ -38,14 +39,14 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
 
                 // Preencher UF e Município com base nos IDs
                 if (cliente.uf_id) {
-                    const ufCorrespondente = ufs.find((uf) => uf.codIBGE === cliente.uf_id);
+                    const ufCorrespondente = ufs.find((uf) => parseInt(uf.codIBGE) === parseInt(cliente.uf_id));
                     setUf(ufCorrespondente ? ufCorrespondente.codIBGE : '');
                 }
 
                 // Preencher Município com base no ID
                 if (cliente.municipio_id) {
-                    const municipioCorrespondente = municipios.find((municipio) => municipio.codMunIBGE === cliente.municipio_id);
-                    setMunicipio(municipioCorrespondente ? municipioCorrespondente.codMunIBGE : '');
+                    const municipioCorrespondente = municipios.find((municipio) => parseInt(municipio.id) === parseInt(cliente.municipio_id));
+                    setMunicipio(municipioCorrespondente ? municipioCorrespondente.id : '');
                 }
             } else {
                 // Limpar os campos
@@ -145,7 +146,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="text"
                                 id="nome"
                                 name="nome"
-                                value={nome}
+                                value={nome.toUpperCase()}
                                 onChange={(e)=>{setNome(e.target.value)}} //forma resumida de atualizar o input
                                 maxLength="150"
                                 required
@@ -156,7 +157,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="text"
                                 id="nomeFantasia"
                                 name="nomeFantasia"
-                                value={nomeFantasia}
+                                value={nomeFantasia.toUpperCase()}
                                 onChange={(e)=>{setNomeFantasia(e.target.value)}} //forma resumida de atualizar o input
                                 maxLength="150"
                             />
@@ -180,9 +181,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="email"
                                 id="email"
                                 name="email"
-                                value={email}
+                                value={email.toLowerCase()}
                                 onChange={(e)=>{setEmail(e.target.value)}}
-                                maxLength="50"
+                                maxLength={100}
                                 required
                             />
                         </div>
@@ -193,9 +194,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="text"
                                 id="celular"
                                 name="celular"
-                                value={celular}
+                                value={formatarCelular(celular)}
                                 onChange={(e)=>{setCelular(e.target.value)}}
-                                maxLength="150"
+                                maxLength={20}
                                 required
                             />
                         </div>
@@ -206,8 +207,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="text"
                                 id="logradouro"
                                 name="logradouro"
-                                value={logradouro}
+                                value={logradouro.toUpperCase()}
                                 onChange={(e)=>{setLogradouro(e.target.value)}}
+                                maxLength={100}
                                 required
                             />
                         </div>
@@ -220,6 +222,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 name="numero"
                                 value={numero}
                                 onChange={(e)=>{setNumero(e.target.value)}}
+                                maxLength={8}
                                 required
                             />
                         </div>
@@ -230,8 +233,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 type="text"
                                 id="bairro"
                                 name="bairro"
-                                value={bairro}
+                                value={bairro.toUpperCase()}
                                 onChange={(e)=>{setBairro(e.target.value)}}
+                                maxLength={100}
                                 required
                             />
                         </div>
@@ -244,6 +248,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 name="cep"
                                 value={cep}
                                 onChange={(e)=>{setCep(e.target.value)}}
+                                maxLength={9}
                                 required
                             />
                         </div>
@@ -279,7 +284,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
 
                                 {Array.isArray(municipios) &&
                                     municipios.map((mun) => (
-                                        <option key={mun.id} value={mun.codMunIBGE}>
+                                        <option key={mun.id} value={mun.id}>
                                             {mun.nome}
                                         </option>
                                     ))

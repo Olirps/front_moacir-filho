@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroFornecedor.css'; // Certifique-se de criar este CSS também
 import { cpfCnpjMask } from './utils';
+import { getUfs, getMunicipiosUfId } from '../services/api';
+import Toast from '../components/Toast';
+
+
 
 const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor }) => {
   const [tipofornecedor, setTipoFornecedor] = useState('');
@@ -17,6 +21,9 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
   const [municipio, setMunicipio] = useState('');
   const [uf, setUf] = useState('');
   const [cep, setCep] = useState('');
+  const [ufs, setUfs] = useState([]); // Estado para armazenar os UFs
+  const [municipios, setMunicipios] = useState([]); // Estado para armazenar os municípios
+  const [toast, setToast] = useState({ message: '', type: '' });
 
 
   // Lista fixa de tipos de fornecedor
@@ -27,43 +34,91 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
     { id: 'suplemento', nome: 'Suplemento' },
     { id: 'transporte', nome: 'Transporte' },
   ];
+  useEffect(() => {
+    const fetchUfs = async () => {
+      try {
+        const ufsData = await getUfs();
+        if (Array.isArray(ufsData.data)) {
+          setUfs(ufsData.data);
+        } else {
+          console.error("Erro ao carregar UFs:", ufsData);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar UFs:", error);
+      }
+    };
+    fetchUfs();
+  }, []);
 
   useEffect(() => {
-    if (fornecedor) {
-      // Preencher os campos com os dados da pessoa selecionada para edição
-      setTipoFornecedor(fornecedor.tipo_fornecedor || '');
-      setNome(fornecedor.nome || '');
-      setNomeFantasia(fornecedor.nomeFantasia || '');
-      setfornecedorContato(fornecedor.fornecedor_contato || '');
-      setCpf(fornecedor.cpfCnpj || '');
-      setInscricaoEstadual(fornecedor.inscricaoestadual || '');
-      setEmail(fornecedor.email || '');
-      setCelular(fornecedor.celular || '');
-      setLogradouro(fornecedor.logradouro || '');
-      setNumero(fornecedor.numero || '');
-      setBairro(fornecedor.bairro || '');
-      setMunicipio(fornecedor.municipio || '');
-      setUf(fornecedor.uf || '');
-      setCep(fornecedor.cep || '');
+    if (uf) {
+      const fetchMunicipios = async () => {
+        try {
+          const municipiosData = await getMunicipiosUfId(uf);
+          if (Array.isArray(municipiosData.data)) {
+            setMunicipios(municipiosData.data);
+          } else {
+            console.error("Erro ao carregar municípios:", municipiosData);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar municípios:", error);
+        }
+      };
+      fetchMunicipios();
     } else {
-      // Limpar os campos quando não há pessoa selecionada
-      setTipoFornecedor('');
-      setNome('');
-      setNomeFantasia('');
-      setfornecedorContato('');
-      setCpf('');
-      setInscricaoEstadual('');
-      setEmail('');
-      setCelular('');
-      setLogradouro('');
-      setNumero('');
-      setBairro('');
-      setMunicipio('');
-      setUf('');
-      setCep('');
-
+      setMunicipios([]);
     }
+  }, [uf]);
+
+
+  useEffect(() => {
+    const preencherDadosFornecedor = async () => {
+      if (fornecedor) {
+        // Preencher os campos com os dados da pessoa selecionada para edição
+        setTipoFornecedor(fornecedor.tipo_fornecedor || '');
+        setNome(fornecedor.nome || '');
+        setNomeFantasia(fornecedor.nomeFantasia || '');
+        setfornecedorContato(fornecedor.fornecedor_contato || '');
+        setCpf(fornecedor.cpfCnpj || '');
+        setInscricaoEstadual(fornecedor.inscricaoestadual || '');
+        setEmail(fornecedor.email || '');
+        setCelular(fornecedor.celular || '');
+        setLogradouro(fornecedor.logradouro || '');
+        setNumero(fornecedor.numero || '');
+        setBairro(fornecedor.bairro || '');
+        setUf(fornecedor.uf || '');
+        setCep(fornecedor.cep || '');
+      } else {
+        // Limpar os campos quando não há pessoa selecionada
+        setTipoFornecedor('');
+        setNome('');
+        setNomeFantasia('');
+        setfornecedorContato('');
+        setCpf('');
+        setInscricaoEstadual('');
+        setEmail('');
+        setCelular('');
+        setLogradouro('');
+        setNumero('');
+        setBairro('');
+        setMunicipio('');
+        setUf('');
+        setCep('');
+
+      }
+    };
+    preencherDadosFornecedor();
+
   }, [fornecedor]);
+
+
+
+  useEffect(() => {
+    if (fornecedor?.municipio && municipios.length) {
+      const municipioEncontrado = municipios.find(m => parseInt(m.id) === parseInt(fornecedor.municipio));
+      setMunicipio(municipioEncontrado ? municipioEncontrado.id : '');
+    }
+  }, [municipios, fornecedor]);
 
   if (!isOpen) return null;
 
@@ -110,10 +165,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
 
   const handleMunicipioChange = (e) => {
     setMunicipio(e.target.value); // Atualiza o estado do município
-  };
-
-  const handleUfChange = (e) => {
-    setUf(e.target.value); // Atualiza o estado do UF
   };
 
   const handleCepChange = (e) => {
@@ -271,28 +322,44 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
               />
             </div>
             <div>
-              <label htmlFor="municipio">Município</label>
-              <input
-                className='input-geral'
-                type="text"
-                id="municipio"
-                name="municipio"
-                value={municipio}
-                onChange={handleMunicipioChange}
-                required
-              />
-            </div>
-            <div>
               <label htmlFor="uf">UF</label>
-              <input
-                className='input-geral'
-                type="text"
+              <select
+                className="select-geral"
                 id="uf"
                 name="uf"
                 value={uf}
-                onChange={handleUfChange}
+                onChange={(e) => setUf(e.target.value)}
                 required
-              />
+              >
+                <option value="">Selecione um estado</option>
+                {ufs.map((uf) => (
+                  <option key={uf.id} value={uf.codIBGE}>
+                    {uf.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="municipio">Município</label>
+              <select
+                className="select-geral"
+                id="municipio"
+                name="municipio"
+                value={municipio}
+                onChange={(e) => { setMunicipio(e.target.value) }}
+                required
+              >
+                <option value="">Selecione um município</option>
+
+                {Array.isArray(municipios) &&
+                  municipios.map((mun) => (
+                    <option key={mun.id} value={mun.id}>
+                      {mun.nome}
+                    </option>
+                  ))
+                }
+
+              </select>
             </div>
             <div>
               <label htmlFor="cep">CEP</label>

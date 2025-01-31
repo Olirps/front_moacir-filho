@@ -519,6 +519,23 @@ select {
   border-color: #007bff;
 }
 
+.select-geral {
+  display: block;
+  width: 97%; /* Faz com que os inputs preencham completamente os divs */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  margin-top: 5px; /* Adiciona um espaço entre a label e o select */
+}
+
+/* Quando o input estiver focado */
+.select-geral:focus {
+  border-color: #007bff;
+}
+
 /* Botão de salvar */
 #botao-salva {
   width: 100%;

@@ -6,6 +6,8 @@ import { cpfCnpjMask, removeMaks } from '../components/utils';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+import { formatarCelular } from '../utils/functions';
+
 
 function Fornecedores() {
   const [fornecedores, setFornecedores] = useState([]);
@@ -119,7 +121,7 @@ function Fornecedores() {
         return; // Impede a abertura do modal
       }
       setIsModalOpen(true);
-      setIsEdit(false);
+      setIsEdit(true);
       setSelectedFornecedor(null);
       const response = await getFornecedorById(fornecedor.id);
       setSelectedFornecedor(response.data);
@@ -241,7 +243,7 @@ function Fornecedores() {
                     <th>Contato</th>
                     <th>CPF/CNPJ</th>
                     <th>Email</th>
-                    <th>Data Criação</th>
+                    <th>Telefone</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -253,7 +255,7 @@ function Fornecedores() {
                       <td>{fornecedor.fornecedor_contato}</td>
                       <td>{cpfCnpjMask(fornecedor.cpfCnpj)}</td>
                       <td>{fornecedor.email}</td>
-                      <td>{new Date(fornecedor.createdAt).toLocaleDateString('pt-BR')}</td>
+                      <td>{formatarCelular(fornecedor.celular)}</td>
                       <td>
                         <button
                           onClick={() => handleEditClick(fornecedor)}

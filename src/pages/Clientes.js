@@ -4,6 +4,8 @@ import '../styles/Clientes.css';
 import ModalCliente from '../components/ModalCadastraCliente';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import Toast from '../components/Toast';
+import { formatarCelular } from '../utils/functions';
+
 
 function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -239,7 +241,7 @@ function Clientes() {
                       <td>{cliente.nome}</td>
                       <td>{cpfCnpjMask(cliente.cpfCnpj)}</td>
                       <td>{cliente.email}</td>
-                      <td>{cliente.celular}</td>
+                      <td>{formatarCelular(cliente.celular)}</td>
                       <td>
                         <button
                           onClick={() => handleEditClick(cliente)}

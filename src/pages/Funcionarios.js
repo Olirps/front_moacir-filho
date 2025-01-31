@@ -3,6 +3,7 @@ import { getFuncionarios, addFuncionario, updateFuncionario, getFuncionarioById 
 import '../styles/Funcionarios.css';
 import ModalFuncionario from '../components/ModalCadastraFuncionario';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
+import { formatarCelular } from '../utils/functions';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
@@ -78,10 +79,19 @@ function Funcionarios() {
     const formData = new FormData(e.target);
     const newFuncionario = {
       nome: formData.get('nome'),
-      cpf: formData.get('cpf'),
+      cpfCnpj: formData.get('cpf'),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
-      cargo: formData.get('cargo')
+      tipoFuncionario: formData.get('tipoFuncionario'),
+      dataContratacao: formData.get('dataContratacao'),
+      cargo: formData.get('cargo'),
+      numero: formData.get('numero'),
+      bairro: formData.get('bairro'),
+      uf_id: formData.get('uf'),
+      municipio_id: formData.get('municipio'),
+      cep: formData.get('cep'),
+      salario: formData.get('salario'),
+      logradouro: formData.get('logradouro')
     };
 
     try {
@@ -98,12 +108,51 @@ function Funcionarios() {
 
   const handleEditClick = async (funcionario) => {
     try {
+      if (!hasPermission(permissions, 'funcionarios', 'edit')) {
+        setToast({ message: "Você não tem permissão para editar funcionario.", type: "error" });
+        return; // Impede a abertura do modal
+      }
       const response = await getFuncionarioById(funcionario.id);
       setSelectedFuncionario(response.data);
       setIsEdit(true);
       setIsModalOpen(true);
     } catch (err) {
       setToast({ message: "Erro ao buscar detalhes do funcionário.", type: "error" });
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedFuncionario = {
+      nome: formData.get('nome'),
+      cpfCnpj: formData.get('cpf'),
+      email: formData.get('email'),
+      celular: formData.get('celular').replace(/\D/g, ''),
+      tipoFuncionario: formData.get('tipoFuncionario'),
+      dataContratacao: formData.get('dataContratacao'),
+      cargo: formData.get('cargo'),
+      numero: formData.get('numero'),
+      bairro: formData.get('bairro'),
+      uf_id: formData.get('uf'),
+      municipio_id: formData.get('municipio'),
+      cep: formData.get('cep'),
+      salario: formData.get('salario'),
+      logradouro: formData.get('logradouro')
+    };
+
+    try {
+      await updateFuncionario(selectedFuncionario.id, updatedFuncionario);
+      setToast({ message: "Funcionario atualizado com sucesso!", type: "success" });
+      setIsModalOpen(false);
+      setSelectedFuncionario(null);
+      setIsEdit(false);
+      const response = await getFuncionarios();
+      setFuncionarios(response.data);
+      setFilteredFuncionarios(response.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || "Erro ao atualizar funcionario.";
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
@@ -143,7 +192,6 @@ function Funcionarios() {
                   <tr>
                     <th>ID</th>
                     <th>Nome</th>
-                    <th>CPF</th>
                     <th>Email</th>
                     <th>Celular</th>
                     <th>Cargo</th>
@@ -154,10 +202,9 @@ function Funcionarios() {
                   {filteredFuncionarios.map((funcionario) => (
                     <tr key={funcionario.id}>
                       <td>{funcionario.id}</td>
-                      <td>{funcionario.nome}</td>
-                      <td>{cpfCnpjMask(funcionario.cpf)}</td>
-                      <td>{funcionario.email}</td>
-                      <td>{funcionario.celular}</td>
+                      <td>{funcionario.cliente.nome}</td>
+                      <td>{funcionario.cliente.email}</td>
+                      <td>{formatarCelular(funcionario.cliente.celular)}</td>
                       <td>{funcionario.cargo}</td>
                       <td>
                         <button className="edit-button" onClick={() => handleEditClick(funcionario)}>Editar</button>
@@ -175,7 +222,7 @@ function Funcionarios() {
         <ModalFuncionario
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={isEdit ? handleAddFuncionario : handleAddFuncionario}
+          onSubmit={isEdit ? handleEditSubmit : handleAddFuncionario}
           funcionario={selectedFuncionario}
           edit={isEdit}
         />
