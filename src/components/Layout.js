@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Importar a função para checar permissões
 
 function Layout() {
-  const {permissions } = useAuth(); // Pega as permissões do usuário
+  const { permissions } = useAuth(); // Pega as permissões do usuário
 
   const [username, setUser] = useState('');
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -59,7 +59,7 @@ function Layout() {
             {canViewMenuItem('home') && <Link to="/home" className="menu-item">Home</Link>}
 
             {/* Cadastros menu item with a submenu */}
-            {canViewMenuItem('permissoes') ||canViewMenuItem('clientes') || canViewMenuItem('funcionarios')|| canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos') ? (
+            {canViewMenuItem('permissoes') || canViewMenuItem('clientes') || canViewMenuItem('funcionarios') || canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos') ? (
               <div id="cadastros" className="menu-item" onClick={toggleCadastros}>
                 <span>Cadastros</span>
                 <div id="cadastros-submenu" className={isCadastrosOpen ? 'submenu' : ''}>
@@ -86,9 +86,12 @@ function Layout() {
           </nav>
           {/* User information and logout button */}
           <div id="user-info">
-            <span id="user-text">Bem-vindo, </span>
-            <span id="username">{username}</span>
-            <button onClick={handleLogout} id="logout-button">Sair</button>
+            <div>
+              <span id="usuario">{`Bem vindo ${username.toUpperCase()}`}</span>
+            </div>
+            <div>
+              <button onClick={handleLogout} id="logout-button">Sair</button>
+            </div>
           </div>
         </div>
       </header>
