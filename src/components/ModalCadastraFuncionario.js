@@ -34,8 +34,13 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
           setCpf(funcionario.cliente?.cpfCnpj || '');
           setEmail(funcionario.cliente?.email || '');
           setCelular(funcionario.cliente?.celular || '');
-          setdataContratacao(funcionario.dataContratacao || '');
-          settipoFuncionario(funcionario.tipoFuncionario || '');
+          // Converter a data para o formato correto (YYYY-MM-DD)
+          if (funcionario.dataContratacao) {
+            const dataFormatada = new Date(funcionario.dataContratacao).toISOString().split('T')[0];
+            setdataContratacao(dataFormatada);
+          } else {
+            setdataContratacao('');
+          } settipoFuncionario(funcionario.tipoFuncionario || '');
           setCargo(funcionario.cargo || '');
           setSalario(funcionario.salario || '');
           setLogradouro(funcionario.cliente?.logradouro || '');
@@ -197,16 +202,15 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 required
               />
             </div>
-            <div>
+            <div className="field-line">
               <label htmlFor="dataContratacao">Data Contratação</label>
               <input
-                className='input-geral'
-                type="text"
-                id='dataContratacao'
-                name="dataContratacao"
+                className="input-geral"
+                type="date"
+                name='dataContratacao'
+                id="dataContratacao"
                 value={dataContratacao}
                 onChange={(e) => setdataContratacao(e.target.value)}
-                maxLength={10}
                 required
               />
             </div>

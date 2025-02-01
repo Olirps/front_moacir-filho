@@ -102,7 +102,17 @@ function Funcionarios() {
       setFuncionarios(response.data);
       setFilteredFuncionarios(response.data);
     } catch (err) {
-      setToast({ message: "Erro ao cadastrar funcionário.", type: "error" });
+      const errorMessage = err.response?.data?.error || "Erro ao cadastrar funcionário.";
+      /*if (errorMessage.includes('Já existe um Funcionário com esse CPF/CNPJ:')) {
+        const confirmReuse = window.confirm("Já existe um funcionário com o CPF/CNPJ informado. Deseja reaproveitar os dados?");
+        if (confirmReuse) {
+          const existingFuncionario = err.response.data.funcionario;
+          setSelectedFuncionario(existingFuncionario);
+          setIsEdit(true);
+          setIsModalOpen(true);
+        }
+      }*/
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
