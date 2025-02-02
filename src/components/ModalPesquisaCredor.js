@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalPesquisaCredor.css';
 import Toast from '../components/Toast';
-import { getFornecedores, getFuncionarios, getClientes } from '../services/api';  // Funções de consulta
+import { getFornecedoresByFiltro, getFuncionariosByFiltro, getClientesByFiltro } from '../services/api';  // Funções de consulta
 
-const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredito }) => {
+const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredor }) => {
     const [tipoCredito, setTipoCredito] = useState('fornecedor'); // Estado para o tipo de crédito selecionado
     const [funcionarioInputs, setFuncionarioInputs] = useState({ nome: '', cpf: '' });
     const [fornecedorInputs, setFornecedorInputs] = useState({ razaoSocial: '', nomeFantasia: '', cnpj: '' });
     const [clienteInputs, setClienteInputs] = useState({ razaoSocial: '', nomeFantasia: '', cpfCnpj: '' });
     const [resultados, setResultados] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedItems, setSelectedItems] = useState([]);
     const [toast, setToast] = useState({ message: '', type: '' });
-    
+
 
     useEffect(() => {
         if (isOpen) {
@@ -28,28 +29,37 @@ const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredito }) => {
             let response;
             switch (tipoCredito) {
                 case 'fornecedor':
-                    response = await getFornecedores(fornecedorInputs); // Pesquisa fornecedores
+                    response = await getFornecedoresByFiltro(fornecedorInputs); // Pesquisa fornecedores
                     break;
                 case 'funcionario':
-                    response = await getFuncionarios(funcionarioInputs); // Pesquisa funcionários
+                    response = await getFuncionariosByFiltro(funcionarioInputs); // Pesquisa funcionários
                     break;
                 case 'cliente':
-                    response = await getClientes(clienteInputs); // Pesquisa clientes
+                    response = await getClientesByFiltro(clienteInputs); // Pesquisa clientes
                     break;
                 default:
                     break;
             }
             setResultados(response.data);
+            if (response.data.length === 0) {
+                setToast({ message: "Nenhum resultado encontrado.", type: "error" });
+                setTimeout(() => {
+                    setToast({ message: '', type: '' });
+                }, 3000);
+            }
             setLoading(false);
         } catch (err) {
             console.error('Erro na pesquisa', err);
             setToast({ message: "Erro ao buscar créditos.", type: "error" });
+            setTimeout(() => {
+                setToast({ message: '', type: '' });
+            }, 3000);
             setLoading(false);
         }
     };
 
-    const handleSelect = (credito) => {
-        onSelectCredito(credito);  // Envia o item selecionado para o pai
+    const handleSelect = (credor) => {
+        onSelectCredor(credor);  // Envia o item selecionado para o pai
         onClose();  // Fecha o modal
     };
 
@@ -59,36 +69,51 @@ const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredito }) => {
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>Pesquisar Crédito</h2>
+                <h2>Pesquisar Credor</h2>
 
-                <div>
-                    <label htmlFor="fornecedor">Fornecedor</label>
-                    <input
-                        type="radio"
-                        id="fornecedor"
-                        name="tipoCredito"
-                        value="fornecedor"
-                        checked={tipoCredito === 'fornecedor'}
-                        onChange={() => setTipoCredito('fornecedor')}
-                    />
-                    <label htmlFor="funcionario">Funcionário</label>
-                    <input
-                        type="radio"
-                        id="funcionario"
-                        name="tipoCredito"
-                        value="funcionario"
-                        checked={tipoCredito === 'funcionario'}
-                        onChange={() => setTipoCredito('funcionario')}
-                    />
-                    <label htmlFor="cliente">Cliente</label>
-                    <input
-                        type="radio"
-                        id="cliente"
-                        name="tipoCredito"
-                        value="cliente"
-                        checked={tipoCredito === 'cliente'}
-                        onChange={() => setTipoCredito('cliente')}
-                    />
+                <div className="radio-group">
+                    <div className="radio-option">
+                        <input
+                            type="radio"
+                            id="fornecedor"
+                            name="tipoCredito"
+                            value="fornecedor"
+                            checked={tipoCredito === 'fornecedor'}
+                            onClick={() => {
+                                setResultados([])
+                            }}
+                            onChange={() => setTipoCredito('fornecedor')}
+                        />
+                        <label htmlFor="fornecedor">Fornecedor</label>
+                    </div>
+                    <div className="radio-option">
+                        <input
+                            type="radio"
+                            id="funcionario"
+                            name="tipoCredito"
+                            value="funcionario"
+                            checked={tipoCredito === 'funcionario'}
+                            onClick={() => {
+                                setResultados([])
+                            }}
+                            onChange={() => setTipoCredito('funcionario')}
+                        />
+                        <label htmlFor="funcionario">Funcionário</label>
+                    </div>
+                    <div className="radio-option">
+                        <input
+                            type="radio"
+                            id="cliente"
+                            name="tipoCredito"
+                            value="cliente"
+                            checked={tipoCredito === 'cliente'}
+                            onClick={() => {
+                                setResultados([])
+                            }}
+                            onChange={() => setTipoCredito('cliente')}
+                        />
+                        <label htmlFor="cliente">Cliente</label>
+                    </div>
                 </div>
 
                 {tipoCredito === 'funcionario' && (
@@ -170,17 +195,42 @@ const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredito }) => {
                     </div>
                 )}
 
-                <button className="button" onClick={handleSearch}>Pesquisar</button>
+                <button className='button-geral' onClick={handleSearch}>Pesquisar</button>
 
                 {loading && <div className="spinner-container"><div className="spinner"></div></div>}
 
-                <ul>
-                    {resultados.map((item) => (
-                        <li key={item.id} onClick={() => handleSelect(item)}>
-                            {item.nome} (ID: {item.id})
-                        </li>
-                    ))}
-                </ul>
+                <div id="results-container">
+                    <div id="grid-padrao-container">
+                        <table id="grid-padrao">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>CPF/CNPJ</th>
+                                    <th>Selecionar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {resultados.map((item) => (
+                                    <tr key={item.id}>
+                                        <td>{item.id}</td>
+                                        <td>{item.nome || item.cliente.nome}</td>
+                                        <td>{item.cpfCnpj || item.cliente.cpfCnpj}</td>
+                                        <td>
+                                            <button className='button-geral' onClick={() => {
+                                                handleSelect(item)
+                                            }
+                                            }>
+                                                Selecionar
+
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             {toast.message && <Toast message={toast.message} type={toast.type} />}
         </div>

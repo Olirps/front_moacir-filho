@@ -220,7 +220,11 @@ function MovimentacaoFinanceiraDespesa() {
                       <td>{movimentacao.id}</td>
                       <td>{movimentacao.descricao}</td>
                       <td>{movimentacao.fornecedor_id}</td>
-                      <td>{movimentacao.valor}</td>
+                      <td>{new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(movimentacao.valor || 0)}</td>
+
                       <td>{new Date(movimentacao.data_lancamento).toLocaleDateString()}</td>
                       <td>
                         <button

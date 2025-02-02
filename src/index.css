@@ -560,6 +560,38 @@ select {
   transform: scale(1.05);
 }
 
+.button-geral {
+  padding: 10px 20px;
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.button-geral:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+.radio-group {
+  display: flex; /* Coloca todos os radio-options em uma linha */
+  gap: 16px; /* Espaçamento entre os radio-options */
+}
+
+.radio-option {
+  display: flex;
+  align-items: center; /* Alinha verticalmente o input e a label */
+  margin-bottom: 10px; /* Espaçamento entre os itens */
+}
+
+.radio-option input {
+  margin-right: 8px; /* Espaçamento entre o input e a label */
+  flex-direction: row;
+
+}
+
 /* Responsividade para telas menores */
 @media (max-width: 600px) {
   #cadastro-padrao {

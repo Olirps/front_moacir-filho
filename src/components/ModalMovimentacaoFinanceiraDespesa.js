@@ -101,8 +101,8 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
         setIsModalPesquisaOpen(true);
     };
 
-    const handleSelectCredito = (credito) => {
-        setCredorSelecionado(credito);  // Atualiza o crédito selecionado
+    const handleSelectCredor = (credor) => {
+        setCredorSelecionado(credor);  // Atualiza o crédito selecionado
         setIsModalPesquisaOpen(false);  // Fecha o modal de pesquisa
     };
 
@@ -112,9 +112,10 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>{movimentacao ? "Editar Despesa" : "Nova Despesa"}</h2>
-                <button onClick={handleOpenPesquisaCredito}>Pesquisar Credor</button>
-
+                <h2>{movimentacao ? "Editar Despesa" : "Cadastrar Despesa"}</h2>
+                <div>
+                    <button className='button-geral' onClick={handleOpenPesquisaCredito}>Pesquisar Credor</button>
+                </div>
                 {loading ? (
                     <div className="spinner-container">
                         <div className="spinner"></div>
@@ -127,7 +128,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                 <input
                                     type="text"
                                     className="input-geral"
-                                    value={credorSelecionado ? credorSelecionado.nome : ""}
+                                    value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : "" }
                                     onClick={handleOpenPesquisaCredito}
                                     readOnly
                                     placeholder="Selecionar Credor"
@@ -149,7 +150,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                 <input
                                     className='input-geral'
                                     type="text"
-                                    value={valor.replace(',','.')}
+                                    value={valor.replace(',', '.')}
                                     onChange={(e) => setValor(e.target.value)}
                                     required
                                 />
@@ -172,7 +173,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                 </select>
                             </div>
                             <div id='botao-salva'>
-                                <button className="button" onClick={handleSave}>Salvar</button>
+                                <button className="button-geral" onClick={handleSave}>Salvar</button>
                                 {movimentacao && <button className="button delete" onClick={handleCancelar}>Excluir</button>}
                             </div>
                         </div>
@@ -192,7 +193,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
             <ModalPesquisaCredor
                 isOpen={isModalPesquisaOpen}
                 onClose={() => setIsModalPesquisaOpen(false)}
-                onSelectCredito={handleSelectCredito}
+                onSelectCredor={handleSelectCredor}
             />
         </div>
     );

@@ -89,6 +89,16 @@ export const getFornecedorById = async (id) => {
   return api.get(`/fornecedores/${id}`);
 };
 
+export const getFornecedoresByFiltro = async (filtro) => {
+  try {
+    const response = await api.get('/fornecedores/filtro/credor', { params: filtro });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar fornecedores com filtro:', error);
+    throw error;
+  }
+};
+
 // Funções para gerenciar carros
 export const getVeiculos = async (filters = {}) => {
   const response = await api.get('/veiculos', { params: filters });
@@ -163,6 +173,17 @@ export const getClienteById = async (id) => {
   return api.get(`/clientes/${id}`);
 };
 
+export const getClientesByFiltro = async (filtro) => {
+  try {
+    const response = await api.get('/clientes/filtro/credor', { params: filtro });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar clientes com filtro:', error);
+    throw error;
+  }
+};
+
+
 // Funções para gerenciar Funcionarios
 export const getFuncionarios = async (filters = {}) => {
   try {
@@ -185,6 +206,17 @@ export const updateFuncionario = async (id, cliente) => {
 export const getFuncionarioById = async (id) => {
   return api.get(`/funcionarios/${id}`);
 };
+
+export const getFuncionariosByFiltro = async (filtro) => {
+  try {
+    const response = await api.get('/funcionarios/filtro/credor', { params: filtro });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar funcionarios com filtro:', error);
+    throw error;
+  }
+};
+
 
 //Movimentacao Financeira
 export const getAllMovimentacaofinanceiraDespesa = async () => {
