@@ -13,6 +13,7 @@ import { useAuth } from './context/AuthContext';
 import Veiculos from './pages/Veiculos';
 import Clientes from './pages/Clientes';
 import Funcionarios from './pages/Funcionarios';
+import MovimentacaoFinanceiraDespesa from './pages/MovimentacaoFinanceiraDespesa';
 import Permissoes from './pages/Permissoes';
 
 import { hasPermission } from './utils/hasPermission'; // Importar a função
@@ -69,6 +70,10 @@ function App() {
           <Route
             path="/movimentacaoprodutos"
             element={isAuthenticated && hasPermission(permissions, 'movimentacaoprodutos', 'view') ? <MovimentacaoProdutos /> : null} // Condicionalmente não renderiza
+          />
+          <Route
+            path="/movimentacaofinanceiradespesas"
+            element={isAuthenticated && hasPermission(permissions, 'movimentacaofinanceiradespesas', 'view') ? <MovimentacaoFinanceiraDespesa /> : null} // Condicionalmente não renderiza
           />
         </Route>
       </Routes>

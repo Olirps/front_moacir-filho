@@ -112,7 +112,6 @@ export const getTipoVeiculo = async () => {
   return api.get('/tipoveiculo');
 };
 
-
 // Funções para gerenciar vinculo de produtos com veiculos
 export const vinculoProdVeiculo = async (carro) => {
   return api.post('/vinculoprodveiculo', carro);
@@ -187,7 +186,24 @@ export const getFuncionarioById = async (id) => {
   return api.get(`/funcionarios/${id}`);
 };
 
+//Movimentacao Financeira
+export const getAllMovimentacaofinanceiraDespesa = async () => {
+  return api.get('/movimentacaofinanceiradespesa');
+};
 
+export const getLancamentoDespesaById = async (id) => {
+  return api.get(`/movimentacaofinanceiradespesa/${id}`);
+};
+export const addMovimentacaofinanceiraDespesa = async (lancamento) => {
+  return api.post('/movimentacaofinanceiradespesa',lancamento);
+};
+export const updateMovimentacaofinanceiraDespesa = async (id) => {
+  return api.put(`/movimentacaofinanceiradespesa/${id}`);
+};
+
+export const cancelarMovimentacaofinanceiraDespesa = async (id) => {
+  return api.put(`/movimentacaofinanceiradespesa/${id}`);
+};
 
 // Nota Fiscal Eletronica
 export const getNotafiscal = async () => {

@@ -12,6 +12,7 @@ function Layout() {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isCadastrosOpen, setCadastrosOpen] = useState(false);
   const [isMovimentacaoOpen, setMovimentacaoOpen] = useState(false);
+  const [isGestaoFinanceiraOpen, setGestaoFinanceiraOpen] = useState(false); // Novo estado para "Gestão Financeira"
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,11 +35,19 @@ function Layout() {
   const toggleCadastros = () => {
     setCadastrosOpen(!isCadastrosOpen);
     setMovimentacaoOpen(false); // Fecha o submenu de movimentação
+    setGestaoFinanceiraOpen(false); // Fecha o submenu de gestão financeira
   };
 
   const toggleMovimentacao = () => {
     setMovimentacaoOpen(!isMovimentacaoOpen);
     setCadastrosOpen(false); // Fecha o submenu de cadastros
+    setGestaoFinanceiraOpen(false); // Fecha o submenu de gestão financeira
+  };
+
+  const toggleGestaoFinanceira = () => {
+    setGestaoFinanceiraOpen(!isGestaoFinanceiraOpen);
+    setCadastrosOpen(false); // Fecha o submenu de cadastros
+    setMovimentacaoOpen(false); // Fecha o submenu de movimentação
   };
 
   // Função que retorna true se o usuário tem permissão para visualizar o item de menu
@@ -83,6 +92,17 @@ function Layout() {
                 </div>
               </div>
             ) : null}
+
+            {/* Gestão Financeira menu item with a submenu */}
+            {canViewMenuItem('contaspagar')|| canViewMenuItem('movimentacaofinanceiradespesas') ? (
+              <div id="gestao-financeira" className="menu-item" onClick={toggleGestaoFinanceira}>
+                <span>Gestão Financeira</span>
+                <div id="gestao-financeira-submenu" className={isGestaoFinanceiraOpen ? 'submenu' : ''}>
+                  {canViewMenuItem('movimentacaofinanceiradespesas') && <Link to="/movimentacaofinanceiradespesas" className="submenu-item">Contas a Pagar</Link>}
+                </div>
+              </div>
+            ) : null}
+
           </nav>
           {/* User information and logout button */}
           <div id="user-info">

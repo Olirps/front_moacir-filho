@@ -45,7 +45,8 @@
 }
 
 #cadastros-submenu,
-#movimentacao-submenu {
+#movimentacao-submenu,
+#gestao-financeira-submenu {
   display: none;
   position: absolute;
   top: 100%;
@@ -71,7 +72,8 @@
 
 /* Exibe os submenus ao passar o mouse sobre o item pai */
 #cadastros:hover #cadastros-submenu,
-#movimentacao:hover #movimentacao-submenu {
+#movimentacao:hover #movimentacao-submenu,
+#gestao-financeira:hover #gestao-financeira-submenu {
   display: block;
 }
 

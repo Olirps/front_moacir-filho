@@ -164,8 +164,10 @@ function LancaNFe() {
       closeNotaFiscalModal();  // Fecha o modal após salvar
       setImportSuccess(prev => !prev); // Atualiza o estado para acionar re-renderização
     } catch (err) {
+      
       console.error('Erro ao buscar detalhes da NFe', err);
-      setToast({ message: "Erro ao buscar detalhes da NFe.", type: "error" });
+      setToast({ message: err.response?.data?.error, type: "error" });
+      //setToast({ message: "Erro ao buscar detalhes da NFe.", type: "error" });
     }
   };
   const handleImportSubmit = async (files) => {

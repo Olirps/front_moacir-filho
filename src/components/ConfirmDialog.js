@@ -1,7 +1,9 @@
 import React from 'react';
 import '../styles/ConfirmDialog.css'; // Adicione um CSS para a modal, se necessário
 
-const ConfirmDialog = ({ message, onConfirm, onCancel }) => {
+const ConfirmDialog = ({ isOpen,message, onConfirm, onCancel }) => {
+  if (!isOpen) return null; // Verifica se a modal deve ser exibida
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
