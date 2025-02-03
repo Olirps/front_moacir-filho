@@ -229,6 +229,11 @@ export const getLancamentoDespesaById = async (id) => {
 export const addMovimentacaofinanceiraDespesa = async (lancamento) => {
   return api.post('/movimentacaofinanceiradespesa',lancamento);
 };
+
+export const addParcelasDespesa = async (parcelas) => {
+  return api.post('/lancamentoparcelas',parcelas);
+};
+
 export const updateMovimentacaofinanceiraDespesa = async (id) => {
   return api.put(`/movimentacaofinanceiradespesa/${id}`);
 };

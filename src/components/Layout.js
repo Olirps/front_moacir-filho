@@ -68,7 +68,8 @@ function Layout() {
             {canViewMenuItem('home') && <Link to="/home" className="menu-item">Home</Link>}
 
             {/* Cadastros menu item with a submenu */}
-            {canViewMenuItem('permissoes') || canViewMenuItem('clientes') || canViewMenuItem('funcionarios') || canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos') ? (
+            {canViewMenuItem('permissoes') || canViewMenuItem('clientes') || canViewMenuItem('funcionarios') || canViewMenuItem('fornecedores') || canViewMenuItem('produtos') || canViewMenuItem('veiculos')
+            || canViewMenuItem('bancos') ? (
               <div id="cadastros" className="menu-item" onClick={toggleCadastros}>
                 <span>Cadastros</span>
                 <div id="cadastros-submenu" className={isCadastrosOpen ? 'submenu' : ''}>
@@ -78,6 +79,7 @@ function Layout() {
                   {canViewMenuItem('fornecedores') && <Link to="/fornecedores" className="submenu-item">Fornecedores</Link>}
                   {canViewMenuItem('produtos') && <Link to="/produtos" className="submenu-item">Produtos/Serviços</Link>}
                   {canViewMenuItem('veiculos') && <Link to="/veiculos" className="submenu-item">Veículos</Link>}
+                  {canViewMenuItem('bancos') && <Link to="/bancos" className="submenu-item">Bancos</Link>}
                 </div>
               </div>
             ) : null}

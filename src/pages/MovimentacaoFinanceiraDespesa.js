@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa } from '../services/api';
+import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, addParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
+import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import Toast from '../components/Toast';
 
 function MovimentacaoFinanceiraDespesa() {
@@ -18,6 +19,7 @@ function MovimentacaoFinanceiraDespesa() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalLancaParcelasOpen, setIsModalLancaParcelasOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [selectedMovimentacao, setSelectedMovimentacao] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
@@ -62,6 +64,12 @@ function MovimentacaoFinanceiraDespesa() {
     setCurrentPage(1);
   };
 
+  const handleSuccess = () => {
+    console.log("Despesa salva com sucesso!");
+    // Adicione outras ações que deseja realizar após salvar
+  };
+
+
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -93,6 +101,20 @@ function MovimentacaoFinanceiraDespesa() {
     setIsEdit(true);
     setIsModalOpen(true);
   };
+
+  const handleLancaParcelas = async (movimentacao) => {
+    setSelectedMovimentacao(movimentacao);
+    setIsModalLancaParcelasOpen(true);
+  };
+
+  const handleSaveParcelas = async (parcelas) => {
+    const lancaparcelas = await addParcelasDespesa(parcelas);
+    // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
+    console.log("Parcelas salvas:", parcelas);
+    setToast({ message: "Parcelas salvas com sucesso!", type: "success" });
+    setIsModalLancaParcelasOpen(false);
+  };
+
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -233,7 +255,14 @@ function MovimentacaoFinanceiraDespesa() {
                         >
                           Editar
                         </button>
+                        <button
+                          onClick={() => handleLancaParcelas(movimentacao)}
+                          className="edit-button"
+                        >
+                          Lançar Parcelas
+                        </button>
                       </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -269,8 +298,19 @@ function MovimentacaoFinanceiraDespesa() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={isEdit ? handleEditSubmit : handleAddMovimentacao}
+          onSuccess={handleSuccess}  // Passando a função handleSuccess
           movimentacao={selectedMovimentacao}
           edit={isEdit}
+        />
+      )}
+      {isModalLancaParcelasOpen && (
+        <ModalLancamentoParcelas
+          isOpen={isModalLancaParcelasOpen}
+          onClose={() => setIsModalLancaParcelasOpen(false)}
+          valorTotal={valor}
+          despesa={selectedMovimentacao}
+          onSave={handleSaveParcelas}
+
         />
       )}
     </div>

@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalMovimentacaoFinanceiraDespesa.css';
 import Toast from '../components/Toast';
+import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importando o modal de pesquisa
+import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import { getLancamentoDespesaById, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, cancelarMovimentacaofinanceiraDespesa } from '../services/api';
 
 const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
+    const [tipoCredor, setTipoCredor] = useState('');
     const [dataLancamento, setDataLancamento] = useState('');
-    const [tipo, setTipo] = useState('credito');  // Tipo de movimentação (crédito ou débito)
+    const [dataVencimento, setDataVencimento] = useState('');
+    const [tipo, setTipo] = useState('debito');  // Tipo de movimentação (crédito ou débito)
+    const [despesaAdicionada, setDespesaAdicionada] = useState('');  // Tipo de movimentação (crédito ou débito)
     const [formError, setFormError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ message: '', type: '' });
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [mensagem, setMensagem] = useState('');
     const [isModalPesquisaOpen, setIsModalPesquisaOpen] = useState(false);  // Controle do Modal de Pesquisa
     const [credorSelecionado, setCredorSelecionado] = useState(null);  // Crédito selecionado do Modal de Pesquisa
+    const [lancarParcelas, setLancarParcelas] = useState(false); // Estado para controlar a opção de parcelamento
+    const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
+
 
     useEffect(() => {
         if (isOpen) {
@@ -25,21 +34,31 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
             } else {
                 setDescricao('');
                 setValor('');
-                setDataLancamento('');
-                setTipo('credito');
+                setDataVencimento('');
+                setTipo('debito');
                 setCredorSelecionado(null); // Reseta o crédito selecionado
                 setLoading(false);
             }
         }
     }, [isOpen, movimentacao]);
 
+    const resetForm = () => {
+        setDescricao('');
+        setValor('');
+        setDataVencimento('');
+        setTipo('debito');
+        setCredorSelecionado(null);
+        setLancarParcelas(false); // Reseta a opção de parcelamento
+        setLoading(false);
+    };
+
     const fetchDespesaData = async (id) => {
         try {
             const response = await getLancamentoDespesaById(id);
             setDescricao(response.data.descricao);
             setValor(response.data.valor);
-            setDataLancamento(response.data.data_lancamento);
-            setTipo(response.data.tipo || 'credito');
+            setDataVencimento(response.data.data_lancamento);
+            setTipo(response.data.tipo || 'debito');
             setCredorSelecionado(response.data.credito || null); // Define o crédito selecionado
             setLoading(false);
         } catch (err) {
@@ -49,10 +68,22 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
         }
     };
 
+    const handleTipoCredor = (tipo) => {
+        setTipoCredor(tipo); // Aqui, o tipo de credor é atualizado no estado do componente pai
+    };
+
+    const handleLancaParcelas = ()=>{
+        setIsModalParcelasOpen(true)
+    }
+
     const handleSave = async () => {
-        if (!descricao || !valor || !dataLancamento || !credorSelecionado) {
+        if (!descricao || !valor || !dataVencimento || !credorSelecionado) {
             setFormError(true);
             setToast({ message: "Preencha todos os campos e selecione um crédito.", type: "error" });
+            return;
+        }
+        if (lancarParcelas) {
+            setIsModalParcelasOpen(true); // Abre o modal de parcelas
             return;
         }
 
@@ -60,29 +91,55 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
             const data = {
                 descricao,
                 valor,
-                data_lancamento: dataLancamento,
+                data_lancamento: dataVencimento,
                 tipo,
-                credor_id: credorSelecionado.id, // Usa o ID do crédito selecionado
+                ...(tipoCredor === 'funcionario' && { funcionario_id: credorSelecionado.id }),
+                ...(tipoCredor === 'fornecedor' && { fornecedor_id: credorSelecionado.id }),
+                ...(tipoCredor === 'cliente' && { cliente_id: credorSelecionado.id })
             };
+
 
             if (movimentacao) {
                 await updateMovimentacaofinanceiraDespesa(movimentacao.id, data);
             } else {
-                await addMovimentacaofinanceiraDespesa(data);
+
+                const despesaAdicionada = await addMovimentacaofinanceiraDespesa(data);
+
+                // Verifica se a despesa foi adicionada com sucesso
+                if (despesaAdicionada) {
+                    setToast({ message: "Despesa salva com sucesso!", type: "success" });
+                    // Chama a função para abrir o ConfirmarLancarParcelas
+                    handleConfirmarLancarParcelas(despesaAdicionada);
+                    onSuccess();
+                }
             }
             setToast({ message: "Despesa salva com sucesso!", type: "success" });
-            onSuccess();
-            onClose();
         } catch (err) {
             console.error('Erro ao salvar despesa', err);
             setToast({ message: "Erro ao salvar despesa.", type: "error" });
         }
     };
 
+    const handleConfirmarLancarParcelas = (despesa) => {
+        setDespesaAdicionada(despesa);
+        setMensagem("Despesa salva com sucesso! Deseja lançar as parcelas?");
+        setIsConfirmDialogOpen(true); // Abre o ConfirmDialog
+    };
+
     const handleCancelar = () => {
         if (!movimentacao) return;
+        setMensagem('Deseja realmente excluir esta despesa?')
         setIsConfirmDialogOpen(true);
     };
+
+    const handleSaveParcelas = (parcelas) => {
+        // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
+        console.log("Parcelas salvas:", parcelas);
+        setToast({ message: "Parcelas salvas com sucesso!", type: "success" });
+        onSuccess();
+        onClose();
+    };
+
 
     const confirmCancelamento = async () => {
         try {
@@ -128,7 +185,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                 <input
                                     type="text"
                                     className="input-geral"
-                                    value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : "" }
+                                    value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : ""}
                                     onClick={handleOpenPesquisaCredito}
                                     readOnly
                                     placeholder="Selecionar Credor"
@@ -141,7 +198,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                     className='input-geral'
                                     type="text"
                                     value={descricao.toUpperCase()}
-                                    onChange={(e) => setDescricao(e.target.value)}
+                                    onChange={(e) => setDescricao(e.target.value.toUpperCase())}
                                     required
                                 />
                             </div>
@@ -156,19 +213,18 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                                 />
                             </div>
                             <div>
-                                <label>Data de Lançamento</label>
+                                <label>Data de Vencimento</label>
                                 <input
                                     className='input-geral'
                                     type="date"
-                                    value={dataLancamento}
-                                    onChange={(e) => setDataLancamento(e.target.value)}
+                                    value={dataVencimento}
+                                    onChange={(e) => setDataVencimento(e.target.value)}
                                     required
                                 />
                             </div>
                             <div>
                                 <label>Tipo</label>
                                 <select className='input-geral' value={tipo} onChange={(e) => setTipo(e.target.value)} required>
-                                    <option value="credito">Crédito</option>
                                     <option value="debito">Débito</option>
                                 </select>
                             </div>
@@ -180,20 +236,29 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                     </>
                 )}
             </div>
-
-            <ConfirmDialog
-                isOpenConfirm={isConfirmDialogOpen}
-                message="Deseja realmente excluir esta despesa?"
-                onConfirm={confirmCancelamento}
-                onCancel={() => setIsConfirmDialogOpen(false)}
-            />
-
             {toast.message && <Toast message={toast.message} type={toast.type} />}
-
+            {isConfirmDialogOpen && (
+                <ConfirmarLancarParcelas
+                    isOpen={isConfirmDialogOpen}
+                    message={mensagem}
+                    onConfirm={handleLancaParcelas}  // Abre o modal de lançamento de parcelas
+                    onCancel={() => setIsConfirmDialogOpen(false)}
+                />
+            )
+            }
             <ModalPesquisaCredor
                 isOpen={isModalPesquisaOpen}
                 onClose={() => setIsModalPesquisaOpen(false)}
                 onSelectCredor={handleSelectCredor}
+                onTipoCredor={handleTipoCredor}  // Passando a função para o modal
+            />
+
+            <ModalLancamentoParcelas
+                isOpen={isModalParcelasOpen}
+                onClose={() => setIsModalParcelasOpen(false)}
+                valorTotal={valor}
+                despesa={despesaAdicionada}
+                onSave={handleSaveParcelas}
             />
         </div>
     );

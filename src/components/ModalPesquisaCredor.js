@@ -3,7 +3,7 @@ import '../styles/ModalPesquisaCredor.css';
 import Toast from '../components/Toast';
 import { getFornecedoresByFiltro, getFuncionariosByFiltro, getClientesByFiltro } from '../services/api';  // Funções de consulta
 
-const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredor }) => {
+const ModalPesquisaCredor = ({ isOpen,onTipoCredor, onClose, onSelectCredor }) => {
     const [tipoCredito, setTipoCredito] = useState('fornecedor'); // Estado para o tipo de crédito selecionado
     const [funcionarioInputs, setFuncionarioInputs] = useState({ nome: '', cpf: '' });
     const [fornecedorInputs, setFornecedorInputs] = useState({ razaoSocial: '', nomeFantasia: '', cnpj: '' });
@@ -59,6 +59,7 @@ const ModalPesquisaCredor = ({ isOpen, onClose, onSelectCredor }) => {
     };
 
     const handleSelect = (credor) => {
+        onTipoCredor(tipoCredito)
         onSelectCredor(credor);  // Envia o item selecionado para o pai
         onClose();  // Fecha o modal
     };
