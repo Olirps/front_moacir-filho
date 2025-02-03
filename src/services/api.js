@@ -60,7 +60,19 @@ export const updatePermissoes = async (id, permissoes) => {
 };
 
 
+// Bancos
 
+export const addContabancaria = async (contabancaria) => {
+  return api.post('/contasbancarias', contabancaria);
+};
+
+export const getAllContas = async () => {
+  return api.get('/contasbancarias');
+};
+
+export const getAllBancos = async () => {
+  return api.get('/bancos');
+};
 
 // Funções para gerenciar pessoas
 /*export const getPessoas = () => {
