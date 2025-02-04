@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastroCarro.css';
 import { getMarcas, getTipoVeiculo } from '../services/api';
 import { formatPlaca } from '../utils/functions';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
   const [modelo, setModelo] = useState('');
@@ -11,6 +14,16 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
   const [tipoVeiculoId, setTipoVeiculoId] = useState('');
   const [marcas, setMarcas] = useState([]);
   const [tiposVeiculo, setTiposVeiculo] = useState([]);
+  const [permiteEditar, setPermiteEditar] = useState(true);
+  const { permissions } = useAuth();
+
+  useEffect(() => {
+    if (isOpen && isEdit) {
+      const canEdit = hasPermission(permissions, 'carros', isEdit ? 'edit' : 'insert');
+      setPermiteEditar(canEdit)
+    }
+  }, [isOpen, isEdit, permissions]);
+
 
   useEffect(() => {
     if (carro) {
@@ -81,6 +94,7 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
                 value={modelo}
                 onChange={handleModeloChange}
                 maxLength="150"
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -94,8 +108,9 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
                 value={placa}
                 onChange={(e) => handlePlacaChange(e.target.value.toUpperCase())} // Transforma para maiúsculas ao digitar
                 maxLength="8"
-                required={tipoVeiculoId !== 3 && tipoVeiculoId !==  4} // Condicional para placa ser obrigatória apenas se não for maquinário ou equipamento
-                />
+                disabled={!permiteEditar}
+                required={tipoVeiculoId !== 3 && tipoVeiculoId !== 4} // Condicional para placa ser obrigatória apenas se não for maquinário ou equipamento
+              />
             </div>
 
             <div>
@@ -107,6 +122,7 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
                 name="quilometragem"
                 value={quilometragem}
                 onChange={handleQuilometragemChange}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -118,6 +134,7 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
                 name="marcaId"
                 value={marcaId}
                 onChange={handleMarcaChange}
+                disabled={!permiteEditar}
                 required
               >
                 <option value="">Selecione a Marca</option>
@@ -136,6 +153,7 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
                 name="tipoVeiculoId"
                 value={tipoVeiculoId}
                 onChange={handleTipoVeiculoChange}
+                disabled={!permiteEditar}
                 required
               >
                 <option value="">Selecione o Tipo de Veículo</option>
@@ -147,7 +165,15 @@ const ModalCadastroCarro = ({ isOpen, onClose, isEdit, onSubmit, carro }) => {
               </select>
             </div>
             <div id='botao-salva'>
-              <button type="submit" id="btnsalvar" className="button">Salvar</button>
+              {permiteEditar ? (
+                <button
+                  type="submit"
+                  id="btnsalvar"
+                  className="button"
+                >
+                  Salvar
+                </button>
+              ) : ''}
             </div>
           </div>
         </form>

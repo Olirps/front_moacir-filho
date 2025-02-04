@@ -4,6 +4,9 @@ import { cpfCnpjMask } from './utils';
 import { formatarCelular } from '../utils/functions';
 import { getUfs, getMunicipiosUfId } from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
   const [nome, setNome] = useState('');
@@ -24,6 +27,15 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
   const [ufs, setUfs] = useState([]); // Estado para armazenar os UFs
   const [municipios, setMunicipios] = useState([]); // Estado para armazenar os municípios
   const [toast, setToast] = useState({ message: '', type: '' });
+  const [permiteEditar, setPermiteEditar] = useState(true);
+  const { permissions } = useAuth();
+
+  useEffect(() => {
+    if (isOpen && edit) {
+      const canEdit = hasPermission(permissions, 'funcionarios', edit ? 'edit' : 'insert');
+      setPermiteEditar(canEdit)
+    }
+  }, [isOpen, edit, permissions]);
 
   // Carregar dados do funcionário quando o modal for aberto
   useEffect(() => {
@@ -78,7 +90,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
       setUf('');
       setCep('');
     }
-  }, [isOpen, funcionario, edit, ufs, municipios]);
+  }, [funcionario, ufs, municipios]);
 
 
   //ufs, municipios
@@ -159,6 +171,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={nome.toUpperCase()}
                 onChange={(e) => setNome(e.target.value)}
                 maxLength={150}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -187,6 +200,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 maxLength={100}
+                disabled={!permiteEditar}
               />
             </div>
             <div>
@@ -199,6 +213,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={formatarCelular(celular)}
                 onChange={(e) => setCelular(e.target.value)}
                 maxLength={20}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -211,6 +226,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 id="dataContratacao"
                 value={dataContratacao}
                 onChange={(e) => setdataContratacao(e.target.value)}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -222,6 +238,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 name="tipoFuncionario"
                 value={tipoFuncionario}
                 onChange={(e) => settipoFuncionario(e.target.value)}
+                disabled={!permiteEditar}
                 required
               >
                 <option value="">Selecione</option>
@@ -240,6 +257,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={cargo.toUpperCase()}
                 onChange={(e) => setCargo(e.target.value)}
                 maxLength={50}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -253,6 +271,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={salario}
                 onChange={(e) => setSalario(e.target.value.replace(',', '.'))}
                 maxLength={12}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -266,6 +285,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={logradouro.toUpperCase()}
                 maxLength={100}
                 onChange={(e) => setLogradouro(e.target.value)}
+                disabled={!permiteEditar}
               />
             </div>
             <div>
@@ -278,6 +298,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={numero}
                 onChange={(e) => { setNumero(e.target.value) }}
                 maxLength={8}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -291,6 +312,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={bairro.toUpperCase()}
                 onChange={(e) => { setBairro(e.target.value) }}
                 maxLength={100}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -304,6 +326,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 value={cep}
                 onChange={(e) => { setCep(e.target.value) }}
                 maxLength={9}
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -315,6 +338,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 name="uf"
                 value={uf}
                 onChange={handleUfChange}
+                disabled={!permiteEditar}
                 required
               >
                 <option value="">Selecione um estado</option>
@@ -333,6 +357,7 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 name="municipio"
                 value={municipio}
                 onChange={(e) => { setMunicipio(e.target.value) }}
+                disabled={!permiteEditar}
                 required
               >
                 <option value="">Selecione um município</option>
@@ -346,7 +371,15 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
               </select>
             </div>
             <div id='botao-salva'>
-              <button id="btnsalvar" className="button" type="submit">Salvar</button>
+              {permiteEditar ? (
+                <button
+                  type="submit"
+                  id="btnsalvar"
+                  className="button"
+                >
+                  Salvar
+                </button>
+              ) : ''}
             </div>
           </div>
         </form>

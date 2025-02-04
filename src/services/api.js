@@ -70,6 +70,14 @@ export const getAllContas = async () => {
   return api.get('/contasbancarias');
 };
 
+export const getContasBancariaById = async (id) => {
+  return api.get(`/contasbancarias/${id}`);
+};
+
+export const updateContaBancaria = async (id,conta) => {
+  return api.put(`/contasbancarias/${id}`,conta);
+};
+
 export const getAllBancos = async () => {
   return api.get('/bancos');
 };

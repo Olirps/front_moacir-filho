@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroNFe.css';
 import ModalPesquisaFornecedor from './ModalPesquisaFornecedor';
 import { getUfs, getMunicipios, getUFIBGE } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfChange, isReadOnly }) => {
     const [isPesquisaModalOpen, setIsPesquisaModalOpen] = useState(false);
@@ -23,6 +26,16 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
     const [municipios, setMunicipios] = useState([]);
     const [selectedUfCodIBGE, setSelectedUfCodIBGE] = useState(null);
     const [selectedMunicipioCodIBGE, setSelectedMunicipioCodIBGE] = useState(null);
+    const [permiteEditar, setPermiteEditar] = useState(true);
+    const { permissions } = useAuth();
+
+    useEffect(() => {
+        if (isOpen && isEdit) {
+            const canEdit = hasPermission(permissions, 'notafiscal', isEdit ? 'edit' : 'insert');
+            setPermiteEditar(canEdit)
+        }
+    }, [isOpen, isEdit, permissions]);
+
 
     useEffect(() => {
         const fetchUfs = async () => {
@@ -40,7 +53,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
 
     useEffect(() => {
         const loadNotaFiscalData = async () => {
-            if (notaFiscal && (isEdit || isReadOnly) ) {
+            if (notaFiscal && (isEdit || isReadOnly)) {
                 try {
                     const ufResponse = await getUFIBGE(notaFiscal.cUF);
                     const ufData = ufResponse?.data;
@@ -220,10 +233,10 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                     value={fornecedor}
                                     readOnly
                                     required
-                                    disabled={isReadOnly}
+                                    disabled={isReadOnly || !permiteEditar}
                                 />
                                 <div id='button-group'>
-                                    <button className="button" type="button" onClick={openPesquisaModal} disabled={isReadOnly}>
+                                    <button className="button" type="button" onClick={openPesquisaModal} disabled={isReadOnly || !permiteEditar}>
                                         Pesquisar Fornecedor
                                     </button>
                                 </div>
@@ -248,7 +261,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                         value={value}
                                         onChange={(e) => setter(e.target.value)}
                                         required
-                                        disabled={isReadOnly}
+                                        disabled={isReadOnly || !permiteEditar}
                                     />
                                 </div>
                             ))}
@@ -261,10 +274,10 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                     value={uf}
                                     onChange={handleUfChange}
                                     required
-                                    disabled={isReadOnly}
+                                    disabled={isReadOnly || !permiteEditar}
                                 >
                                     <option value="">Selecione uma UF</option>
-                                    {ufs.length > '0'&& (
+                                    {ufs.length > '0' && (
                                         ufs.map((uf) => (
                                             <option key={uf.codIBGE} value={uf.sigla}>
                                                 {uf.nome}
@@ -282,7 +295,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                     value={municipio}
                                     onChange={handleMunicipioChange}
                                     required
-                                    disabled={!municipios.length || isReadOnly}
+                                    disabled={!municipios.length || isReadOnly || !permiteEditar}
                                 >
                                     <option key="default-municipio" value="">Selecione um município</option>
                                     {municipios.map((mun) => (
@@ -308,15 +321,21 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                         value={value}
                                         onChange={(e) => setter(e.target.value)}
                                         required
-                                        disabled={isReadOnly}
+                                        disabled={isReadOnly || !permiteEditar}
                                     />
                                 </div>
                             ))}
                         </div>
-                        <div id='button-group'>
-                            <button className='button' type="submit" disabled={isReadOnly}>
-                                Salvar
-                            </button>
+                        <div id='botao-salva'>
+                            {permiteEditar && !isReadOnly? (
+                                <button
+                                    type="submit"
+                                    id="btnsalvar"
+                                    className="button"
+                                >
+                                    Salvar
+                                </button>
+                            ) : ''}
                         </div>
 
                     </div>

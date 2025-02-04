@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getNotafiscal, getFornecedorById, getNFeById, importNotafiscal, addNotafiscal, getMunicipiosIBGE,getUFIBGE } from '../services/api';
+import { getNotafiscal, getFornecedorById, getNFeById, importNotafiscal, addNotafiscal, getMunicipiosIBGE, getUFIBGE, updateNFe } from '../services/api';
 import '../styles/LancaNFe.css';
 import '../App.css';
 import Toast from '../components/Toast';
@@ -7,6 +7,8 @@ import ModalImportacaoXML from '../components/ModalImportacaoXML'; // Ajuste o c
 import ModalProdutosNF from '../components/ModalProdutosNF'; // Ajuste o caminho conforme necessário
 import ModalCadastroNFe from '../components/ModalCadastroNFe'; // Ajuste o caminho conforme necessário
 import { cpfCnpjMask } from '../components/utils';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
 
 
@@ -36,6 +38,7 @@ function LancaNFe() {
   const [error, setError] = useState([]);
   const [importSuccess, setImportSuccess] = useState(false);
   const [ufId, setUfId] = useState('');
+  const { permissions } = useAuth();
 
 
   useEffect(() => {
@@ -44,6 +47,10 @@ function LancaNFe() {
   }, [importSuccess]);
 
   const openImportModal = () => {
+    if (!hasPermission(permissions, 'notafiscal', 'insert')) {
+      setToast({ message: "Você não tem permissão para cadastrar nota fiscal.", type: "error" });
+      return; // Impede a abertura do modal
+    }
     setIsImportModalOpen(true);
   };
 
@@ -60,6 +67,10 @@ function LancaNFe() {
   };
 
   const openNotaFiscalModal = () => {
+    if (!hasPermission(permissions, 'notafiscal', 'insert')) {
+      setToast({ message: "Você não tem permissão para cadastrar nota fiscal.", type: "error" });
+      return; // Impede a abertura do modal
+    }
     setSelectedNFe(null)
     setIsReadOnly(false)
     setIsEdit(false)
@@ -84,32 +95,32 @@ function LancaNFe() {
 
 
   const handleSearch = () => {
-      const lowerNNF = nNF.toLowerCase();
-      const lowerCodFornecedor = codFornecedor.toLowerCase();
-      const lowerCnpjFornecedor = cnpjFornecedor.toLowerCase();
-      const lowerNomeFornecedor = nomeFornecedor.toLowerCase();
-  
-      const results = notasFiscais.filter(notaFiscal => {
-        // Acessa diretamente os dados do fornecedor dentro de notaFiscal
-        const fornecedorNome = notaFiscal.nomeFornecedor ? notaFiscal.nomeFornecedor.toLowerCase() : '';
-        const fornecedorCnpj = notaFiscal.cnpjFornecedor ? notaFiscal.cnpjFornecedor.toLowerCase() : '';
-        const codFornecedorNota = notaFiscal.codFornecedor ? notaFiscal.codFornecedor.toString() : '';
-  
-        // Remove a máscara do CNPJ do fornecedor e da busca
-        const cleanCnpjFornecedor = cpfCnpjMask(fornecedorCnpj);
-        const cleanCnpjSearch = cpfCnpjMask(lowerCnpjFornecedor);
-  
-        return (
-          (lowerNNF ? notaFiscal.nNF.toLowerCase().includes(lowerNNF) : true) &&
-          (lowerCodFornecedor ? codFornecedorNota.includes(lowerCodFornecedor) : true) &&
-          (lowerCnpjFornecedor ? cleanCnpjFornecedor.includes(cleanCnpjSearch) : true) &&
-          (lowerNomeFornecedor ? fornecedorNome.trim().includes(lowerNomeFornecedor) : true)
-        );
-      });
-  
-      setFilteredNotasFiscais(results);
-      setCurrentPage(1);
-    };
+    const lowerNNF = nNF.toLowerCase();
+    const lowerCodFornecedor = codFornecedor.toLowerCase();
+    const lowerCnpjFornecedor = cnpjFornecedor.toLowerCase();
+    const lowerNomeFornecedor = nomeFornecedor.toLowerCase();
+
+    const results = notasFiscais.filter(notaFiscal => {
+      // Acessa diretamente os dados do fornecedor dentro de notaFiscal
+      const fornecedorNome = notaFiscal.nomeFornecedor ? notaFiscal.nomeFornecedor.toLowerCase() : '';
+      const fornecedorCnpj = notaFiscal.cnpjFornecedor ? notaFiscal.cnpjFornecedor.toLowerCase() : '';
+      const codFornecedorNota = notaFiscal.codFornecedor ? notaFiscal.codFornecedor.toString() : '';
+
+      // Remove a máscara do CNPJ do fornecedor e da busca
+      const cleanCnpjFornecedor = cpfCnpjMask(fornecedorCnpj);
+      const cleanCnpjSearch = cpfCnpjMask(lowerCnpjFornecedor);
+
+      return (
+        (lowerNNF ? notaFiscal.nNF.toLowerCase().includes(lowerNNF) : true) &&
+        (lowerCodFornecedor ? codFornecedorNota.includes(lowerCodFornecedor) : true) &&
+        (lowerCnpjFornecedor ? cleanCnpjFornecedor.includes(cleanCnpjSearch) : true) &&
+        (lowerNomeFornecedor ? fornecedorNome.trim().includes(lowerNomeFornecedor) : true)
+      );
+    });
+
+    setFilteredNotasFiscais(results);
+    setCurrentPage(1);
+  };
 
   const handleClear = () => {
     setNNF('');
@@ -141,7 +152,7 @@ function LancaNFe() {
     const formData = new FormData(e.target);
     formData.forEach((value, key) => {
     });*/
-    const vlrNf =  parseFloat(e.vNF.replace(',', '.'));
+    const vlrNf = parseFloat(e.vNF.replace(',', '.'));
     const newNf = {
       codFornecedor: e.fornecedorId,
       nNF: e.nNF,
@@ -164,7 +175,7 @@ function LancaNFe() {
       closeNotaFiscalModal();  // Fecha o modal após salvar
       setImportSuccess(prev => !prev); // Atualiza o estado para acionar re-renderização
     } catch (err) {
-      
+
       console.error('Erro ao buscar detalhes da NFe', err);
       setToast({ message: err.response?.data?.error, type: "error" });
       //setToast({ message: "Erro ao buscar detalhes da NFe.", type: "error" });
@@ -224,7 +235,40 @@ function LancaNFe() {
       setToast({ message: "Erro ao buscar detalhes da NFe.", type: "error" });
     }
   };
-  const handleDetalhes= async (nfe) => {
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updatedNotaFiscal = {
+      codFornecedor: formData.get('fornecedorId'),
+      nNF: formData.get('nNF'),
+      serie: formData.get('serie'),
+      cUF: formData.get('selectedUfCodIBGE'),
+      municipio: formData.get('selectedMunicipioCodIBGE').replace(/\D/g, ''),
+      municipio: formData.get('municipio'),
+      dataEmissao: formData.get('dataEmissao'),
+      dataSaida: formData.get('dataSaida'),
+      cNF: formData.get('cNF'),
+      tpNF: formData.get('tpNF'),
+      vNF: formData.get('vlrNf')
+    };
+
+    try {
+      const notaEditada = await updateNFe(selectedNFe.id, updatedNotaFiscal);
+      setToast({ message: "Nota Fiscal atualizada com sucesso!", type: "success" });
+      setIsModalOpen(false);
+      setSelectedNFe(null);
+      setIsEdit(false);
+      const response = await getNotafiscal();
+      setNotasFiscais(response.data);
+      setFilteredNotasFiscais(response.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || "Erro ao atualizar nota fiscal.";
+      setToast({ message: errorMessage, type: "error" });
+    }
+  }
+
+  const handleDetalhes = async (nfe) => {
     try {
       let response = await getNFeById(nfe.id);
       //const fornecedor = fornecedores[nfe.codFornecedor];
@@ -357,25 +401,25 @@ function LancaNFe() {
                       <tr key={notaFiscal.id}>
                         <td>{notaFiscal.id}</td>
                         <td>{notaFiscal.nNF}</td>
-                        <td>{notaFiscal.nomeFornecedor|| 'Nome do Fornecedor não disponível'}</td>
+                        <td>{notaFiscal.nomeFornecedor || 'Nome do Fornecedor não disponível'}</td>
                         <td>{cpfCnpjMask(notaFiscal.cpfCnpj || 'CNPJ não disponível')}</td>
                         <td>{new Date(notaFiscal.dhEmi).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                         <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(notaFiscal.vNF)}</td>
                         <td id="button-action">
-                          {status === 'fechada'&& (
-                              <button className="detalhes-button"
-                                      onClick={() => handleDetalhes(notaFiscal)}
-                              >Detalhes</button>
+                          {status === 'fechada' && (
+                            <button className="detalhes-button"
+                              onClick={() => handleDetalhes(notaFiscal)}
+                            >Detalhes</button>
                           )}
                           {status !== 'fechada' && status === 'andamento' && (
-                              <button className="detalhes-button"
-                                      onClick={() => handleEditar(notaFiscal)}
-                              >Editar</button>
+                            <button className="detalhes-button"
+                              onClick={() => handleEditar(notaFiscal)}
+                            >Editar</button>
                           )}
                           {tipoLancto === 'manual' && (status === 'aberta' || status === 'andamento') && (
-                              <button onClick={() => handleProductClick(notaFiscal)} className="lancto-prod-button">Lancto Prod</button>
+                            <button onClick={() => handleProductClick(notaFiscal)} className="lancto-prod-button">Lancto Prod</button>
                           )}
-                          {status === 'fechada'&& (
+                          {status === 'fechada' && (
                             <button onClick={() => handleProductClick(notaFiscal)} className="edit-button">Produtos</button>
                           )}
                         </td>
@@ -428,7 +472,7 @@ function LancaNFe() {
         <ModalCadastroNFe
           isOpen={isNotaFicalModalOpen}
           onClose={() => setIsNotaFicalModalOpen(false)}
-          onSubmit={handleNotaFiscalClick}
+          onSubmit={isEdit ? handleEditSubmit : handleNotaFiscalClick}
           onUfChange={handleUfChange} // Adicione a função para atualizar a UF
           notaFiscal={selectedNFe}
           isReadOnly={isReadOnly}  // Passa o estado isReadOnly para o modal

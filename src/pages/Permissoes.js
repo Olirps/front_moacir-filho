@@ -81,6 +81,7 @@ export default function PermissionsPage() {
             permissoes: [{
                 pagename: formData.get('pagename'),
                 view: formData.get('view') === 'on', // FormData retorna 'on' para checkbox
+                viewcadastro: formData.get('viewcadastro') === 'on', 
                 edit: formData.get('edit') === 'on',
                 delete: formData.get('delete') === 'on',
                 insert: formData.get('insert') === 'on',
@@ -112,6 +113,7 @@ export default function PermissionsPage() {
             grupoAcessoId: '',
             pagename: '',
             view: false,
+            viewcadastro: false,
             edit: false,
             delete: false,
             insert: false,
@@ -126,6 +128,7 @@ export default function PermissionsPage() {
             grupoAcessoId: permission.grupoAcessoId, // Aqui você pode precisar ajustar conforme a estrutura do seu modelo
             pagename: permission.pagename,
             view: permission.view,
+            viewcadastro: permission.viewcadastro,
             edit: permission.edit,
             delete: permission.delete,
             insert: permission.insert,
@@ -190,6 +193,9 @@ export default function PermissionsPage() {
                                 <input type="checkbox" name="view" checked={formData.view} onChange={handleChange} /> View
                             </label>
                             <label>
+                                <input type="checkbox" name="viewcadastro" checked={formData.viewcadastro} onChange={handleChange} /> View Cadastro
+                            </label>
+                            <label>
                                 <input type="checkbox" name="edit" checked={formData.edit} onChange={handleChange} /> Edit
                             </label>
                             <label>
@@ -225,7 +231,7 @@ export default function PermissionsPage() {
                                     <tr key={perm.id}>
                                         <td>{perm.pagename}</td>
                                         <td>
-                                            {perm.view && "👁️ "} {perm.edit && "✏️ "} {perm.delete && "🗑️ "} {perm.insert && "➕ "}
+                                            {perm.view && "👁️ "} {perm.viewcadastro && "🔍"} {perm.edit && "✏️ "} {perm.delete && "🗑️ "} {perm.insert && "➕ "}
                                         </td>
                                         <td>
                                             <div id="button-group">

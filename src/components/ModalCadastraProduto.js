@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastraProduto.css';
 import Toast from '../components/Toast';
 import { addProdutos, updateNFe } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
-
-const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additionalFields = [] }) => {
+const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, additionalFields = [] }) => {
   const [tipoProduto, setTipoProduto] = useState(
     produto?.tipo_produto === 'produto' || produto?.tipo_produto === 'servico'
       ? produto.tipo_produto
@@ -18,7 +19,15 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
   const [valor_unit, setUnit] = useState('');
   const [produtos, setProdutos] = useState([]);
   const [formData, setFormData] = React.useState({});
+  const [permiteEditar, setPermiteEditar] = useState(true);
+  const { permissions } = useAuth();
 
+  useEffect(() => {
+    if (isOpen && edit) {
+      const canEdit = hasPermission(permissions, 'produtos', edit ? 'edit' : 'insert');
+      setPermiteEditar(canEdit)
+    }
+  }, [isOpen, edit, permissions]);
 
 
 
@@ -48,7 +57,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
       const nota_id = 0
       const formData = new FormData(e.target);
       const newProduto = {
-        tipoProduto:tipoProduto,
+        tipoProduto: tipoProduto,
         xProd: formData.get('xProd'),
         cEAN: formData.get('cEAN'),
         qtdMinima: formData.get('qtdMinima'),
@@ -115,6 +124,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                 value="produto"
                 checked={tipoProduto === 'produto'}
                 onChange={() => setTipoProduto('produto')}
+                disabled={!permiteEditar}
               />
               Produto
             </label>
@@ -125,6 +135,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                 value="servico"
                 checked={tipoProduto === 'servico'}
                 onChange={() => setTipoProduto('servico')}
+                disabled={!permiteEditar}
               />
               Serviço
             </label>
@@ -141,6 +152,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                 value={xProd}
                 onChange={(e) => setxProd(e.target.value)}
                 maxLength="150"
+                disabled={!permiteEditar}
                 required
               />
             </div>
@@ -156,6 +168,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                     name="cEAN"
                     value={cEAN}
                     onChange={(e) => setcEAN(e.target.value)}
+                    disabled={!permiteEditar}
                     required
                   />
                 </div>
@@ -168,6 +181,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                     name="qtdMinima"
                     value={qtdMinima}
                     onChange={(e) => setqtdMinima(e.target.value)}
+                    disabled={!permiteEditar}
                     required
                   />
                 </div>
@@ -180,6 +194,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                     name="qCom"
                     value={qCom}
                     onChange={(e) => setqCom(e.target.value)}
+                    disabled={!permiteEditar}
                     required
                   />
                 </div>
@@ -193,12 +208,20 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, produto, prod, additi
                 name={field.name}
                 placeholder={field.placeholder}
                 onChange={handleInputChange}
+                disabled={!permiteEditar}
               />
             ))}
           </div>
-
-          <div id="botao-salva">
-            <button type="submit" id="btnsalvar" className="button">Salvar</button>
+          <div id='botao-salva'>
+            {permiteEditar ? (
+              <button
+                type="submit"
+                id="btnsalvar"
+                className="button"
+              >
+                Salvar
+              </button>
+            ) : ''}
           </div>
         </form>
       </div>

@@ -3,7 +3,7 @@ import '../styles/ModalCadastroFornecedor.css'; // Certifique-se de criar este C
 import { cpfCnpjMask } from './utils';
 import { getUfs, getMunicipiosUfId } from '../services/api';
 import Toast from '../components/Toast';
-
+import { formatarCelular } from '../utils/functions';
 
 
 const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor }) => {
@@ -279,7 +279,7 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 type="text"
                 id="celular"
                 name="celular"
-                value={celular}
+                value={formatarCelular(celular)}
                 onChange={handleCelularChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
                 required

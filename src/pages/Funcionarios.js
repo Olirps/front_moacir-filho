@@ -118,8 +118,8 @@ function Funcionarios() {
 
   const handleEditClick = async (funcionario) => {
     try {
-      if (!hasPermission(permissions, 'funcionarios', 'edit')) {
-        setToast({ message: "Você não tem permissão para editar funcionario.", type: "error" });
+      if (!hasPermission(permissions, 'funcionarios', 'viewcadastro')) {
+        setToast({ message: "Você não tem permissão para visualizar o cadastro de funcionarios.", type: "error" });
         return; // Impede a abertura do modal
       }
       const response = await getFuncionarioById(funcionario.id);
@@ -217,7 +217,7 @@ function Funcionarios() {
                       <td>{formatarCelular(funcionario.cliente.celular)}</td>
                       <td>{funcionario.cargo}</td>
                       <td>
-                        <button className="edit-button" onClick={() => handleEditClick(funcionario)}>Editar</button>
+                        <button className="edit-button" onClick={() => handleEditClick(funcionario)}>Visualizar</button>
                       </td>
                     </tr>
                   ))}

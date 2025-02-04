@@ -71,7 +71,7 @@ function Fornecedores() {
     setCpf(cpfCnpjMask(value));
   };
 
-  const handleOpenModal = () => {
+  const handleCadastrarModal = () => {
     if (!hasPermission(permissions, 'fornecedores', 'insert')) {
       setToast({ message: "Você não tem permissão para cadastrar fornecedores.", type: "error" });
       return; // Impede a abertura do modal
@@ -116,8 +116,8 @@ function Fornecedores() {
 
   const handleEditClick = async (fornecedor) => {
     try {
-      if (!hasPermission(permissions, 'fornecedores', 'edit')) {
-        setToast({ message: "Você não tem permissão para editar fornecedores.", type: "error" });
+      if (!hasPermission(permissions, 'fornecedores', 'viewcadastro')) {
+        setToast({ message: "Você não tem permissão para visualizar o cadastro de fornecedores.", type: "error" });
         return; // Impede a abertura do modal
       }
       setIsModalOpen(true);
@@ -226,7 +226,7 @@ function Fornecedores() {
               <div id="button-group">
                 <button onClick={handleSearch} className="button">Pesquisar</button>
                 <button onClick={handleClear} className="button">Limpar</button>
-                <button onClick={handleOpenModal} className="button">Cadastrar</button>
+                <button onClick={handleCadastrarModal} className="button">Cadastrar</button>
               </div>
             </div>
           </div>
@@ -261,7 +261,7 @@ function Fornecedores() {
                           onClick={() => handleEditClick(fornecedor)}
                           className="edit-button"
                         >
-                          Editar
+                          Visualizar
                         </button>
                       </td>
                     </tr>

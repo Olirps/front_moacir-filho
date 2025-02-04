@@ -4,6 +4,9 @@ import { cpfCnpjMask } from './utils';
 import { getUfs, getMunicipiosUfId } from '../services/api';
 import Toast from '../components/Toast';
 import { formatarCelular } from '../utils/functions';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 
 const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
@@ -18,11 +21,20 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
     const [municipio, setMunicipio] = useState('');
     const [uf, setUf] = useState('');
     const [cep, setCep] = useState('');
+    const [permiteEditar, setPermiteEditar] = useState(true);
     const [ufs, setUfs] = useState([]); // Estado para armazenar os UFs
     const [municipios, setMunicipios] = useState([]); // Estado para armazenar os municípios
     const [toast, setToast] = useState({ message: '', type: '' });
+    const { permissions } = useAuth();
+    const [hasAccess, setHasAccess] = useState(true);
 
 
+    useEffect(() => {
+        if (isOpen && edit) {
+            const canEdit = hasPermission(permissions, 'clientes', edit ? 'edit' : 'insert');
+            setPermiteEditar(canEdit)
+        }
+    }, [isOpen, edit, permissions]);
 
     useEffect(() => {
         const preencherDadosCliente = async () => {
@@ -130,7 +142,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
 
     if (!isOpen) return null;
 
-   
+
 
     return (
         <div className="modal-overlay">
@@ -147,8 +159,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="nome"
                                 name="nome"
                                 value={nome.toUpperCase()}
-                                onChange={(e)=>{setNome(e.target.value)}} //forma resumida de atualizar o input
+                                onChange={(e) => { setNome(e.target.value) }} //forma resumida de atualizar o input
                                 maxLength="150"
+                                disabled={!permiteEditar}
                                 required
                             />
                             <label htmlFor="nomeFantasia">Nome Fantasia</label>
@@ -158,8 +171,10 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="nomeFantasia"
                                 name="nomeFantasia"
                                 value={nomeFantasia.toUpperCase()}
-                                onChange={(e)=>{setNomeFantasia(e.target.value)}} //forma resumida de atualizar o input
+                                onChange={(e) => { setNomeFantasia(e.target.value) }} //forma resumida de atualizar o input
                                 maxLength="150"
+                                disabled={!permiteEditar}
+
                             />
                         </div>
                         <div>
@@ -170,7 +185,8 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="cpfCnpj"
                                 name="cpfCnpj"
                                 value={cpfCnpjMask(cpfCnpj)} // Controlado pelo estado
-                                onChange={(e)=>{setCpf(cpfCnpjMask(e.target.value))}} //forma resumida de atualizar o input
+                                onChange={(e) => { setCpf(cpfCnpjMask(e.target.value)) }} //forma resumida de atualizar o input
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -182,8 +198,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="email"
                                 name="email"
                                 value={email.toLowerCase()}
-                                onChange={(e)=>{setEmail(e.target.value)}}
+                                onChange={(e) => { setEmail(e.target.value) }}
                                 maxLength={100}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -195,8 +212,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="celular"
                                 name="celular"
                                 value={formatarCelular(celular)}
-                                onChange={(e)=>{setCelular(e.target.value)}}
+                                onChange={(e) => { setCelular(e.target.value) }}
                                 maxLength={20}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -208,8 +226,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="logradouro"
                                 name="logradouro"
                                 value={logradouro.toUpperCase()}
-                                onChange={(e)=>{setLogradouro(e.target.value)}}
+                                onChange={(e) => { setLogradouro(e.target.value) }}
                                 maxLength={100}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -221,8 +240,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="numero"
                                 name="numero"
                                 value={numero}
-                                onChange={(e)=>{setNumero(e.target.value)}}
+                                onChange={(e) => { setNumero(e.target.value) }}
                                 maxLength={8}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -234,8 +254,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="bairro"
                                 name="bairro"
                                 value={bairro.toUpperCase()}
-                                onChange={(e)=>{setBairro(e.target.value)}}
+                                onChange={(e) => { setBairro(e.target.value) }}
                                 maxLength={100}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -247,8 +268,9 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="cep"
                                 name="cep"
                                 value={cep}
-                                onChange={(e)=>{setCep(e.target.value)}}
+                                onChange={(e) => { setCep(e.target.value) }}
                                 maxLength={9}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -260,6 +282,7 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 name="uf"
                                 value={uf}
                                 onChange={handleUfChange}
+                                disabled={!permiteEditar}
                                 required
                             >
                                 <option value="">Selecione um estado</option>
@@ -277,7 +300,8 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
                                 id="municipio"
                                 name="municipio"
                                 value={municipio}
-                                onChange={(e)=>{setMunicipio(e.target.value)}}
+                                onChange={(e) => { setMunicipio(e.target.value) }}
+                                disabled={!permiteEditar}
                                 required
                             >
                                 <option value="">Selecione um município</option>
@@ -292,9 +316,17 @@ const ModalCadastraCliente = ({ isOpen, onClose, onSubmit, cliente, edit }) => {
 
                             </select>
                         </div>
-
                         <div id='botao-salva'>
-                            <button type="submit" id="btnsalvar" className="button">Salvar</button>
+                            {permiteEditar ? (
+                                <button
+                                    type="submit"
+                                    id="btnsalvar"
+                                    className="button"
+                                >
+                                    Salvar
+                                </button>
+                            ) : ''}
+
                         </div>
                     </div>
                 </form>

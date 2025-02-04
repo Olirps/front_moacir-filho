@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastroContasBancarias.css';
 import { addContabancaria, getAllBancos } from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
-const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta }) => {
+
+const ModalCadastroContasBancarias = ({ isOpen, onClose, edit, onSubmit, conta }) => {
     const [bancoId, setBancoId] = useState('');
+    const [banco, setBanco] = useState('');
     const [nome, setNome] = useState('');
     const [agencia, setAgencia] = useState('');
     const [numero, setNumero] = useState('');
@@ -12,12 +16,32 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
     const [tipoconta, setTipoConta] = useState('');
     const [documento, setDocumento] = useState('');
     const [toast, setToast] = useState({ message: '', type: '' });
+    const [loading, setLoading] = useState(true);
+    const [permiteEditar, setPermiteEditar] = useState(true);
+    const { permissions } = useAuth();
+
+    useEffect(() => {
+        if (isOpen && edit) {
+            const canEdit = hasPermission(permissions, 'contasbancarias', edit ? 'edit' : 'insert');
+            setPermiteEditar(canEdit)
+        }
+    }, [isOpen, edit, permissions]);
+
+
 
     useEffect(() => {
         if (conta) {
-            setBancoId(conta.bancoId || '');
+            setBancoId(conta.banco_id || '');
+            setNome(conta.nome || '');
             setAgencia(conta.agencia || '');
-            setNumero(conta.numero || '');
+            setNumero(conta.conta || '');
+            setTipoConta(conta.tipo_conta || '');
+            setDocumento(conta.documento || '');
+            // Preencher UF e Município com base nos IDs
+            if (conta.banco_id) {
+                const bancoCorrespondente = bancos.find((banco) => parseInt(banco.id) === parseInt(conta.banco_id));
+                setBanco(bancoCorrespondente ? bancoCorrespondente.id : '');
+            }
         } else {
             setBancoId('');
             setAgencia('');
@@ -32,12 +56,16 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                 setBancos(response.data);
             } catch (err) {
                 console.error('Erro ao buscar bancos', err);
+            } finally {
+                setLoading(false);
             }
         };
         fetchBancos();
     }, []);
 
     if (!isOpen) return null;
+    if (loading) return <div className="modal-overlay">Carregando...</div>;
+
 
     const handleBancoChange = (e) => setBancoId(e.target.value);
     const handleAgenciaChange = (e) => setAgencia(e.target.value);
@@ -50,7 +78,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>{isEdit ? 'Editar Conta Bancária' : 'Cadastrar Conta Bancária'}</h2>
+                <h2>{edit ? 'Editar Conta Bancária' : 'Cadastrar Conta Bancária'}</h2>
                 <form onSubmit={onSubmit}>
                     <div id='cadastro-padrao'>
                         <div>
@@ -58,15 +86,16 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                             <select
                                 className='input-geral'
                                 id="banco"
-                                name="bancoId"
+                                name="banco"
                                 value={bancoId}
                                 onChange={handleBancoChange}
+                                disabled={!permiteEditar}
                                 required
                             >
                                 <option value="">Selecione o Banco</option>
                                 {bancos.map((banco) => (
                                     <option key={banco.id} value={banco.id}>
-                                        {banco.nome}
+                                        {banco.codBancario + ' - ' + banco.nome}
                                     </option>
                                 ))}
                             </select>
@@ -80,6 +109,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                                 name="nome"
                                 value={nome}
                                 onChange={handleNomeChange}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -92,6 +122,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                                 name="agencia"
                                 value={agencia}
                                 onChange={handleAgenciaChange}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -104,6 +135,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                                 name="numero"
                                 value={numero}
                                 onChange={handleNumeroChange}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
@@ -115,6 +147,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                                 name="tipoconta"
                                 value={tipoconta}
                                 onChange={handleTipoContaChange}
+                                disabled={!permiteEditar}
                                 required
                             >
                                 <option value="">Selecione o Tipo de Conta</option>
@@ -131,15 +164,25 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, isEdit, onSubmit, conta
                                 name="documento"
                                 value={documento}
                                 onChange={handleDocumentoChange}
+                                disabled={!permiteEditar}
                                 required
                             />
                         </div>
                         <div id='botao-salva'>
-                            <button type="submit" id="btnsalvar" className="button">Salvar</button>
+                            {permiteEditar ? (
+                                <button
+                                    type="submit"
+                                    id="btnsalvar"
+                                    className="button"
+                                >
+                                    Salvar
+                                </button>
+                            ) : ''}
                         </div>
                     </div>
                 </form>
             </div>
+            {toast.message && <Toast type={toast.type} message={toast.message} />}
         </div>
     );
 };

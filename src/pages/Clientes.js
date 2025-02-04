@@ -5,6 +5,8 @@ import ModalCliente from '../components/ModalCadastraCliente';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import Toast from '../components/Toast';
 import { formatarCelular } from '../utils/functions';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
 
 function Clientes() {
@@ -20,6 +22,8 @@ function Clientes() {
   const [toast, setToast] = useState({ message: '', type: '' });
   const [selectedCliente, setSelectedCliente] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const { permissions } = useAuth();
+
 
   useEffect(() => {
     const fetchClientes = async () => {
@@ -70,6 +74,17 @@ function Clientes() {
     setCpf(cpfCnpjMask(value));
   };
 
+  const handleCadastrarModal = () => {
+    if (!hasPermission(permissions, 'clientes', 'insert')) {
+      setToast({ message: "Você não tem permissão para cadastrar clientes.", type: "error" });
+      return; // Impede a abertura do modal
+    }
+    setIsModalOpen(true);
+    setIsEdit(false);
+    setSelectedCliente(null);
+  };
+
+
   const handleAddCliente = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -102,6 +117,10 @@ function Clientes() {
 
   const handleEditClick = async (cliente) => {
     try {
+      if (!hasPermission(permissions, 'clientes', 'viewcadastro')) {
+        setToast({ message: "Você não tem permissão para visualizar o cadastro de clientes.", type: "error" });
+        return; // Impede a abertura do modal
+      }
       const response = await getClienteById(cliente.id);
       setSelectedCliente(response.data);
       setIsEdit(true);
@@ -211,9 +230,7 @@ function Clientes() {
                 <button onClick={handleSearch} className="button">Pesquisar</button>
                 <button onClick={handleClear} className="button">Limpar</button>
                 <button onClick={() => {
-                  setIsModalOpen(true);
-                  setIsEdit(false);
-                  setSelectedCliente(null);
+                  handleCadastrarModal();
                 }} className="button">Cadastrar</button>
               </div>
             </div>
@@ -247,7 +264,7 @@ function Clientes() {
                           onClick={() => handleEditClick(cliente)}
                           className="edit-button"
                         >
-                          Editar
+                          Visualizar
                         </button>
                       </td>
                     </tr>
