@@ -224,7 +224,7 @@ function LancaNFe() {
     try {
       let response = await getNFeById(nfe.id);
       response.data.fornecedor = nfe.nome
-      response.data.codFornecedor = nfe.id
+      response.data.codFornecedor = nfe.codFornecedor
 
       setSelectedNFe(response.data);
       setIsEdit(true);
@@ -237,20 +237,19 @@ function LancaNFe() {
   };
 
   const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
+    //e.preventDefault();
     const updatedNotaFiscal = {
-      codFornecedor: formData.get('fornecedorId'),
-      nNF: formData.get('nNF'),
-      serie: formData.get('serie'),
-      cUF: formData.get('selectedUfCodIBGE'),
-      municipio: formData.get('selectedMunicipioCodIBGE').replace(/\D/g, ''),
-      municipio: formData.get('municipio'),
-      dataEmissao: formData.get('dataEmissao'),
-      dataSaida: formData.get('dataSaida'),
-      cNF: formData.get('cNF'),
-      tpNF: formData.get('tpNF'),
-      vNF: formData.get('vlrNf')
+      codFornecedor: e.fornecedorId,
+      nNF: e.nNF,
+      serie: e.serie,
+      cUF: e.selectedUfCodIBGE,
+      municipio: e.selectedMunicipioCodIBGE,
+      municipio: e.municipio,
+      dataEmissao: e.dataEmissao,
+      dataSaida: e.dataSaida,
+      cNF: e.cNF,
+      tpNF: e.tpNF,
+      vNF: e.vNF
     };
 
     try {
@@ -259,6 +258,7 @@ function LancaNFe() {
       setIsModalOpen(false);
       setSelectedNFe(null);
       setIsEdit(false);
+      setIsNotaFicalModalOpen(false);
       const response = await getNotafiscal();
       setNotasFiscais(response.data);
       setFilteredNotasFiscais(response.data);
