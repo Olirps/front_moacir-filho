@@ -246,6 +246,11 @@ export const getAllMovimentacaofinanceiraDespesa = async () => {
 export const getLancamentoDespesaById = async (id) => {
   return api.get(`/movimentacaofinanceiradespesa/${id}`);
 };
+
+export const getParcelasDespesa = async (id) => {
+  return api.get(`/parcelasmovimentacao/${id}`);
+};
+
 export const addMovimentacaofinanceiraDespesa = async (lancamento) => {
   return api.post('/movimentacaofinanceiradespesa',lancamento);
 };

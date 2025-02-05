@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, addParcelasDespesa } from '../services/api';
+import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoDespesaById,updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
@@ -24,6 +24,11 @@ function MovimentacaoFinanceiraDespesa() {
   const [selectedMovimentacao, setSelectedMovimentacao] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
 
+  // responsavel por expandir
+  const [expandedRows, setExpandedRows] = useState({});
+  const [parcelas, setParcelas] = useState({});
+
+  //
   useEffect(() => {
     const fetchMovimentacao = async () => {
       try {
@@ -97,7 +102,8 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleEditClick = async (movimentacao) => {
-    setSelectedMovimentacao(movimentacao);
+    const response = await getLancamentoDespesaById(movimentacao.id);
+    setSelectedMovimentacao(response.data);
     setIsEdit(true);
     setIsModalOpen(true);
   };
@@ -167,6 +173,31 @@ function MovimentacaoFinanceiraDespesa() {
     }
   };
 
+
+  //responsavel por expandir a linha
+  const toggleExpand = async (movimentacaoId) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [movimentacaoId]: !prev[movimentacaoId],
+    }));
+
+    if (!parcelas[movimentacaoId]) {
+      try {
+        const response = await getParcelasDespesa(movimentacaoId);
+        setParcelas((prev) => ({ ...prev, [movimentacaoId]: response.data }));
+      } catch (err) {
+        console.error('Erro ao buscar parcelas', err);
+      }
+    }
+  };
+  //responsavel por expandir a linha - final
+
+  const formatarData = (data) => {
+    const dataCorrigida = new Date(data);
+    dataCorrigida.setMinutes(dataCorrigida.getMinutes() + dataCorrigida.getTimezoneOffset()); // Ajuste de fuso horário
+    return dataCorrigida.toLocaleDateString('pt-BR');
+  };
+
   return (
     <div id="movimentacoes-container">
       <h1 className="title-page">Consulta de Movimentações Financeiras</h1>
@@ -225,45 +256,83 @@ function MovimentacaoFinanceiraDespesa() {
 
           <div id="results-container">
             <div id="grid-padrao-container">
-              <table id="grid-padrao">
+              <table id='grid-padrao'>
                 <thead>
                   <tr>
+                    <th></th>
                     <th>ID</th>
                     <th>Descrição</th>
-                    <th>Fornecedor</th>
                     <th>Valor</th>
                     <th>Data Lançamento</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentMovimentacoes.map((movimentacao) => (
-                    <tr key={movimentacao.id}>
-                      <td>{movimentacao.id}</td>
-                      <td>{movimentacao.descricao}</td>
-                      <td>{movimentacao.fornecedor_id}</td>
-                      <td>{new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(movimentacao.valor || 0)}</td>
-
-                      <td>{new Date(movimentacao.data_lancamento).toLocaleDateString()}</td>
-                      <td>
-                        <button
-                          onClick={() => handleEditClick(movimentacao)}
-                          className="edit-button"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleLancaParcelas(movimentacao)}
-                          className="edit-button"
-                        >
-                          Lançar Parcelas
-                        </button>
-                      </td>
-
-                    </tr>
+                  {movimentacoes.map((movimentacao) => (
+                    <React.Fragment key={movimentacao.id}>
+                      <tr>
+                        <td>
+                          <button onClick={() => toggleExpand(movimentacao.id)}>
+                            {expandedRows[movimentacao.id] ? '▼' : '▶'}
+                          </button>
+                        </td>
+                        <td>{movimentacao.id}</td>
+                        <td>{movimentacao.descricao}</td>
+                        <td>{
+                          new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(movimentacao.valor || 0)
+                        }</td>
+                        <td>{formatarData(movimentacao.data_lancamento)}</td>
+                        <td>
+                          <div>
+                            {movimentacao.status === 'aberta' ? (
+                              <>
+                                <button
+                                  onClick={() => handleEditClick(movimentacao)}
+                                  className="edit-button"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => handleLancaParcelas(movimentacao)}
+                                  className="edit-button"
+                                >
+                                  Lançar Parcelas
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleLancaParcelas(movimentacao)}
+                                className="edit-button"
+                              >
+                                Visualizar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedRows[movimentacao.id] && parcelas[movimentacao.id] && (
+                        parcelas[movimentacao.id].map((parcela) => (
+                          <tr key={parcela.id} className="parcela-row">
+                            <td></td>
+                            <td colspan="2">Parcela {parcela.numero} - {parcela.descricao}</td>
+                            <td>{new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL',
+                            }).format(parcela.valor_parcela || 0)}</td>
+                            <td>{formatarData(parcela.vencimento)}</td>
+                            <td>
+                              <button
+                                className="edit-button">
+                                Pagar
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

@@ -7,7 +7,7 @@ import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importan
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import { getLancamentoDespesaById, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, cancelarMovimentacaofinanceiraDespesa } from '../services/api';
 
-const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onSuccess }) => {
+const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
     const [tipoCredor, setTipoCredor] = useState('');
@@ -22,15 +22,36 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
     const [mensagem, setMensagem] = useState('');
     const [isModalPesquisaOpen, setIsModalPesquisaOpen] = useState(false);  // Controle do Modal de Pesquisa
     const [credorSelecionado, setCredorSelecionado] = useState(null);  // Crédito selecionado do Modal de Pesquisa
-    const [lancarParcelas, setLancarParcelas] = useState(false); // Estado para controlar a opção de parcelamento
+    const [lancarParcelas, setLancarParcelas] = useState(''); // Estado para controlar a opção de parcelamento
     const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
+    const [despesaRecorrente, setDespesaRecorrente] = useState(false); // Estado para controlar o modal de parcelas
 
+    useEffect(() => {
+        if (toast.message) {
+            const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     useEffect(() => {
         if (isOpen) {
             // Reseta os estados quando o modal é aberto
-            if (movimentacao?.id) {
-                fetchDespesaData(movimentacao.id);
+            if (movimentacao?.id && edit) {
+                setDescricao(movimentacao.descricao || '');
+                setValor(String(movimentacao.valor || '')); // Convertendo para string
+                setDataVencimento(movimentacao.data_vencimento || '');
+                setTipo(movimentacao.tipo || 'debito'); // Garante que o tipo esteja correto
+
+                // Verifica o tipo de credor e define o estado adequado
+                if (movimentacao.funcionario_id) {
+                    setCredorSelecionado(movimentacao.funcionario.cliente);
+                } else if (movimentacao.fornecedor_id) {
+                    setCredorSelecionado(movimentacao.fornecedor);
+                } else if (movimentacao.cliente_id) {
+                    setCredorSelecionado(movimentacao.cliente);
+                }
+                setLoading(false);
+
             } else {
                 setDescricao('');
                 setValor('');
@@ -42,60 +63,38 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
         }
     }, [isOpen, movimentacao]);
 
-    const resetForm = () => {
-        setDescricao('');
-        setValor('');
-        setDataVencimento('');
-        setTipo('debito');
-        setCredorSelecionado(null);
-        setLancarParcelas(false); // Reseta a opção de parcelamento
-        setLoading(false);
-    };
-
-    const fetchDespesaData = async (id) => {
-        try {
-            const response = await getLancamentoDespesaById(id);
-            setDescricao(response.data.descricao);
-            setValor(response.data.valor);
-            setDataVencimento(response.data.data_lancamento);
-            setTipo(response.data.tipo || 'debito');
-            setCredorSelecionado(response.data.credito || null); // Define o crédito selecionado
-            setLoading(false);
-        } catch (err) {
-            console.error('Erro ao buscar despesa', err);
-            setToast({ message: "Erro ao buscar despesa.", type: "error" });
-            setLoading(false);
-        }
-    };
-
     const handleTipoCredor = (tipo) => {
         setTipoCredor(tipo); // Aqui, o tipo de credor é atualizado no estado do componente pai
     };
 
-    const handleLancaParcelas = ()=>{
+    const handleLancaParcelas = () => {
         setIsModalParcelasOpen(true)
     }
 
     const handleSave = async () => {
         if (!descricao || !valor || !dataVencimento || !credorSelecionado) {
             setFormError(true);
-            setToast({ message: "Preencha todos os campos e selecione um crédito.", type: "error" });
+            setToast({ message: "Preencha todos os campos e selecione um credor.", type: "error" });
             return;
         }
-        if (lancarParcelas) {
-            setIsModalParcelasOpen(true); // Abre o modal de parcelas
+        if (despesaRecorrente && !lancarParcelas) {
+            setToast({ message: "Informe a quantidade de parcelas.", type: "error" });
             return;
         }
 
         try {
             const data = {
                 descricao,
-                valor,
-                data_lancamento: dataVencimento,
+                valor: parseFloat(valor.replace(',', '.')), // Convertendo para número
+                data_vencimento: dataVencimento, // Define a data atual
+                data_lancamento: new Date().toISOString().split('T')[0], // Define a data atual
                 tipo,
+                data_vencimento: dataVencimento,
                 ...(tipoCredor === 'funcionario' && { funcionario_id: credorSelecionado.id }),
                 ...(tipoCredor === 'fornecedor' && { fornecedor_id: credorSelecionado.id }),
-                ...(tipoCredor === 'cliente' && { cliente_id: credorSelecionado.id })
+                ...(tipoCredor === 'cliente' && { cliente_id: credorSelecionado.id }),
+                despesaRecorrente,
+                lancarParcelas
             };
 
 
@@ -179,60 +178,89 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onClose, movimentacao, onS
                     </div>
                 ) : (
                     <>
-                        <div id='cadastro-padrao'>
-                            <div>
-                                <label>Credor</label>
-                                <input
-                                    type="text"
-                                    className="input-geral"
-                                    value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : ""}
-                                    onClick={handleOpenPesquisaCredito}
-                                    readOnly
-                                    placeholder="Selecionar Credor"
-                                    disabled
-                                />
+                        <form onSubmit={onSubmit}>
+                            <div id='cadastro-padrao'>
+                                <div>
+                                    <label>Credor</label>
+                                    <input
+                                        type="text"
+                                        className="input-geral"
+                                        value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : ""}
+                                        onClick={handleOpenPesquisaCredito}
+                                        readOnly
+                                        placeholder="Selecionar Credor"
+                                        required
+                                        disabled
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="descricao">Descrição</label>
+                                    <input
+                                        className='input-geral'
+                                        type="text"
+                                        name='descricao'
+                                        value={descricao.toUpperCase()}
+                                        onChange={(e) => setDescricao(e.target.value.toUpperCase())}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label>Valor</label>
+                                    <input
+                                        className='input-geral'
+                                        type="text"
+                                        value={valor} // Isso funcionará, pois `valor` é uma string
+                                        onChange={(e) => setValor(e.target.value.replace(',', '.'))}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label>Data de Vencimento</label>
+                                    <input
+                                        className='input-geral'
+                                        type="date"
+                                        value={dataVencimento}
+                                        onChange={(e) => setDataVencimento(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label>Tipo</label>
+                                    <select className='input-geral' value={tipo} onChange={(e) => setTipo(e.target.value)} required>
+                                        <option value="debito">Débito</option>
+                                    </select>
+                                </div>
                             </div>
+                        </form>
+                        <div>
                             <div>
-                                <label>Descrição</label>
+                                <label>Despesa Recorrente?</label>
                                 <input
-                                    className='input-geral'
-                                    type="text"
-                                    value={descricao.toUpperCase()}
-                                    onChange={(e) => setDescricao(e.target.value.toUpperCase())}
+                                    type="checkbox"
+                                    checked={despesaRecorrente}
+                                    onChange={(e) => setDespesaRecorrente(e.target.checked)}
                                     required
                                 />
                             </div>
-                            <div>
-                                <label>Valor</label>
-                                <input
-                                    className='input-geral'
-                                    type="text"
-                                    value={valor.replace(',', '.')}
-                                    onChange={(e) => setValor(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label>Data de Vencimento</label>
-                                <input
-                                    className='input-geral'
-                                    type="date"
-                                    value={dataVencimento}
-                                    onChange={(e) => setDataVencimento(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label>Tipo</label>
-                                <select className='input-geral' value={tipo} onChange={(e) => setTipo(e.target.value)} required>
-                                    <option value="debito">Débito</option>
-                                </select>
-                            </div>
+                            {despesaRecorrente && (
+                                <div>
+                                    <label htmlFor="lancarParcelas">Quantidade de Parcelas?</label>
+                                    <input
+                                        id="lancarParcelas"
+                                        type="number"
+                                        value={lancarParcelas}
+                                        onChange={(e) => setLancarParcelas(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
+
                             <div id='botao-salva'>
                                 <button className="button-geral" onClick={handleSave}>Salvar</button>
                                 {movimentacao && <button className="button delete" onClick={handleCancelar}>Excluir</button>}
                             </div>
                         </div>
+
                     </>
                 )}
             </div>
