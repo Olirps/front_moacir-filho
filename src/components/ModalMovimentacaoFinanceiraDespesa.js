@@ -25,6 +25,9 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
     const [lancarParcelas, setLancarParcelas] = useState(''); // Estado para controlar a opção de parcelamento
     const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
     const [despesaRecorrente, setDespesaRecorrente] = useState(false); // Estado para controlar o modal de parcelas
+    const [valorEntradaDespesa, setValorEntradaDespesa] = useState(''); // Estado para controlar o modal de parcelas
+    //  const [valorRestante, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
+    //  const [valorParcelaArredondado, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
 
     useEffect(() => {
         if (toast.message) {
@@ -234,15 +237,31 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                         </form>
                         <div>
                             <div>
-                                <label>Despesa Recorrente?</label>
-                                <input
-                                    type="checkbox"
-                                    checked={despesaRecorrente}
-                                    onChange={(e) => setDespesaRecorrente(e.target.checked)}
-                                    required
-                                />
+                                <label>Tipo de Despesa</label>
+                                <div>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            value="recorrente"
+                                            checked={despesaRecorrente === 'recorrente'}
+                                            onChange={() => setDespesaRecorrente('recorrente')}
+                                        />
+                                        Recorrente
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            value="parcelada"
+                                            checked={despesaRecorrente === 'parcelada'}
+                                            onChange={() => setDespesaRecorrente('parcelada')}
+                                        />
+                                        Parcelada
+                                    </label>
+                                </div>
                             </div>
-                            {despesaRecorrente && (
+
+                            {/* Exibe campos de despesa recorrente */}
+                            {despesaRecorrente === 'recorrente' && (
                                 <div>
                                     <label htmlFor="lancarParcelas">Quantidade de Parcelas?</label>
                                     <input
@@ -255,10 +274,104 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                                 </div>
                             )}
 
+                            {/* Exibe campos de despesa parcelada */}
+                            {despesaRecorrente === 'parcelada' && (
+                                <>
+                                    <div>
+                                        <label>Quantidade de Parcelas</label>
+                                        <input
+                                            type="number"
+                                            value={lancarParcelas}
+                                            onChange={(e) => setLancarParcelas(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label>Vencimento da Primeira Parcela</label>
+                                        <input
+                                            type="date"
+                                            value={dataLancamento}
+                                            onChange={(e) => setDataLancamento(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label>Valor de Entrada</label>
+                                        <input
+                                            type="number"
+                                            value={valorEntradaDespesa}
+                                            onChange={(e) => setValorEntradaDespesa(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            )}
+                            {/* Exibir parcelas em tela após inserção */}
+                            {despesaRecorrente === 'parcelada' && lancarParcelas && dataLancamento && (
+                                <div>
+                                    <h3>Parcelas</h3>
+                                    <div className="parcelas-container">
+                                        {(() => {
+                                            // Ensure valorEntrada is initialized with a default value if not provided
+                                            const valorEntrada = parseFloat((valorEntradaDespesa || '0').replace(',', '.')); // Default to 0 if undefined
+                                            const valorTotal = parseFloat(valor.replace(',', '.')); // Valor total da despesa
+                                            const valorRestante = valorTotal - valorEntrada; // Calcula o valor restante após a entrada
+
+                                            const valorParcela = valorRestante / parseInt(lancarParcelas); // Dividimos o valor restante pelas parcelas
+                                            const valorParcelaArredondado = parseFloat(valorParcela.toFixed(2)); // Arredondamos para 2 casas decimais
+
+                                            return Array.from({ length: parseInt(lancarParcelas) }, (_, index) => {
+                                                // Ensure dataLancamento is a valid date
+                                                const dataLancamentoDate = new Date(dataLancamento);
+                                                if (isNaN(dataLancamentoDate.getTime())) {
+                                                    console.error('Invalid dataLancamento:', dataLancamento);
+                                                    return null; // or handle the error appropriately
+                                                }
+
+                                                // Calculando a data de vencimento de cada parcela (acrescentando 30 dias para cada uma)
+                                                const dataVencimentoParcela = new Date(dataLancamentoDate);
+                                                dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + index); // Para aumentar um mês para cada parcela
+
+                                                // Handle month overflow
+                                                if (dataVencimentoParcela.getMonth() !== (dataLancamentoDate.getMonth() + index) % 12) {
+                                                    dataVencimentoParcela.setFullYear(dataLancamentoDate.getFullYear() + Math.floor((dataLancamentoDate.getMonth() + index) / 12));
+                                                }
+
+                                                const valorRestanteNaUltima = index === parseInt(lancarParcelas) - 1
+                                                    ? (valorRestante - valorParcelaArredondado * (parseInt(lancarParcelas) - 1))
+                                                    : 0; // Calculando o "resto" para a última parcela
+
+                                                return (
+                                                    <div key={index} className="parcela">
+                                                        <span>{`Parcela ${index + 1}`}</span>
+                                                        <span>
+                                                            <label>Vencimento</label>
+                                                            <input
+                                                                type="date"
+                                                                value={dataVencimentoParcela.toISOString().split('T')[0]} // Formata a data para o padrão YYYY-MM-DD
+                                                                readOnly
+                                                            />
+                                                        </span>
+                                                        <span>
+                                                            <label>Valor</label>
+                                                            <input
+                                                                type="number"
+                                                                value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0 ? valorRestanteNaUltima.toFixed(2) : valorParcelaArredondado.toFixed(2)} // Valor da parcela com o "resto" adicionado
+                                                                readOnly
+                                                            />
+                                                        </span>
+                                                    </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
                             <div id='botao-salva'>
                                 <button className="button-geral" onClick={handleSave}>Salvar</button>
                                 {movimentacao && <button className="button delete" onClick={handleCancelar}>Excluir</button>}
                             </div>
+
                         </div>
 
                     </>
