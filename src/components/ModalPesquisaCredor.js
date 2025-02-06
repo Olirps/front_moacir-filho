@@ -50,7 +50,7 @@ const ModalPesquisaCredor = ({ isOpen,onTipoCredor, onClose, onSelectCredor }) =
             setLoading(false);
         } catch (err) {
             console.error('Erro na pesquisa', err);
-            setToast({ message: "Erro ao buscar créditos.", type: "error" });
+            setToast({ message: "Erro ao buscar credores.", type: "error" });
             setTimeout(() => {
                 setToast({ message: '', type: '' });
             }, 3000);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoDespesaById,updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
+import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoDespesaById, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
@@ -78,13 +78,27 @@ function MovimentacaoFinanceiraDespesa() {
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    console.log('formData: ' + JSON.stringify(formData));
+
+    const tipoCredor = formData.get('tipoCredor');
+    const credorId = formData.get('credorSelecionado'); // Supondo que o campo 'credor' contenha o ID
+    const despesaRecorrenteInput = e.target.elements.despesaRecorrente;
+    const pagamento = despesaRecorrenteInput ? despesaRecorrenteInput.value : null;
+
+    const data_lancamento = new Date().toISOString().split('T')[0]; // Define a data atual
+
     const newMovimentacao = {
       descricao: formData.get('descricao'),
       valor: formData.get('valor'),
-      fornecedor_id: formData.get('fornecedor'),
-      funcionario_id: formData.get('funcionario'),
+      fornecedor_id: tipoCredor === 'fornecedor' ? credorId : null,
+      funcionario_id: tipoCredor === 'funcionario' ? credorId : null,
+      cliente_id: tipoCredor === 'cliente' ? credorId : null,
       nota_id: formData.get('notaId'),
-      data_lancamento: formData.get('dataLancamento'),
+      data_lancamento,
+      data_vencimento: formData.get('dataVencimento'),
+      pagamento,
+      lancarParcelas: formData.get('lancarParcelas'),
+      valorEntradaDespesa: formData.get('valorEntradaDespesa'),
       tipo: formData.get('tipo')
     };
 
@@ -109,18 +123,38 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleLancaParcelas = async (movimentacao) => {
-    setSelectedMovimentacao(movimentacao);
+    const response = await getLancamentoDespesaById(movimentacao.id);
+    setSelectedMovimentacao(response.data);
+    setValor(response.data.valor);
     setIsModalLancaParcelasOpen(true);
   };
 
-  const handleSaveParcelas = async (parcelas) => {
-    const lancaparcelas = await addParcelasDespesa(parcelas);
-    // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
-    console.log("Parcelas salvas:", parcelas);
-    setToast({ message: "Parcelas salvas com sucesso!", type: "success" });
-    setIsModalLancaParcelasOpen(false);
-  };
+  const handleSaveParcelas = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const lancaParcelas = {
+      descricao: selectedMovimentacao.descricao,
+      financeiro_id: selectedMovimentacao.id,
+      quantidadeParcelas: formData.get('quantidadeParcelas'),
+      valor: selectedMovimentacao.valor,
+      vencimento: formData.get('vencimento'),
+      valorEntrada: formData.get('valorEntrada')
+    };
 
+    try {
+      const lancaparcelas = await addParcelasDespesa(lancaParcelas);
+      // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
+      setToast({ message: "Parcelas salvas com sucesso!", type: "success" });
+      setIsModalLancaParcelasOpen(false);
+      const response = await getAllMovimentacaofinanceiraDespesa();
+      setMovimentacoes(response.data);
+      setFilteredMovimentacoes(response.data);
+
+
+    } catch (error) {
+
+    }
+  };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -176,20 +210,30 @@ function MovimentacaoFinanceiraDespesa() {
 
   //responsavel por expandir a linha
   const toggleExpand = async (movimentacaoId) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [movimentacaoId]: !prev[movimentacaoId],
-    }));
+    setExpandedRows((prev) => {
+      const isExpanded = !prev[movimentacaoId];
 
-    if (!parcelas[movimentacaoId]) {
-      try {
-        const response = await getParcelasDespesa(movimentacaoId);
-        setParcelas((prev) => ({ ...prev, [movimentacaoId]: response.data }));
-      } catch (err) {
-        console.error('Erro ao buscar parcelas', err);
+      // Fecha a linha e limpa as parcelas se for recolhida
+      if (!isExpanded) {
+        setParcelas((prevParcelas) => {
+          const updatedParcelas = { ...prevParcelas };
+          delete updatedParcelas[movimentacaoId]; // Remove as parcelas armazenadas
+          return updatedParcelas;
+        });
       }
+
+      return { ...prev, [movimentacaoId]: isExpanded };
+    });
+
+    // Se está expandindo, busca novamente as parcelas
+    try {
+      const response = await getParcelasDespesa(movimentacaoId);
+      setParcelas((prev) => ({ ...prev, [movimentacaoId]: response.data }));
+    } catch (err) {
+      console.error('Erro ao buscar parcelas', err);
     }
   };
+
   //responsavel por expandir a linha - final
 
   const formatarData = (data) => {
@@ -287,14 +331,16 @@ function MovimentacaoFinanceiraDespesa() {
                         <td>{formatarData(movimentacao.data_lancamento)}</td>
                         <td>
                           <div>
-                            {movimentacao.status === 'aberta' ? (
+                            {(movimentacao.status === 'aberta') ? (
                               <>
-                                <button
-                                  onClick={() => handleEditClick(movimentacao)}
-                                  className="edit-button"
-                                >
-                                  Editar
-                                </button>
+                                {movimentacao.tipo_lancamento !== 'automatico' && (
+                                  <button
+                                    onClick={() => handleEditClick(movimentacao)}
+                                    className="edit-button"
+                                  >
+                                    Editar
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleLancaParcelas(movimentacao)}
                                   className="edit-button"
@@ -367,7 +413,6 @@ function MovimentacaoFinanceiraDespesa() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSubmit={isEdit ? handleEditSubmit : handleAddMovimentacao}
-          onSuccess={handleSuccess}  // Passando a função handleSuccess
           movimentacao={selectedMovimentacao}
           edit={isEdit}
         />
@@ -377,6 +422,7 @@ function MovimentacaoFinanceiraDespesa() {
           isOpen={isModalLancaParcelasOpen}
           onClose={() => setIsModalLancaParcelasOpen(false)}
           valorTotal={valor}
+          onSubmit={handleSaveParcelas}
           despesa={selectedMovimentacao}
           onSave={handleSaveParcelas}
 

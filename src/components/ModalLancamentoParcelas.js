@@ -1,43 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/ModalLancamentoParcelas.css'; // Crie um arquivo CSS para estilizar o modal
+import '../styles/ModalLancamentoParcelas.css';
 import Toast from '../components/Toast';
 
-const ModalLancamentoParcelas = ({ isOpen, onClose, valorTotal, despesa, onSave }) => {
+const ModalLancamentoParcelas = ({ isOpen, onSubmit,onClose, valorTotal, despesa, onSave }) => {
     const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
     const [vencimento, setVencimento] = useState(new Date().toISOString().split('T')[0]);
-    const [valorEntrada, setValorEntrada] = useState('0');
-    const [formaPagamento, setFormaPagamento] = useState('dinheiro');
-    const [toast, setToast] = useState({ message: '', type: '' });
+    const [valorEntrada, setValorEntrada] = useState(0);
     const [parcelas, setParcelas] = useState([]);
+    const [toast, setToast] = useState({ message: '', type: '' });
 
     useEffect(() => {
-        if (vencimento && quantidadeParcelas > 0) {
-            const novasParcelas = [];
-            const valorParcela = (despesa.valor - valorEntrada) / quantidadeParcelas;
+        calcularParcelas();
+    }, [quantidadeParcelas, vencimento, valorEntrada, valorTotal]);
 
-            for (let i = 0; i < quantidadeParcelas; i++) {
-                const dataVencimento = new Date(vencimento);
-                dataVencimento.setMonth(dataVencimento.getMonth() + i);
+    const calcularParcelas = () => {
+        const entrada = parseFloat(valorEntrada) || 0;
+        const restante = valorTotal - entrada;
+        const valorBaseParcela = Math.floor((restante / quantidadeParcelas) * 100) / 100;
+        let somaParcelas = valorBaseParcela * (quantidadeParcelas - 1);
+        const valorAjustadoUltimaParcela = restante - somaParcelas;
 
-                novasParcelas.push({
-                    valor: valorParcela,
-                    dataVencimento: dataVencimento.toISOString().split('T')[0],
-                    formaPagamento,
-                });
-            }
+        const novasParcelas = Array.from({ length: quantidadeParcelas }, (_, i) => {
+            const dataVenc = new Date(vencimento);
+            dataVenc.setMonth(dataVenc.getMonth() + i);
+            return {
+                numero: i + 1,
+                valor: i === quantidadeParcelas - 1 ? valorAjustadoUltimaParcela : valorBaseParcela,
+                dataVencimento: dataVenc.toISOString().split('T')[0],
+            };
+        });
 
-            setParcelas(novasParcelas);
-        }
-    }, [quantidadeParcelas, vencimento, valorEntrada, formaPagamento, valorTotal]);
-
-    const handleSave = () => {
-        if (!vencimento || quantidadeParcelas < 1) {
-            setToast({ message: "Preencha todos os campos obrigatórios.", type: "error" });
-            return;
-        }
-
-        onSave(parcelas);
-        onClose();
+        setParcelas(novasParcelas);
     };
 
     if (!isOpen) return null;
@@ -46,78 +39,65 @@ const ModalLancamentoParcelas = ({ isOpen, onClose, valorTotal, despesa, onSave 
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>Lançar Parcelas</h2>
-                <div className="form-group">
-                    <label>Quantidade de Parcelas</label>
-                    <input
-                        type="number"
-                        value={quantidadeParcelas}
-                        onChange={(e) => setQuantidadeParcelas(Number(e.target.value))}
-                        min="1"
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Data de Vencimento</label>
-                    <input
-                        type="date"
-                        value={vencimento}
-                        onChange={(e) => setVencimento(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Valor de Entrada</label>
-                    <input
-                        type="text"
-                        value={valorEntrada}
-                        onChange={(e) => setValorEntrada(Number(e.target.value.replace(',','.')))}
-                        min="0"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Forma de Pagamento</label>
-                    <select
-                        value={formaPagamento}
-                        onChange={(e) => setFormaPagamento(e.target.value)}
-                    >
-                        <option value="transferencia">Transferência</option>
-                        <option value="boleto">Boleto</option>
-                        <option value="credito">Cartão de Crédito</option>
-                        <option value="debito">Cartão de Débito</option>
-                        <option value="dinheiro">Dinheiro</option>
-                    </select>
-                </div>
-                <div className="form-group">
-                    <button className="button-geral" onClick={handleSave}>Salvar Parcelas</button>
-                </div>
-                {toast.message && <Toast message={toast.message} type={toast.type} />}
-
-                {parcelas.length > 0 && (
-                    <div className="parcelas-table">
-                        <h3>Parcelas Geradas</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Parcela</th>
-                                    <th>Valor</th>
-                                    <th>Data de Vencimento</th>
-                                    <th>Forma de Pagamento</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {parcelas.map((parcela, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>{parcela.valor.toFixed(2)}</td>
-                                        <td>{parcela.dataVencimento}</td>
-                                        <td>{parcela.formaPagamento}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <h2>Lançamento de Parcelas</h2>
+                <form onSubmit={onSubmit}>
+                    <div className="form-group">
+                        <label>Quantidade de Parcelas:</label>
+                        <input
+                            type="number"
+                            value={quantidadeParcelas}
+                            name='quantidadeParcelas'
+                            onChange={(e) => setQuantidadeParcelas(Math.max(1, Number(e.target.value)))}
+                            min="1"
+                        />
                     </div>
-                )}
+                    <div className="form-group">
+                        <label>Data de Vencimento:</label>
+                        <input
+                            type="date"
+                            name='vencimento'
+                            value={vencimento}
+                            onChange={(e) => setVencimento(e.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Valor de Entrada:</label>
+                        <input
+                            type="number"
+                            value={valorEntrada}
+                            name='valorEntrada'
+                            onChange={(e) => setValorEntrada(e.target.value)}
+                            min="0"
+                            step="0.01"
+                        />
+                    </div>
+                    {parcelas.length > 0 && (
+                        <div className="parcelas-table">
+                            <h3>Parcelas Geradas</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parcela</th>
+                                        <th>Valor</th>
+                                        <th>Data de Vencimento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {parcelas.map((parcela) => (
+                                        <tr key={parcela.numero}>
+                                            <td>{parcela.numero}</td>
+                                            <td>{parcela.valor.toFixed(2)}</td>
+                                            <td>{parcela.dataVencimento}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    <button type='submit' className="button-geral">Salvar Parcelas</button>
+
+                </form>
+                {toast.message && <Toast message={toast.message} type={toast.type} />}
             </div>
         </div>
     );
