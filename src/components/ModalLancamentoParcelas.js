@@ -44,10 +44,10 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit,onClose, valorTotal, despesa
                     <div className="form-group">
                         <label>Quantidade de Parcelas:</label>
                         <input
-                            type="number"
+                            type="text"
                             value={quantidadeParcelas}
                             name='quantidadeParcelas'
-                            onChange={(e) => setQuantidadeParcelas(Math.max(1, Number(e.target.value)))}
+                            onChange={(e) => setQuantidadeParcelas(Math.max(1, Number(e.target.value.replace(',', ''))))}
                             min="1"
                         />
                     </div>
@@ -63,10 +63,10 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit,onClose, valorTotal, despesa
                     <div className="form-group">
                         <label>Valor de Entrada:</label>
                         <input
-                            type="number"
+                            type="text"
                             value={valorEntrada}
                             name='valorEntrada'
-                            onChange={(e) => setValorEntrada(e.target.value)}
+                            onChange={(e) => setValorEntrada(e.target.value.replace(',', '.'))}
                             min="0"
                             step="0.01"
                         />

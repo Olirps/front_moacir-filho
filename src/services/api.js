@@ -247,8 +247,20 @@ export const getLancamentoDespesaById = async (id) => {
   return api.get(`/movimentacaofinanceiradespesa/${id}`);
 };
 
+export const getLancamentoCompletoById = async (id) => {
+  return api.get(`/despesa/${id}`);
+};
+
 export const getParcelasDespesa = async (id) => {
   return api.get(`/parcelasmovimentacao/${id}`);
+};
+
+export const getParcelaByID = async (id) => {
+  return api.get(`/parcelas/${id}`);
+};
+
+export const pagamentoParcela = async (id,pagamento) => {
+  return api.put(`/parcelas/${id}`,pagamento);
 };
 
 export const addMovimentacaofinanceiraDespesa = async (lancamento) => {

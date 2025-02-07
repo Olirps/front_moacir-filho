@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoDespesaById, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
+import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById,getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
+import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
+import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+
 
 function MovimentacaoFinanceiraDespesa() {
   const [movimentacoes, setMovimentacoes] = useState([]);
@@ -20,9 +25,15 @@ function MovimentacaoFinanceiraDespesa() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalLancaParcelasOpen, setIsModalLancaParcelasOpen] = useState(false);
+  const [isModalPagarLancamentosOpen, setIsModalPagarLancamentosOpen] = useState(false);
+  const [isModalLancamentoCompletoOpen, setIsModalLancamentoCompletoOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
   const [selectedMovimentacao, setSelectedMovimentacao] = useState(null);
+  const [selectedLancamentoCompleto, setSelectedLancamentoCompleto] = useState(null);
+  const [selectedParcela, setSelectedParcela] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const { permissions } = useAuth();
+
 
   // responsavel por expandir
   const [expandedRows, setExpandedRows] = useState({});
@@ -73,7 +84,15 @@ function MovimentacaoFinanceiraDespesa() {
     console.log("Despesa salva com sucesso!");
     // Adicione outras ações que deseja realizar após salvar
   };
-
+  const handleCadastrarModal = () => {
+    if (!hasPermission(permissions, 'movimentacaofinanceiradespesas', 'insert')) {
+      setToast({ message: "Você não tem permissão para cadastrar despesas.", type: "error" });
+      return; // Impede a abertura do modal
+    }
+    setIsModalOpen(true);
+    setIsEdit(false);
+    setSelectedMovimentacao(null);
+  };
 
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
@@ -156,6 +175,43 @@ function MovimentacaoFinanceiraDespesa() {
     }
   };
 
+  const handleSavePagamento = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const pagamento = {
+      data_pagamento: formData.get('datapagamento'),
+      valor_pago: formData.get('valorPago'),
+      conta_id: formData.get('contabancaria'),
+      metodo_pagamento: formData.get('formaPagamento'),
+      data_efetiva_pg: new Date().toISOString().split('T')[0],
+      status: 'liquidado'
+    };
+
+    try {
+      const parcelaPaga = await pagamentoParcela(selectedParcela.id, pagamento);
+      // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
+      setToast({ message: "Parcelas Liquidada com sucesso!", type: "success" });
+      setIsModalPagarLancamentosOpen(false);
+      const response = await getAllMovimentacaofinanceiraDespesa();
+      setMovimentacoes(response.data);
+      setFilteredMovimentacoes(response.data);
+      toggleExpand(selectedParcela.financeiro_id)
+
+    } catch (error) {
+
+    }
+  };
+  const handlePagarParcelas = async (parcela) => {
+    if (!hasPermission(permissions, 'pagamentosparcelas', 'insert')) {
+      setToast({ message: "Você não tem permissão para realizar pagamentos.", type: "error" });
+      return; // Impede a abertura do modal
+    }
+    const response = await getParcelaByID(parcela.id);
+    setSelectedParcela(response.data);
+    setIsModalPagarLancamentosOpen(true);
+  };
+
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -183,6 +239,13 @@ function MovimentacaoFinanceiraDespesa() {
       setToast({ message: errorMessage, type: "error" });
     }
   };
+
+  const handleGetDespesaCompleta = async (lancto) => {
+   const lancamentoCompleto = await getLancamentoCompletoById(lancto.id);
+   setSelectedLancamentoCompleto(lancamentoCompleto)
+   setIsModalLancamentoCompletoOpen(true)
+   console.log('Lançamento Completo: '+JSON.stringify(lancamentoCompleto));
+  }
 
   useEffect(() => {
     if (toast.message) {
@@ -288,9 +351,7 @@ function MovimentacaoFinanceiraDespesa() {
                 <button onClick={handleSearch} className="button">Pesquisar</button>
                 <button onClick={handleClear} className="button">Limpar</button>
                 <button onClick={() => {
-                  setIsModalOpen(true);
-                  setIsEdit(false);
-                  setSelectedMovimentacao(null);
+                  handleCadastrarModal();
                 }} className="button">Cadastrar</button>
               </div>
             </div>
@@ -314,7 +375,7 @@ function MovimentacaoFinanceiraDespesa() {
                 <tbody>
                   {movimentacoes.map((movimentacao) => (
                     <React.Fragment key={movimentacao.id}>
-                      <tr>
+                      <tr className={expandedRows[movimentacao.id] ? 'selected' : ''}>
                         <td>
                           <button onClick={() => toggleExpand(movimentacao.id)}>
                             {expandedRows[movimentacao.id] ? '▼' : '▶'}
@@ -350,7 +411,7 @@ function MovimentacaoFinanceiraDespesa() {
                               </>
                             ) : (
                               <button
-                                onClick={() => handleLancaParcelas(movimentacao)}
+                                onClick={() => handleGetDespesaCompleta(movimentacao)}
                                 className="edit-button"
                               >
                                 Visualizar
@@ -371,7 +432,11 @@ function MovimentacaoFinanceiraDespesa() {
                             <td>{formatarData(parcela.vencimento)}</td>
                             <td>
                               <button
-                                className="edit-button">
+                                className="edit-button"
+                                onClick={() => {
+                                  handlePagarParcelas(parcela);
+                                }}
+                              >
                                 Pagar
                               </button>
                             </td>
@@ -426,6 +491,21 @@ function MovimentacaoFinanceiraDespesa() {
           despesa={selectedMovimentacao}
           onSave={handleSaveParcelas}
 
+        />
+      )}
+      {isModalPagarLancamentosOpen && (
+        <ModalPagarLancamentos
+          isOpen={isModalPagarLancamentosOpen}
+          onClose={() => setIsModalPagarLancamentosOpen(false)}
+          onSubmit={handleSavePagamento}
+          parcela={selectedParcela}
+        />
+      )}
+      {isModalLancamentoCompletoOpen && (
+        <ModalLancamentoCompleto
+          isOpen={isModalLancamentoCompletoOpen}
+          onClose={() => setIsModalLancamentoCompletoOpen(false)}
+          lancamento={selectedLancamentoCompleto}
         />
       )}
     </div>
