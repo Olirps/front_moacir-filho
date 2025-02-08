@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById,getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
+import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
@@ -34,6 +34,15 @@ function MovimentacaoFinanceiraDespesa() {
   const [isEdit, setIsEdit] = useState(false);
   const { permissions } = useAuth();
 
+  ////handleSearch
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
+  const [pagamento, setPagamento] = useState('');
+  const [cliente, setCliente] = useState('');
+  ////handleSearch - Final
+
+
+
 
   // responsavel por expandir
   const [expandedRows, setExpandedRows] = useState({});
@@ -56,7 +65,63 @@ function MovimentacaoFinanceiraDespesa() {
     fetchMovimentacao();
   }, []);
 
+  /*const handleSearch = () => {
+    const results = movimentacoes.filter(movimentacao => {
+      const fornecedorMatch = movimentacao.fornecedor?.nomeFantasia?.toLowerCase().includes(fornecedor.toLowerCase());
+      return fornecedorMatch;
+    })
+    setFilteredMovimentacoes(results);
+    setCurrentPage(1);
+  }*/
+
   const handleSearch = () => {
+    // Verifica quais filtros estão preenchidos
+    const filtrosAtivos = {
+      descricao: !!descricao, // true se descricao estiver preenchida
+      fornecedor: !!fornecedor, // true se fornecedor estiver preenchido
+      funcionario: !!funcionario, // true se funcionario estiver preenchido
+      cliente: !!cliente, // true se cliente estiver preenchido
+      dataVencimento: !!dataInicio && !!dataFim, // true se dataInicio e dataFim estiverem preenchidos
+      pagamento: !!pagamento, // true se pagamento estiver preenchido
+    };
+
+    // Aplica os filtros dinamicamente
+    const results = movimentacoes.filter(movimentacao => {
+      // Filtro por descrição (se ativo)
+      const descricaoMatch = !filtrosAtivos.descricao
+        || movimentacao.descricao?.toLowerCase().includes(descricao.trim().toLowerCase());
+
+      // Filtro por fornecedor (se ativo)
+      const fornecedorMatch = !filtrosAtivos.fornecedor
+        || movimentacao.fornecedor?.nomeFantasia?.toLowerCase().includes(fornecedor.toLowerCase());
+
+      // Filtro por funcionário (se ativo)
+      const funcionarioMatch = !filtrosAtivos.funcionario
+        || movimentacao.funcionario?.nome?.toLowerCase().includes(funcionario.toLowerCase());
+
+      // Filtro por cliente (se ativo)
+      const clienteMatch = !filtrosAtivos.cliente
+        || movimentacao.cliente?.nome?.toLowerCase().includes(cliente.toLowerCase());
+
+      // Filtro por data de vencimento (se ativo)
+      const dataVencimentoMatch = !filtrosAtivos.dataVencimento
+        || (new Date(movimentacao.data_vencimento) >= new Date(dataInicio)
+          && new Date(movimentacao.data_vencimento) <= new Date(dataFim));
+
+      // Filtro por tipo de pagamento (se ativo)
+      const pagamentoMatch = !filtrosAtivos.pagamento
+        || movimentacao.pagamento === pagamento;
+
+      // Retorna true apenas se todos os filtros ativos forem atendidos
+      return descricaoMatch && fornecedorMatch && funcionarioMatch && clienteMatch && dataVencimentoMatch && pagamentoMatch;
+    });
+
+    setFilteredMovimentacoes(results);
+    setCurrentPage(1);
+  };
+
+
+  /*const handleSearch = () => {
     const results = movimentacoes.filter(movimentacao =>
       (descricao ? movimentacao.descricao.toLowerCase().includes(descricao.toLowerCase()) : true) &&
       (fornecedor ? movimentacao.fornecedor_id === fornecedor : true) &&
@@ -65,7 +130,7 @@ function MovimentacaoFinanceiraDespesa() {
 
     setFilteredMovimentacoes(results);
     setCurrentPage(1);
-  };
+  };*/
 
   const handleClear = () => {
     setDescricao('');
@@ -241,11 +306,27 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleGetDespesaCompleta = async (lancto) => {
-   const lancamentoCompleto = await getLancamentoCompletoById(lancto.id);
-   setSelectedLancamentoCompleto(lancamentoCompleto)
-   setIsModalLancamentoCompletoOpen(true)
-   console.log('Lançamento Completo: '+JSON.stringify(lancamentoCompleto));
+    const lancamentoCompleto = await getLancamentoCompletoById(lancto.id);
+    setSelectedLancamentoCompleto(lancamentoCompleto)
+    setIsModalLancamentoCompletoOpen(true)
+    console.log('Lançamento Completo: ' + JSON.stringify(lancamentoCompleto));
   }
+  const handleConfirmacaoParcelas = async (dadosRecebidos) => {
+    console.log("Parcelas confirmadas:", dadosRecebidos);
+
+    try {
+      await updateLancamentoDespesa(dadosRecebidos.id, { status: 'cancelada' });
+      setToast({ message: "Movimentação financeira atualizada com sucesso!", type: "success" });
+      setIsModalLancamentoCompletoOpen(false);
+      setIsEdit(false);
+      const response = await getAllMovimentacaofinanceiraDespesa();
+      setMovimentacoes(response.data);
+      setFilteredMovimentacoes(response.data);
+    } catch (err) {
+      const errorMessage = err.response?.data?.error || "Erro ao atualizar movimentação financeira.";
+      setToast({ message: errorMessage, type: "error" });
+    }
+  };
 
   useEffect(() => {
     if (toast.message) {
@@ -317,7 +398,7 @@ function MovimentacaoFinanceiraDespesa() {
             <div id="search-fields">
               <div>
                 <label htmlFor="descricao">Descrição</label>
-                <input className="input-geral"
+                <input
                   type="text"
                   id="descricao"
                   value={descricao}
@@ -327,7 +408,7 @@ function MovimentacaoFinanceiraDespesa() {
               </div>
               <div>
                 <label htmlFor="fornecedor">Fornecedor</label>
-                <input className="input-geral"
+                <input
                   type="text"
                   id="fornecedor"
                   value={fornecedor}
@@ -337,13 +418,54 @@ function MovimentacaoFinanceiraDespesa() {
               </div>
               <div>
                 <label htmlFor="funcionario">Funcionário</label>
-                <input className="input-geral"
+                <input
                   type="text"
                   id="funcionario"
                   value={funcionario}
                   onChange={(e) => setFuncionario(e.target.value)}
                   maxLength="150"
                 />
+              </div>
+              <div>
+                <label htmlFor="cliente">Cliente</label>
+                <input
+                  type="text"
+                  id="cliente"
+                  value={cliente}
+                  onChange={(e) => setCliente(e.target.value)}
+                  maxLength="150"
+                />
+              </div>
+              <div>
+                <label htmlFor="dataInicio">Data Início</label>
+                <input
+                  type="date"
+                  id="dataInicio"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="dataFim">Data Fim</label>
+                <input
+                  type="date"
+                  id="dataFim"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="pagamento">Tipo de Pagamento</label>
+                <select
+                  id="pagamento"
+                  value={pagamento}
+                  onChange={(e) => setPagamento(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="cotaunica">Cota Única</option>
+                  <option value="parcelada">Parcelada</option>
+                  <option value="recorrente">Recorrente</option>
+                </select>
               </div>
             </div>
             <div>
@@ -373,7 +495,7 @@ function MovimentacaoFinanceiraDespesa() {
                   </tr>
                 </thead>
                 <tbody>
-                  {movimentacoes.map((movimentacao) => (
+                  {currentMovimentacoes.map((movimentacao) => (
                     <React.Fragment key={movimentacao.id}>
                       <tr className={expandedRows[movimentacao.id] ? 'selected' : ''}>
                         <td>
@@ -477,6 +599,7 @@ function MovimentacaoFinanceiraDespesa() {
         <ModalMovimentacaoFinanceiraDespesa
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          onConfirmar={handleConfirmacaoParcelas}
           onSubmit={isEdit ? handleEditSubmit : handleAddMovimentacao}
           movimentacao={selectedMovimentacao}
           edit={isEdit}
@@ -506,6 +629,7 @@ function MovimentacaoFinanceiraDespesa() {
           isOpen={isModalLancamentoCompletoOpen}
           onClose={() => setIsModalLancamentoCompletoOpen(false)}
           lancamento={selectedLancamentoCompleto}
+          onConfirmar={handleConfirmacaoParcelas}
         />
       )}
     </div>

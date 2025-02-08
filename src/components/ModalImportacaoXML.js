@@ -52,19 +52,21 @@ const ModalImportacaoXML = ({ isOpen, onClose, onSubmit }) => {
         {/* Conteúdo da página quando o carregamento estiver completo */}
 
         <form onSubmit={handleSubmit}>
-          <div className="input-group">
+          <div id='cadastro-padrao'>
             <label htmlFor="file">Selecione o arquivo XML</label>
             <input
+              className='input-geral'
               type="file"
               id="file"
               name="file"
               accept=".xml"
               multiple // Permite a seleção de múltiplos arquivos
               onChange={handleFileChange}
+              required
             />
           </div>
           {error && <p className="error-message">{error}</p>}
-          <button type="submit" className="button">Importar</button>
+          <button type="submit" className="button-geral">Importar</button>
         </form>
         </>
         )}

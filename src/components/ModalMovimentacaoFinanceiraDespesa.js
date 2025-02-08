@@ -7,11 +7,11 @@ import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importan
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import { getLancamentoDespesaById, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, cancelarMovimentacaofinanceiraDespesa } from '../services/api';
 
-const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, movimentacao, onSuccess }) => {
+const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edit, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
     const [tipoCredor, setTipoCredor] = useState('');
-    const [dataLancamento, setDataLancamento] = useState('');
+    const [dataLancamento, setDataLancamento] = useState(new Date().toISOString().split('T')[0]);
     const [dataVencimento, setDataVencimento] = useState('');
     const [tipo, setTipo] = useState('debito');  // Tipo de movimentação (crédito ou débito)
     const [despesaAdicionada, setDespesaAdicionada] = useState('');  // Tipo de movimentação (crédito ou débito)
@@ -24,6 +24,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
     const [credorSelecionado, setCredorSelecionado] = useState(null);  // Crédito selecionado do Modal de Pesquisa
     const [lancarParcelas, setLancarParcelas] = useState(''); // Estado para controlar a opção de parcelamento
     const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
+    const [cancelarLancto, setCancelarLancto] = useState(false); // Estado para controlar o modal de parcelas
     const [despesaRecorrente, setDespesaRecorrente] = useState('cotaunica'); // Estado para controlar o modal de parcelas
     const [valorEntradaDespesa, setValorEntradaDespesa] = useState(''); // Estado para controlar o modal de parcelas
     //  const [valorRestante, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
@@ -114,9 +115,14 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
 
     const handleCancelar = () => {
         if (!movimentacao) return;
+        setCancelarLancto(true)
         setMensagem('Deseja realmente excluir esta despesa?')
         setIsConfirmDialogOpen(true);
     };
+
+    const handleConfirmCancelamento = async () => {
+        onConfirmar(movimentacao);
+    }
 
     const handleSaveParcelas = (parcelas) => {
         // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
@@ -247,7 +253,11 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                                                 value="parcelada"
                                                 name='despesaRecorrente'
                                                 checked={despesaRecorrente === 'parcelada'}
-                                                onChange={() => setDespesaRecorrente('parcelada')}
+                                                onChange={() => {
+                                                    setDespesaRecorrente('parcelada')
+                                                    setLancarParcelas('')
+                                                }
+                                                }
                                             />
                                             Parcelada
                                         </label>
@@ -260,16 +270,25 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                                         <div>
                                             <label>Quantidade de Parcelas</label>
                                             <input
+                                                className='input-geral'
                                                 type="number"
                                                 name='lancarParcelas'
                                                 value={lancarParcelas}
-                                                onChange={(e) => setLancarParcelas(e.target.value)}
+                                                onChange={(e) => {
+                                                    // Remove qualquer caractere que não seja um número inteiro
+                                                    const value = e.target.value.replace(/[^0-9]/g, '');
+                                                    // Converte o valor para número inteiro
+                                                    const intValue = parseInt(value, 10);
+                                                    // Define o valor mínimo como 1
+                                                    setLancarParcelas(Math.max(1, intValue || 0));
+                                                }}
                                                 required
                                             />
                                         </div>
                                         <div>
                                             <label>Vencimento da Primeira Parcela</label>
                                             <input
+                                                className='input-geral'
                                                 type="date"
                                                 name='dataLancamento'
                                                 value={dataLancamento}
@@ -280,10 +299,11 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                                         <div>
                                             <label>Valor de Entrada</label>
                                             <input
-                                                type="number"
+                                                className='input-geral'
+                                                type="text"
                                                 name='valorEntradaDespesa'
                                                 value={valorEntradaDespesa}
-                                                onChange={(e) => setValorEntradaDespesa(e.target.value)}
+                                                onChange={(e) => setValorEntradaDespesa(e.target.value.replace(',', '.'))}
                                                 required
                                             />
                                         </div>
@@ -352,13 +372,16 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                                         </div>
                                     </div>
                                 )}
-                                <div id='botao-salva'>
+                                <div id='button-group'>
                                     <button type="submit"
                                         className="button-geral"
                                     >
                                         Salvar
                                     </button>
-                                    {movimentacao && <button className="button delete" onClick={handleCancelar}>Excluir</button>}
+                                    {movimentacao &&
+                                        <button className="button-excluir" onClick={handleCancelar}>
+                                            Excluir
+                                        </button>}
                                 </div>
                             </div>
                         </form>
@@ -370,7 +393,9 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onSubmit, edit, onClose, m
                 <ConfirmarLancarParcelas
                     isOpen={isConfirmDialogOpen}
                     message={mensagem}
-                    onConfirm={handleLancaParcelas}  // Abre o modal de lançamento de parcelas
+                    cancelarLancto={cancelarLancto}
+                    onConfirmar={handleConfirmCancelamento}
+                    onConfirm={cancelarLancto ? handleConfirmCancelamento : handleLancaParcelas}  // Abre o modal de lançamento de parcelas
                     onCancel={() => setIsConfirmDialogOpen(false)}
                 />
             )

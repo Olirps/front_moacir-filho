@@ -275,6 +275,10 @@ export const updateMovimentacaofinanceiraDespesa = async (id) => {
   return api.put(`/movimentacaofinanceiradespesa/${id}`);
 };
 
+export const updateLancamentoDespesa = async (id,dados) => {
+  return api.put(`/lancamentos/${id}`,dados);
+};
+
 export const cancelarMovimentacaofinanceiraDespesa = async (id) => {
   return api.put(`/movimentacaofinanceiradespesa/${id}`);
 };

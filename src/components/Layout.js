@@ -107,14 +107,12 @@ function Layout() {
 
           </nav>
           {/* User information and logout button */}
-          <div id="user-info">
             <div>
               <span id="usuario">{`Bem vindo ${username.toUpperCase()}`}</span>
             </div>
             <div>
               <button onClick={handleLogout} id="logout-button">Sair</button>
             </div>
-          </div>
         </div>
       </header>
       {/* Main content area */}

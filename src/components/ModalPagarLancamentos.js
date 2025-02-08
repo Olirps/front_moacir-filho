@@ -55,6 +55,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                     <div className="form-group">
                         <label>Data do Pagamento</label>
                         <input
+                            className='input-geral'
                             type='date'
                             value={datapagamento}
                             name='datapagamento'
@@ -65,10 +66,11 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                     <div className="form-group">
                         <label>Valor Pago</label>
                         <input
+                            className='input-geral'
                             type="text"
                             name='valorPago'
                             value={valorPago}
-                            onChange={(e) => setValorPago(e.target.value.replace(',','.'))}
+                            onChange={(e) => setValorPago(e.target.value.replace(',', '.'))}
                         />
                     </div>
                     <div>

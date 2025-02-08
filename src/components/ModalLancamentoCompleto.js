@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoCompleto.css';
+import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import { cpfCnpjMask } from './utils';
 
 
-const ModalLancamentoCompleto = ({ isOpen, onClose, lancamento }) => {
+const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) => {
     const [lancamentoCompleto, setLancamentoCompleto] = useState(null);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [cancelarLancto, setCancelarLancto] = useState(false); // Estado para controlar o modal de parcelas
+        const [mensagem, setMensagem] = useState('');
+    
+
 
     useEffect(() => {
         if (lancamento) {
             setLancamentoCompleto(lancamento.data);
         }
     }, [lancamento]);
+    const handleCancelar = () => {
+        if (!lancamento.data) return;
+        setCancelarLancto(true)
+        setMensagem('Deseja realmente excluir esta despesa?')
+        setIsConfirmDialogOpen(true);
+    };
+
+    const handleConfirmCancelamento = async () => {
+        const dadosLancto = lancamento.data
+        onConfirmar(dadosLancto);
+    }
 
     if (!isOpen || !lancamentoCompleto) return null;
 
@@ -108,7 +125,23 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, lancamento }) => {
                         <p><strong>Status:</strong> {lancamentoCompleto.notaFiscal.status}</p>
                     </div>
                 )}
+                <div id='button-group'>
+                    <button className="button-excluir" onClick={handleCancelar}>
+                        Excluir
+                    </button>
+                </div>
             </div>
+            {isConfirmDialogOpen && (
+                <ConfirmarLancarParcelas
+                    isOpen={isConfirmDialogOpen}
+                    message={mensagem}
+                    cancelarLancto={cancelarLancto}
+                    onConfirmar={handleConfirmCancelamento}
+                    onConfirm={handleConfirmCancelamento}  // Abre o modal de lançamento de parcelas
+                    onCancel={() => setIsConfirmDialogOpen(false)}
+                />
+            )
+            }
         </div>
     );
 };
