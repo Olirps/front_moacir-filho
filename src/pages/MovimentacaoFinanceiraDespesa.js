@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
+import {converterMoedaParaNumero } from '../utils/functions';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
@@ -65,14 +66,7 @@ function MovimentacaoFinanceiraDespesa() {
     fetchMovimentacao();
   }, []);
 
-  /*const handleSearch = () => {
-    const results = movimentacoes.filter(movimentacao => {
-      const fornecedorMatch = movimentacao.fornecedor?.nomeFantasia?.toLowerCase().includes(fornecedor.toLowerCase());
-      return fornecedorMatch;
-    })
-    setFilteredMovimentacoes(results);
-    setCurrentPage(1);
-  }*/
+
 
   const handleSearch = () => {
     // Verifica quais filtros estão preenchidos
@@ -120,18 +114,6 @@ function MovimentacaoFinanceiraDespesa() {
     setCurrentPage(1);
   };
 
-
-  /*const handleSearch = () => {
-    const results = movimentacoes.filter(movimentacao =>
-      (descricao ? movimentacao.descricao.toLowerCase().includes(descricao.toLowerCase()) : true) &&
-      (fornecedor ? movimentacao.fornecedor_id === fornecedor : true) &&
-      (funcionario ? movimentacao.funcionario_id === funcionario : true)
-    );
-
-    setFilteredMovimentacoes(results);
-    setCurrentPage(1);
-  };*/
-
   const handleClear = () => {
     setDescricao('');
     setFornecedor('');
@@ -145,10 +127,6 @@ function MovimentacaoFinanceiraDespesa() {
     setCurrentPage(1);
   };
 
-  const handleSuccess = () => {
-    console.log("Despesa salva com sucesso!");
-    // Adicione outras ações que deseja realizar após salvar
-  };
   const handleCadastrarModal = () => {
     if (!hasPermission(permissions, 'movimentacaofinanceiradespesas', 'insert')) {
       setToast({ message: "Você não tem permissão para cadastrar despesas.", type: "error" });
@@ -162,18 +140,18 @@ function MovimentacaoFinanceiraDespesa() {
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    console.log('formData: ' + JSON.stringify(formData));
 
     const tipoCredor = formData.get('tipoCredor');
     const credorId = formData.get('credorSelecionado'); // Supondo que o campo 'credor' contenha o ID
     const despesaRecorrenteInput = e.target.elements.despesaRecorrente;
     const pagamento = despesaRecorrenteInput ? despesaRecorrenteInput.value : null;
-
+    const valorLancamento = formData.get('valor');
+    const valorEntrada = formData.get('valorEntradaDespesa');
     const data_lancamento = new Date().toISOString().split('T')[0]; // Define a data atual
 
     const newMovimentacao = {
       descricao: formData.get('descricao'),
-      valor: formData.get('valor'),
+      valor: converterMoedaParaNumero(valorLancamento),
       fornecedor_id: tipoCredor === 'fornecedor' ? credorId : null,
       funcionario_id: tipoCredor === 'funcionario' ? credorId : null,
       cliente_id: tipoCredor === 'cliente' ? credorId : null,
@@ -182,7 +160,7 @@ function MovimentacaoFinanceiraDespesa() {
       data_vencimento: formData.get('dataVencimento'),
       pagamento,
       lancarParcelas: formData.get('lancarParcelas'),
-      valorEntradaDespesa: formData.get('valorEntradaDespesa'),
+      valorEntradaDespesa:converterMoedaParaNumero(valorEntrada),
       tipo: formData.get('tipo')
     };
 
@@ -216,13 +194,15 @@ function MovimentacaoFinanceiraDespesa() {
   const handleSaveParcelas = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const valorEntrada = formData.get('valorEntrada');
+    
     const lancaParcelas = {
       descricao: selectedMovimentacao.descricao,
       financeiro_id: selectedMovimentacao.id,
       quantidadeParcelas: formData.get('quantidadeParcelas'),
       valor: selectedMovimentacao.valor,
       vencimento: formData.get('vencimento'),
-      valorEntrada: formData.get('valorEntrada')
+      valorEntrada: converterMoedaParaNumero(valorEntrada)
     };
 
     try {
@@ -243,9 +223,10 @@ function MovimentacaoFinanceiraDespesa() {
   const handleSavePagamento = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const valorPago = formData.get('valorEntrada');
     const pagamento = {
       data_pagamento: formData.get('datapagamento'),
-      valor_pago: formData.get('valorPago'),
+      valor_pago: converterMoedaParaNumero(valorPago),
       conta_id: formData.get('contabancaria'),
       metodo_pagamento: formData.get('formaPagamento'),
       data_efetiva_pg: new Date().toISOString().split('T')[0],
@@ -309,10 +290,8 @@ function MovimentacaoFinanceiraDespesa() {
     const lancamentoCompleto = await getLancamentoCompletoById(lancto.id);
     setSelectedLancamentoCompleto(lancamentoCompleto)
     setIsModalLancamentoCompletoOpen(true)
-    console.log('Lançamento Completo: ' + JSON.stringify(lancamentoCompleto));
   }
   const handleConfirmacaoParcelas = async (dadosRecebidos) => {
-    console.log("Parcelas confirmadas:", dadosRecebidos);
 
     try {
       await updateLancamentoDespesa(dadosRecebidos.id, { status: 'cancelada' });

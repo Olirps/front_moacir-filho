@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastroCarro.css';
 import { getMarcas, getTipoVeiculo } from '../services/api';
-import { formatPlaca } from '../utils/functions';
+import { formatPlaca,formatarMoeda } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 

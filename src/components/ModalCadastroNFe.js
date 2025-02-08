@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroNFe.css';
 import ModalPesquisaFornecedor from './ModalPesquisaFornecedor';
 import { getUfs, getMunicipios, getUFIBGE } from '../services/api';
+import {formatarMoedaBRL } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
@@ -247,7 +248,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                             {[
                                 { label: 'Número', id: 'nNF', value: nNF, setter: setNNF },
                                 { label: 'Série', id: 'serie', value: serie, setter: setSerie },
-                                { label: 'Valor Nota Fiscal', id: 'vNF', value: vNF.replace(',', '.'), setter: setvNF },
+                                { label: 'Valor Nota Fiscal', id: 'vNF', value: formatarMoedaBRL(vNF), setter: setvNF },
                                 { label: 'cNF', id: 'cNF', value: cNF, setter: setCNF },
                                 { label: 'tpNF', id: 'tpNF', value: tpNF, setter: setTPNF },
                             ].map(({ label, id, value, setter }) => (

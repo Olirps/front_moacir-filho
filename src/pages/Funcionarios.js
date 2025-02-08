@@ -45,8 +45,8 @@ function Funcionarios() {
     let lowerCpf = cpf.toLowerCase();
     lowerCpf = removeMaks(lowerCpf);
     const results = funcionarios.filter(funcionario =>
-      (lowerNome ? funcionario.nome.toLowerCase().includes(lowerNome) : true) &&
-      (lowerCpf ? funcionario.cpf.toLowerCase().includes(lowerCpf) : true)
+      (lowerNome ? funcionario.cliente.nome.toLowerCase().includes(lowerNome) : true) &&
+      (lowerCpf ? removeMaks(funcionario.cliente.cpfCnpj).includes(lowerCpf) : true)
     );
 
     setFilteredFuncionarios(results);
@@ -77,9 +77,10 @@ function Funcionarios() {
   const handleAddFuncionario = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const cpfCnpj = formData.get('cpf')
     const newFuncionario = {
       nome: formData.get('nome'),
-      cpfCnpj: formData.get('cpf'),
+      cpfCnpj: removeMaks(cpfCnpj),
       email: formData.get('email'),
       celular: formData.get('celular').replace(/\D/g, ''),
       tipoFuncionario: formData.get('tipoFuncionario'),

@@ -259,7 +259,7 @@ function Veiculos() {
                       <tr key={carro.id}>
                         <td>{carro.id}</td>
                         <td>{carro.modelo}</td>
-                        <td>{carro.placa}</td>
+                        <td>{formatPlaca(carro.placa)}</td>
                         <td>{carro.quilometragem}</td>
                         <td>{marca?.nome || 'Desconhecida'}</td>
                         <td>

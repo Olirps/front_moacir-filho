@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoParcelas.css';
 import Toast from '../components/Toast';
+import {formatarMoedaBRL } from '../utils/functions';
+
 
 const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despesa, onSave }) => {
     const [quantidadeParcelas, setQuantidadeParcelas] = useState(1);
@@ -70,7 +72,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                                 type="text"
                                 value={valorEntrada}
                                 name='valorEntrada'
-                                onChange={(e) => setValorEntrada(e.target.value.replace(',', '.'))}
+                                onChange={(e) => setValorEntrada(formatarMoedaBRL(e.target.value))}
                                 min="0"
                                 step="0.01"
                             />

@@ -43,7 +43,7 @@ function decodeJWT(token) {
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Ajusta a codificação para base64 padrão
 
   // Decodifica a string base64 para JSON
-  const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
 
@@ -55,11 +55,42 @@ function decodeJWT(token) {
 function formatarCelular(value) {
   value = value.replace(/\D/g, '');
   if (value.length > 10) {
-      value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
   } else {
-      value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
   }
   return value;
 }
 
-module.exports = { converterData, formatarDataResumida, formatPlaca,decodeJWT,formatarCelular };
+const formatarNumero = (valor) => {
+  if (!valor) return "";
+  return Number(valor.replace(/\D/g, "")).toLocaleString("pt-BR");
+};
+
+const converterMoedaParaNumero = (valor) => {
+  if (!valor) return 0;
+
+  // Remove "R$", espaços e pontos, substitui vírgula por ponto
+  let numeroLimpo = valor.replace(/R\$\s?|\./g, "").replace(",", ".");
+
+  // Converte para número decimal
+  return parseFloat(numeroLimpo);
+};
+
+const formatarMoedaBRL = (valor) => {
+  if (!valor) return "";
+
+  // Remove tudo que não for número
+  let numeroLimpo = valor.replace(/\D/g, "");
+
+  // Converte para número e formata no padrão brasileiro
+  let numeroFormatado = (Number(numeroLimpo) / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+
+  return numeroFormatado;
+};
+
+
+module.exports = { converterData, formatarDataResumida, formatPlaca, decodeJWT, formatarCelular, converterMoedaParaNumero, formatarNumero, formatarMoedaBRL };

@@ -48,7 +48,7 @@ function Clientes() {
     lowerCpf = removeMaks(lowerCpf);
     const results = clientes.filter(cliente =>
       (lowerNome ? cliente.nome.toLowerCase().includes(lowerNome) : true) &&
-      (lowerNomeFantasia ? cliente.nomeFantasia.toLowerCase().includes(lowerNomeFantasia) : true) &&
+      (lowerNomeFantasia ? cliente.nomeFantasia?.toLowerCase().includes(lowerNomeFantasia) : true) &&
       (lowerCpf ? cliente.cpfCnpj.toLowerCase().includes(lowerCpf) : true)
     );
 

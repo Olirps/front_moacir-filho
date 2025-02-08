@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getNotafiscal, getFornecedorById, getNFeById, importNotafiscal, addNotafiscal, getMunicipiosIBGE, getUFIBGE, updateNFe } from '../services/api';
+import { getNotafiscal, getNFeById, importNotafiscal, addNotafiscal, getMunicipiosIBGE, getUFIBGE, updateNFe } from '../services/api';
 import '../styles/LancaNFe.css';
 import '../App.css';
 import Toast from '../components/Toast';
@@ -7,6 +7,7 @@ import ModalImportacaoXML from '../components/ModalImportacaoXML'; // Ajuste o c
 import ModalProdutosNF from '../components/ModalProdutosNF'; // Ajuste o caminho conforme necessário
 import ModalCadastroNFe from '../components/ModalCadastroNFe'; // Ajuste o caminho conforme necessário
 import { cpfCnpjMask } from '../components/utils';
+import { converterMoedaParaNumero } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
@@ -56,10 +57,6 @@ function LancaNFe() {
 
   const closeImportModal = () => {
     setIsImportModalOpen(false);
-  };
-
-  const openProductModal = () => {
-    setIsProductModalOpen(true);
   };
 
   const closeProductModal = () => {
@@ -152,7 +149,8 @@ function LancaNFe() {
     const formData = new FormData(e.target);
     formData.forEach((value, key) => {
     });*/
-    const vlrNf = parseFloat(e.vNF.replace(',', '.'));
+    const vlrNf = converterMoedaParaNumero(e.vNF);
+
     const newNf = {
       codFornecedor: e.fornecedorId,
       nNF: e.nNF,
@@ -237,7 +235,8 @@ function LancaNFe() {
   };
 
   const handleEditSubmit = async (e) => {
-    //e.preventDefault();
+    
+    const vlrNf = converterMoedaParaNumero(e.vNF);
     const updatedNotaFiscal = {
       codFornecedor: e.fornecedorId,
       nNF: e.nNF,
@@ -249,7 +248,7 @@ function LancaNFe() {
       dataSaida: e.dataSaida,
       cNF: e.cNF,
       tpNF: e.tpNF,
-      vNF: e.vNF
+      vNF: vlrNf
     };
 
     try {

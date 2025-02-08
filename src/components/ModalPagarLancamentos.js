@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoParcelas.css';
 import Toast from '../components/Toast';
+import { formatarMoedaBRL } from '../utils/functions';
 import { getAllContas } from '../services/api';
 
 const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
@@ -70,7 +71,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                             type="text"
                             name='valorPago'
                             value={valorPago}
-                            onChange={(e) => setValorPago(e.target.value.replace(',', '.'))}
+                            onChange={(e) => setValorPago(formatarMoedaBRL(e.target.value))}
                         />
                     </div>
                     <div>

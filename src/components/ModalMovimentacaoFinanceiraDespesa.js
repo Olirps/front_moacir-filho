@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalMovimentacaoFinanceiraDespesa.css';
 import Toast from '../components/Toast';
+import {formatarMoedaBRL } from '../utils/functions';
 import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
-import ConfirmDialog from '../components/ConfirmDialog';
 import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importando o modal de pesquisa
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
-import { getLancamentoDespesaById, addMovimentacaofinanceiraDespesa, updateMovimentacaofinanceiraDespesa, cancelarMovimentacaofinanceiraDespesa } from '../services/api';
 
 const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edit, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
@@ -15,7 +14,6 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
     const [dataVencimento, setDataVencimento] = useState('');
     const [tipo, setTipo] = useState('debito');  // Tipo de movimentação (crédito ou débito)
     const [despesaAdicionada, setDespesaAdicionada] = useState('');  // Tipo de movimentação (crédito ou débito)
-    const [formError, setFormError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ message: '', type: '' });
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -75,44 +73,6 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
         setIsModalParcelasOpen(true)
     }
 
-    const handleSave = async () => {
-        if (!descricao || !valor || !dataVencimento || !credorSelecionado) {
-            setFormError(true);
-            setToast({ message: "Preencha todos os campos e selecione um credor.", type: "error" });
-            return;
-        }
-
-        try {
-            const data = {
-                descricao,
-                valor: parseFloat(valor.replace(',', '.')), // Convertendo para número
-                data_vencimento: dataVencimento, // Define a data atual
-                data_lancamento: new Date().toISOString().split('T')[0], // Define a data atual
-                tipo,
-                pagamento: despesaRecorrente,
-                data_vencimento: dataVencimento,
-                ...(tipoCredor === 'funcionario' && { funcionario_id: credorSelecionado.id }),
-                ...(tipoCredor === 'fornecedor' && { fornecedor_id: credorSelecionado.id }),
-                ...(tipoCredor === 'cliente' && { cliente_id: credorSelecionado.id }),
-                despesaRecorrente,
-                lancarParcelas
-            };
-
-
-            if (movimentacao) {
-                await updateMovimentacaofinanceiraDespesa(movimentacao.id, data);
-            } else {
-                const despesaAdicionada = await addMovimentacaofinanceiraDespesa(data);
-            }
-            setToast({ message: "Despesa salva com sucesso!", type: "success" });
-            onClose();
-
-        } catch (err) {
-            console.error('Erro ao salvar despesa', err);
-            setToast({ message: "Erro ao salvar despesa.", type: "error" });
-        }
-    };
-
     const handleCancelar = () => {
         if (!movimentacao) return;
         setCancelarLancto(true)
@@ -126,7 +86,6 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
 
     const handleSaveParcelas = (parcelas) => {
         // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
-        console.log("Parcelas salvas:", parcelas);
         setToast({ message: "Parcelas salvas com sucesso!", type: "success" });
         onSuccess();
         onClose();
@@ -195,7 +154,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                         value={valor} // Isso funcionará, pois `valor` é uma string
                                         name='valor' // Isso funcionará, pois `valor` é uma string
 
-                                        onChange={(e) => { setValor(e.target.value.replace(',', '.')) }} //forma resumida de atualizar o input
+                                        onChange={(e) => { setValor(formatarMoedaBRL(e.target.value)) }} //forma resumida de atualizar o input
 
                                         required
                                     />
@@ -303,7 +262,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                                 type="text"
                                                 name='valorEntradaDespesa'
                                                 value={valorEntradaDespesa}
-                                                onChange={(e) => setValorEntradaDespesa(e.target.value.replace(',', '.'))}
+                                                onChange={(e) => setValorEntradaDespesa(formatarMoedaBRL(e.target.value))}
                                                 required
                                             />
                                         </div>

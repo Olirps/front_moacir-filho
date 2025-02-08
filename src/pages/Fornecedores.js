@@ -13,6 +13,7 @@ function Fornecedores() {
   const [fornecedores, setFornecedores] = useState([]);
   const [filteredFornecedores, setFilteredFornecedores] = useState([]);
   const [nome, setNome] = useState('');
+  const [nomeFantasia, setNomeFantasia] = useState('');
   const [fornecedorContato, setfornecedorContato] = useState('');
   const [cpfCnpj, setCpf] = useState('');
   const [loading, setLoading] = useState(true);
@@ -43,10 +44,12 @@ function Fornecedores() {
 
   const handleSearch = () => {
     const lowerNome = nome.toLowerCase();
+    const lowerNomeFantasia = nomeFantasia.toLowerCase();
     let lowerCpf = cpfCnpj.toLowerCase();
     lowerCpf = removeMaks(lowerCpf);
     const results = fornecedores.filter(fornecedor =>
       (lowerNome ? fornecedor.nome.toLowerCase().includes(lowerNome) : true) &&
+      (lowerNomeFantasia ? fornecedor.nomeFantasia.toLowerCase().includes(lowerNomeFantasia) : true)&&
       (lowerCpf ? fornecedor.cpfCnpj.toLowerCase().includes(lowerCpf) : true)
     );
 
@@ -57,6 +60,7 @@ function Fornecedores() {
   const handleClear = () => {
     setNome('');
     setCpf('');
+    setNomeFantasia('');
     setFilteredFornecedores(fornecedores);
     setCurrentPage(1); // Resetar para a primeira página ao limpar a busca
   };
@@ -208,6 +212,16 @@ function Fornecedores() {
                   id="nome"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
+                  maxLength="150"
+                />
+              </div>
+              <div>
+                <label htmlFor="nomeFantasia">Nome Fantasia</label>
+                <input className="input-geral"
+                  type="text"
+                  id="nomeFantasia"
+                  value={nomeFantasia}
+                  onChange={(e) => setNomeFantasia(e.target.value)}
                   maxLength="150"
                 />
               </div>
