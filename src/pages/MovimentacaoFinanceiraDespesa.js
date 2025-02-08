@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
-import {converterMoedaParaNumero } from '../utils/functions';
+import { converterMoedaParaNumero } from '../utils/functions';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
@@ -160,7 +160,7 @@ function MovimentacaoFinanceiraDespesa() {
       data_vencimento: formData.get('dataVencimento'),
       pagamento,
       lancarParcelas: formData.get('lancarParcelas'),
-      valorEntradaDespesa:converterMoedaParaNumero(valorEntrada),
+      valorEntradaDespesa: converterMoedaParaNumero(valorEntrada),
       tipo: formData.get('tipo')
     };
 
@@ -185,6 +185,10 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleLancaParcelas = async (movimentacao) => {
+    if (!hasPermission(permissions, 'lancarparcelas', 'insert')) {
+      setToast({ message: "Você não tem permissão para lançar parcelas.", type: "error" });
+      return; // Impede a abertura do modal
+    }
     const response = await getLancamentoDespesaById(movimentacao.id);
     setSelectedMovimentacao(response.data);
     setValor(response.data.valor);
@@ -195,7 +199,7 @@ function MovimentacaoFinanceiraDespesa() {
     e.preventDefault();
     const formData = new FormData(e.target);
     const valorEntrada = formData.get('valorEntrada');
-    
+
     const lancaParcelas = {
       descricao: selectedMovimentacao.descricao,
       financeiro_id: selectedMovimentacao.id,
@@ -287,6 +291,10 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleGetDespesaCompleta = async (lancto) => {
+    if (!hasPermission(permissions, 'lancamento-completo', 'view')) {
+      setToast({ message: "Você não tem permissão visualizar o lançamento.", type: "error" });
+      return; // Impede a abertura do modal
+    }
     const lancamentoCompleto = await getLancamentoCompletoById(lancto.id);
     setSelectedLancamentoCompleto(lancamentoCompleto)
     setIsModalLancamentoCompletoOpen(true)

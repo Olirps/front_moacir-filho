@@ -173,7 +173,9 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
+        const formData = new FormData(e.target);
+        
+        const valorNF = formData.get('vNF'); 
         const today = new Date(); // Data atual
         const dataEmissaoDate = new Date(dataEmissao); // Converter string para objeto Date
         const dataSaidaDate = new Date(dataSaida);
@@ -194,12 +196,10 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
             fornecedorId,
             nNF,
             serie,
-            cNF,
-            tpNF,
             selectedUfCodIBGE,
             selectedMunicipioCodIBGE,
             municipio,
-            vNF,
+            vNF: valorNF,
             dataEmissao,
             dataSaida
         });
@@ -249,8 +249,6 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                                 { label: 'Número', id: 'nNF', value: nNF, setter: setNNF },
                                 { label: 'Série', id: 'serie', value: serie, setter: setSerie },
                                 { label: 'Valor Nota Fiscal', id: 'vNF', value: formatarMoedaBRL(vNF), setter: setvNF },
-                                { label: 'cNF', id: 'cNF', value: cNF, setter: setCNF },
-                                { label: 'tpNF', id: 'tpNF', value: tpNF, setter: setTPNF },
                             ].map(({ label, id, value, setter }) => (
                                 <div key={id}>
                                     <label htmlFor={id}>{label}</label>

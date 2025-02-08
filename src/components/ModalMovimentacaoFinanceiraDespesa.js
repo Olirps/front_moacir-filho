@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalMovimentacaoFinanceiraDespesa.css';
 import Toast from '../components/Toast';
-import {formatarMoedaBRL } from '../utils/functions';
+import {formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
 import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importando o modal de pesquisa
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
@@ -153,9 +153,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                         type="text"
                                         value={valor} // Isso funcionará, pois `valor` é uma string
                                         name='valor' // Isso funcionará, pois `valor` é uma string
-
                                         onChange={(e) => { setValor(formatarMoedaBRL(e.target.value)) }} //forma resumida de atualizar o input
-
                                         required
                                     />
                                 </div>
@@ -249,9 +247,9 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                             <input
                                                 className='input-geral'
                                                 type="date"
-                                                name='dataLancamento'
-                                                value={dataLancamento}
-                                                onChange={(e) => setDataLancamento(e.target.value)}
+                                                name='dataVencimento'
+                                                value={dataVencimento}
+                                                onChange={(e) => setDataVencimento(e.target.value)}
                                                 required
                                             />
                                         </div>
@@ -275,8 +273,8 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                         <div className="parcelas-container">
                                             {(() => {
                                                 // Ensure valorEntrada is initialized with a default value if not provided
-                                                const valorEntrada = parseFloat((valorEntradaDespesa || '0').replace(',', '.')); // Default to 0 if undefined
-                                                const valorTotal = parseFloat(valor.replace(',', '.')); // Valor total da despesa
+                                                const valorEntrada = converterMoedaParaNumero(valorEntradaDespesa || '0'); // Default to 0 if undefined
+                                                const valorTotal = converterMoedaParaNumero(valor); // Valor total da despesa
                                                 const valorRestante = valorTotal - valorEntrada; // Calcula o valor restante após a entrada
 
                                                 const valorParcela = valorRestante / parseInt(lancarParcelas); // Dividimos o valor restante pelas parcelas

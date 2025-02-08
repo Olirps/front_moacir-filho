@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastraProduto.css';
 import Toast from '../components/Toast';
 import { addProdutos, updateNFe } from '../services/api';
+import { formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
-const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, additionalFields = [] }) => {
+const ModalCadastraProduto = ({ isOpen, onClose, onSubmit, edit, produto, prod, additionalFields = [] }) => {
   const [tipoProduto, setTipoProduto] = useState(
     produto?.tipo_produto === 'produto' || produto?.tipo_produto === 'servico'
       ? produto.tipo_produto
@@ -43,12 +44,15 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, a
   if (!isOpen) return null;
 
   const handleInputChange = (e) => {
+    let { name, value } = e.target;
+    if (name === "valor_unit") {
+      value = formatarMoedaBRL(value);
+    }
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     });
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Evita o comportamento padrão de recarregar a página
@@ -62,7 +66,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, a
         cEAN: formData.get('cEAN'),
         qtdMinima: formData.get('qtdMinima'),
         qCom: formData.get('qCom'),
-        vUnCom: formData.get('valor_unit'),           //valor_unit: formData.get('valor_unit'),  ajustado para tratar produtos cadastrados manual na nf 24/09/2024
+        vUnCom: converterMoedaParaNumero(formData.get('valor_unit')),           //valor_unit: formData.get('valor_unit'),  ajustado para tratar produtos cadastrados manual na nf 24/09/2024
         nota_id: prod?.id
       };
 
@@ -169,7 +173,6 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, a
                     value={cEAN}
                     onChange={(e) => setcEAN(e.target.value)}
                     disabled={!permiteEditar}
-                    required
                   />
                 </div>
                 <div>
@@ -206,6 +209,7 @@ const ModalCadastraProduto = ({ isOpen, onClose, onSubmit,edit, produto, prod, a
                 key={index}
                 type={field.type}
                 name={field.name}
+                value={formData[field.name] || ""} // Garante que o valor atualizado seja exibido
                 placeholder={field.placeholder}
                 onChange={handleInputChange}
                 disabled={!permiteEditar}

@@ -2,14 +2,22 @@ import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoCompleto.css';
 import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import { cpfCnpjMask } from './utils';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+import Toast from '../components/Toast';
+
 
 
 const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) => {
     const [lancamentoCompleto, setLancamentoCompleto] = useState(null);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [cancelarLancto, setCancelarLancto] = useState(false); // Estado para controlar o modal de parcelas
-        const [mensagem, setMensagem] = useState('');
-    
+    const [mensagem, setMensagem] = useState('');
+    const [toast, setToast] = useState({ message: '', type: '' });
+
+    const { permissions } = useAuth();
+
+
 
 
     useEffect(() => {
@@ -17,7 +25,20 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
             setLancamentoCompleto(lancamento.data);
         }
     }, [lancamento]);
+
+
+    useEffect(() => {
+        if (toast.message) {
+            const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
     const handleCancelar = () => {
+        if (!hasPermission(permissions, 'lancamento-completo', 'delete')) {
+            setToast({ message: "Você não tem permissão para cancelar despesas.", type: "error" });
+            return; // Impede a abertura do modal
+        }
         if (!lancamento.data) return;
         setCancelarLancto(true)
         setMensagem('Deseja realmente excluir esta despesa?')
@@ -120,7 +141,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                     <div className="nota-fiscal-detalhes">
                         <h3>Nota Fiscal</h3>
                         <p><strong>Número:</strong> {lancamentoCompleto.notaFiscal.nNF}</p>
-                        <p><strong>Valor Total:</strong> R$ {lancamentoCompleto.notaFiscal.vNF}</p>
+                        <p><strong>Valor Total:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lancamentoCompleto.notaFiscal.vNF)}</p>
                         <p><strong>Data de Emissão:</strong> {formatarData(lancamentoCompleto.notaFiscal.dhEmi)}</p>
                         <p><strong>Status:</strong> {lancamentoCompleto.notaFiscal.status}</p>
                     </div>
@@ -131,6 +152,8 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                     </button>
                 </div>
             </div>
+            {toast.message && <Toast type={toast.type} message={toast.message} />}
+
             {isConfirmDialogOpen && (
                 <ConfirmarLancarParcelas
                     isOpen={isConfirmDialogOpen}

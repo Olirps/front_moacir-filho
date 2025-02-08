@@ -7,7 +7,7 @@ import ModalImportacaoXML from '../components/ModalImportacaoXML'; // Ajuste o c
 import ModalProdutosNF from '../components/ModalProdutosNF'; // Ajuste o caminho conforme necessário
 import ModalCadastroNFe from '../components/ModalCadastroNFe'; // Ajuste o caminho conforme necessário
 import { cpfCnpjMask } from '../components/utils';
-import { converterMoedaParaNumero } from '../utils/functions';
+import { converterMoedaParaNumero,formatarNumero } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
@@ -38,6 +38,7 @@ function LancaNFe() {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState([]);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [onNFOpen, setOnNFOpen] = useState(false);
   const [ufId, setUfId] = useState('');
   const { permissions } = useAuth();
 
@@ -60,6 +61,9 @@ function LancaNFe() {
   };
 
   const closeProductModal = () => {
+    if (onNFOpen) {
+      fetchNotasFiscais()
+    }
     setIsProductModalOpen(false);
   };
 
@@ -235,7 +239,7 @@ function LancaNFe() {
   };
 
   const handleEditSubmit = async (e) => {
-    
+
     const vlrNf = converterMoedaParaNumero(e.vNF);
     const updatedNotaFiscal = {
       codFornecedor: e.fornecedorId,
@@ -464,6 +468,7 @@ function LancaNFe() {
         <ModalProdutosNF
           isOpen={isProductModalOpen}
           onClose={closeProductModal}
+          onNFOpen={false}
           prod={selectedNFe} // Certifique-se de passar o dado correto
         />
       )}

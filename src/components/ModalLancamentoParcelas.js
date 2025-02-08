@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoParcelas.css';
 import Toast from '../components/Toast';
-import {formatarMoedaBRL } from '../utils/functions';
+import {formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
 
 
 const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despesa, onSave }) => {
@@ -16,7 +16,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
     }, [quantidadeParcelas, vencimento, valorEntrada, valorTotal]);
 
     const calcularParcelas = () => {
-        const entrada = parseFloat(valorEntrada) || 0;
+        const entrada = converterMoedaParaNumero(valorEntrada) || 0;
         const restante = valorTotal - entrada;
         const valorBaseParcela = Math.floor((restante / quantidadeParcelas) * 100) / 100;
         let somaParcelas = valorBaseParcela * (quantidadeParcelas - 1);
@@ -41,7 +41,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
         <div className="modal-overlay">
             <div className="modal-content">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>Lançamento de Parcelas</h2>
+                <h2>Lançamento de Parcelas - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}</h2>
                 <form onSubmit={onSubmit}>
                     <div id='cadastro-padrao'>
                         <div className="form-group">
