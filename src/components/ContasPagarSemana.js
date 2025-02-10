@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/ContasPagarSemana.css"; // Arquivo de estilos
+import { formatarData,formatarMoedaBRL } from '../utils/functions';
 
 const ContasPagarSemana = ({ contas }) => {
   return (
@@ -20,8 +21,8 @@ const ContasPagarSemana = ({ contas }) => {
             {contas.map((conta) => (
               <tr key={conta.id} className={conta.status}>
                 <td>{conta.descricao}</td>
-                <td>{new Date(conta.vencimento).toLocaleDateString("pt-BR")}</td>
-                <td>{conta.valor_parcela.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                <td>{formatarData(conta.vencimento)}</td>
+                <td>{formatarMoedaBRL(conta.valor_parcela)}</td>
                 <td className={`status ${conta.status}`}>{conta.status}</td>
               </tr>
             ))}

@@ -92,5 +92,12 @@ const formatarMoedaBRL = (valor) => {
   return numeroFormatado;
 };
 
+const formatarData = (data) => {
+  const dataCorrigida = new Date(data);
+  dataCorrigida.setMinutes(dataCorrigida.getMinutes() + dataCorrigida.getTimezoneOffset()); // Ajuste de fuso horário
+  return dataCorrigida.toLocaleDateString('pt-BR');
+};
 
-module.exports = { converterData, formatarDataResumida, formatPlaca, decodeJWT, formatarCelular, converterMoedaParaNumero, formatarNumero, formatarMoedaBRL };
+
+
+module.exports = { converterData, formatarDataResumida,formatarData, formatPlaca, decodeJWT, formatarCelular, converterMoedaParaNumero, formatarNumero, formatarMoedaBRL };
