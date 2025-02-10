@@ -106,7 +106,7 @@ const ContasBancarias = () => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const newConta = {
-            banco_id: formData.get('bancoId'),
+            banco_id: formData.get('banco'),
             agencia: formData.get('agencia'),
             conta: formData.get('numero'),
             nome: formData.get('nome'),

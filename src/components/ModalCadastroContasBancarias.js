@@ -90,7 +90,6 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, edit, onSubmit, conta }
                                 value={bancoId}
                                 onChange={handleBancoChange}
                                 disabled={!permiteEditar}
-                                required
                             >
                                 <option value="">Selecione o Banco</option>
                                 {bancos.map((banco) => (
@@ -156,7 +155,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, edit, onSubmit, conta }
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="documento">Documento</label>
+                            <label htmlFor="documento">Complemento</label>
                             <input
                                 className='input-geral'
                                 type="text"
@@ -165,7 +164,7 @@ const ModalCadastroContasBancarias = ({ isOpen, onClose, edit, onSubmit, conta }
                                 value={documento}
                                 onChange={handleDocumentoChange}
                                 disabled={!permiteEditar}
-                                required
+                                maxLength={254}
                             />
                         </div>
                         <div id='botao-salva'>

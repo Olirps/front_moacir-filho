@@ -81,7 +81,7 @@ const formatarMoedaBRL = (valor) => {
   if (!valor) return "";
 
   // Remove tudo que não for número
-  let numeroLimpo = valor.replace(/\D/g, "");
+  let numeroLimpo = String(valor).replace(/\D/g, "");
 
   // Converte para número e formata no padrão brasileiro
   let numeroFormatado = (Number(numeroLimpo) / 100).toLocaleString("pt-BR", {

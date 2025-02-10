@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalLancamentoParcelas.css';
 import Toast from '../components/Toast';
-import {formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
+import { formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
 
 
 const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despesa, onSave }) => {
@@ -27,11 +27,17 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
             dataVenc.setMonth(dataVenc.getMonth() + i);
             return {
                 numero: i + 1,
-                valor: i === quantidadeParcelas - 1 ? valorAjustadoUltimaParcela : valorBaseParcela,
+                valor: i === quantidadeParcelas - 1 ? valorAjustadoUltimaParcela.toFixed(2) : valorBaseParcela,
                 dataVencimento: dataVenc.toISOString().split('T')[0],
             };
         });
 
+        setParcelas(novasParcelas);
+    };
+
+    const handleParcelaChange = (index, field, value) => {
+        const novasParcelas = [...parcelas];
+        novasParcelas[index][field] = field === 'valor' ? (value) : value;
         setParcelas(novasParcelas);
     };
 
@@ -92,10 +98,16 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {parcelas.map((parcela) => (
+                                        {parcelas.map((parcela, index) => (
                                             <tr key={parcela.numero}>
                                                 <td>{parcela.numero}</td>
-                                                <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parcela.valor)}</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        value={formatarMoedaBRL(parcela.valor)}
+                                                        onChange={(e) => handleParcelaChange(index, 'valor', e.target.value)}
+                                                    />
+                                                </td>
                                                 <td>{new Date(parcela.dataVencimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                                             </tr>
                                         ))}

@@ -36,7 +36,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                 <h2>Pagamento de Parcelas</h2>
                 <form onSubmit={onSubmit}>
                     <div>
-                        <label htmlFor="contabancaria">Conta Bancária</label>
+                        <label htmlFor="contabancaria">Origem Pagamento</label>
                         <select
                             className='input-geral'
                             id="contabancaria"

@@ -13,7 +13,14 @@
 
 /* Container para pesquisa */
 .homeCenter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
 }
 
 #home-container {
@@ -41,15 +48,13 @@
 
 .watermark {
   position: absolute;
-  width: 200px; /* Ajuste o tamanho conforme necessário */
-  height: auto;
-  background-image: url('../img/S&S.png'); /* Ajuste o caminho */
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0.2; /* Define a transparência */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-size: 80px;
+  color: rgba(0, 0, 0, 0.1);
+  user-select: none;
+  z-index: 0; /* Mantém a marca d'água no fundo */
 }
 
 #logo {
@@ -104,6 +109,32 @@
 
 #cadastros:hover #cadastros-submenu {
   display: block;
+}
+
+/* Posiciona o quadro no canto superior esquerdo */
+.contas-pagar-wrapper {
+  position: absolute;  /* Posiciona de forma fixa na tela */
+  top: 100px;           /* Distância do topo */
+  left: 70px;          /* Distância da esquerda */
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 10px 8px rgba(0, 0, 0, 0.1);
+  width: 500px;        /* Largura fixa para não espalhar demais */
+  z-index: 2;          /* Garante que fique acima da marca d’água */
+}
+
+.quadro-titulo {
+  font-size: 18px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.sem-contas {
+  text-align: center;
+  font-style: italic;
+  color: gray;
 }
 
 @media (max-width: 768px) {
