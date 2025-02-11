@@ -227,7 +227,7 @@ function MovimentacaoFinanceiraDespesa() {
   const handleSavePagamento = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const valorPago = formData.get('valorEntrada');
+    const valorPago = formData.get('valorPago');
     const pagamento = {
       data_pagamento: formData.get('datapagamento'),
       valor_pago: converterMoedaParaNumero(valorPago),

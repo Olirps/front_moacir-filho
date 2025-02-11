@@ -37,6 +37,10 @@
   color: #fff;
   text-decoration: none;
   cursor: pointer;
+  display: inline-block; /* Faz o elemento se ajustar ao conteúdo */
+  white-space: nowrap; /* Impede que o texto quebre em várias linhas */
+  margin: 5px; /* Espaçamento entre os itens */
+  flex-shrink: 0; /* Impede que o item encolha */
 }
 
 .menu-item:hover {
@@ -214,6 +218,18 @@
 
   #logout-button:hover {
     background-color: #ff1f1f;
+  }
+
+  .contas-pagar-wrapper {
+    position: absolute;
+    top: 200px;
+    left: 10px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 10px 8px rgba(0, 0, 0, 0.1);
+    width: 330px;
+    z-index: 1;
   }
 }
 

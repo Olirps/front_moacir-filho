@@ -60,8 +60,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                             type='date'
                             value={datapagamento}
                             name='datapagamento'
-                            onChange={(e) => setDataPagamento(Math.max(1, Number(e.target.value)))}
-                            min="1"
+                            onChange={(e) => setDataPagamento(e.target.value)}
                         />
                     </div>
                     <div className="form-group">
@@ -70,7 +69,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                             className='input-geral'
                             type="text"
                             name='valorPago'
-                            value={valorPago}
+                            value={formatarMoedaBRL(valorPago)}
                             onChange={(e) => setValorPago(formatarMoedaBRL(e.target.value))}
                         />
                     </div>

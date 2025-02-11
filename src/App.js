@@ -15,6 +15,7 @@ import Clientes from './pages/Clientes';
 import Funcionarios from './pages/Funcionarios';
 import MovimentacaoFinanceiraDespesa from './pages/MovimentacaoFinanceiraDespesa';
 import ContasBancarias from './pages/ContasBancarias';
+import ContasPagas from './pages/ContasPagas';
 import Permissoes from './pages/Permissoes';
 
 import { hasPermission } from './utils/hasPermission'; // Importar a função
@@ -79,6 +80,10 @@ function App() {
           <Route
             path="/contasbancarias"
             element={isAuthenticated && hasPermission(permissions, 'contasbancarias', 'view') ? <ContasBancarias /> : null} // Condicionalmente não renderiza
+          />
+          <Route
+            path="/contasliquidadas"
+            element={isAuthenticated && hasPermission(permissions, 'contasliquidadas', 'view') ? <ContasPagas /> : null} // Condicionalmente não renderiza
           />
         </Route>
       </Routes>

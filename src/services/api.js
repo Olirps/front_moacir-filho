@@ -287,6 +287,12 @@ export const cancelarMovimentacaofinanceiraDespesa = async (id) => {
   return api.put(`/movimentacaofinanceiradespesa/${id}`);
 };
 
+export const getContasPagas = async () => {
+  return api.get('/contaspagas/');
+};
+
+
+
 // Nota Fiscal Eletronica
 export const getNotafiscal = async () => {
   return api.get('/notafiscal');

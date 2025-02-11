@@ -96,11 +96,12 @@ function Layout() {
             ) : null}
 
             {/* Gestão Financeira menu item with a submenu */}
-            {canViewMenuItem('contaspagar')|| canViewMenuItem('movimentacaofinanceiradespesas') ? (
+            {canViewMenuItem('contaspagar')|| canViewMenuItem('movimentacaofinanceiradespesas') || canViewMenuItem('contasliquidadas') ? (
               <div id="gestao-financeira" className="menu-item" onClick={toggleGestaoFinanceira}>
                 <span>Gestão Financeira</span>
                 <div id="gestao-financeira-submenu" className={isGestaoFinanceiraOpen ? 'submenu' : ''}>
                   {canViewMenuItem('movimentacaofinanceiradespesas') && <Link to="/movimentacaofinanceiradespesas" className="submenu-item">Contas a Pagar</Link>}
+                  {canViewMenuItem('contasliquidadas') && <Link to="/contasliquidadas" className="submenu-item">Contas/Parcelas Liquidadas</Link>}
                 </div>
               </div>
             ) : null}
