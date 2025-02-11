@@ -10,6 +10,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
     const [tipoCredor, setTipoCredor] = useState('');
+    const [credor, setCredor] = useState('');
     const [dataLancamento, setDataLancamento] = useState(new Date().toISOString().split('T')[0]);
     const [dataVencimento, setDataVencimento] = useState('');
     const [tipo, setTipo] = useState('debito');  // Tipo de movimentação (crédito ou débito)
@@ -24,7 +25,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
     const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
     const [cancelarLancto, setCancelarLancto] = useState(false); // Estado para controlar o modal de parcelas
     const [despesaRecorrente, setDespesaRecorrente] = useState('cotaunica'); // Estado para controlar o modal de parcelas
-    const [valorEntradaDespesa, setValorEntradaDespesa] = useState(''); // Estado para controlar o modal de parcelas
+    const [valorEntradaDespesa, setValorEntradaDespesa] = useState(0); // Estado para controlar o modal de parcelas
     //  const [valorRestante, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
     //  const [valorParcelaArredondado, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
 
@@ -100,7 +101,10 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
         setCredorSelecionado(credor);  // Atualiza o crédito selecionado
         setIsModalPesquisaOpen(false);  // Fecha o modal de pesquisa
     };
-
+    const handleCredor = (e) => {
+        const { value } = e.target;
+        setCredor(value);
+      };
     if (!isOpen) return null;
 
     return (
@@ -127,12 +131,11 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                         type="text"
                                         className="input-geral"
                                         name='credorSelecionado'
-                                        value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : ""}
-                                        onClick={handleOpenPesquisaCredito}
-                                        readOnly
-                                        placeholder="Selecionar Credor"
+                                        value={credorSelecionado ? (credorSelecionado.nome || credorSelecionado.cliente?.nome) : credor}
+                                        onChange={handleCredor}
+                                        placeholder="Selecionar ou Informe o Credor"
+                                        disabled={credorSelecionado} // Desabilita apenas se cliente_id estiver definido
                                         required
-                                        disabled
                                     />
                                 </div>
                                 <div>
@@ -289,7 +292,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                                     }
 
                                                     // Calculando a data de vencimento de cada parcela (acrescentando 30 dias para cada uma)
-                                                    const dataVencimentoParcela = new Date(dataLancamentoDate);
+                                                    const dataVencimentoParcela = new Date(dataVencimento);
                                                     dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + index); // Para aumentar um mês para cada parcela
 
                                                     // Handle month overflow
@@ -316,9 +319,9 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                                             <span>
                                                                 <label>Valor</label>
                                                                 <input
-                                                                    type="number"
+                                                                    type="text"
                                                                     name='lancarParcelas'
-                                                                    value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0 ? valorRestanteNaUltima.toFixed(2) : valorParcelaArredondado.toFixed(2)} // Valor da parcela com o "resto" adicionado
+                                                                    value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0 ? formatarMoedaBRL(valorRestanteNaUltima.toFixed(2)) : formatarMoedaBRL(valorParcelaArredondado)} // Valor da parcela com o "resto" adicionado
                                                                     readOnly
                                                                 />
                                                             </span>

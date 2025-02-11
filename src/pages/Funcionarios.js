@@ -3,7 +3,7 @@ import { getFuncionarios, addFuncionario, updateFuncionario, getFuncionarioById 
 import '../styles/Funcionarios.css';
 import ModalFuncionario from '../components/ModalCadastraFuncionario';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
-import { formatarCelular } from '../utils/functions';
+import { formatarCelular,formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
@@ -91,7 +91,7 @@ function Funcionarios() {
       uf_id: formData.get('uf'),
       municipio_id: formData.get('municipio'),
       cep: formData.get('cep'),
-      salario: formData.get('salario'),
+      salario: converterMoedaParaNumero(formData.get('salario')),
       logradouro: formData.get('logradouro')
     };
 

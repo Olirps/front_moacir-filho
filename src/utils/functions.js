@@ -79,28 +79,24 @@ const converterMoedaParaNumero = (valor) => {
 
 const formatarMoedaBRL = (valor) => {
   if (!valor) return "";
-
-  // Remove tudo que não for número ou ponto decimal
-  let numeroLimpo = String(valor).replace(/[^\d.]/g, "");
-
-  // Tenta converter para float
-  let numeroConvertido = Number(numeroLimpo);
-
-  // Se a conversão mantém o mesmo valor como inteiro, significa que não havia casas decimais
-  if (Number.isInteger(numeroConvertido)) {
-    return numeroConvertido.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+  let numeroConvertido = Number(valor);
+  let numeroLimpo = 0;
+  if (Number.isInteger(valor)) {
+    numeroConvertido = numeroConvertido.toFixed(2);
+    numeroLimpo = String(numeroConvertido).replace(/\D/g, "");
+  } else {
+    numeroLimpo = String(valor).replace(/\D/g, "");
   }
 
-  // Caso contrário, já é um número com decimal e formatamos normalmente
-  return numeroConvertido.toLocaleString("pt-BR", {
+
+  // Converte para número e formata no padrão brasileiro
+  let numeroFormatado = (Number(numeroLimpo) / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
-};
 
+  return numeroFormatado;
+};
 
 const formatarData = (data) => {
   const dataCorrigida = new Date(data);

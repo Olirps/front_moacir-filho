@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalCadastraFuncionario.css';
 import { cpfCnpjMask } from './utils';
-import { formatarCelular } from '../utils/functions';
+import { formatarCelular,formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
 import { getUfs, getMunicipiosUfId } from '../services/api';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
@@ -268,8 +268,8 @@ function ModalFuncionario({ isOpen, onClose, onSubmit, funcionario, edit }) {
                 type="text"
                 id='salario'
                 name="salario"
-                value={salario}
-                onChange={(e) => setSalario(e.target.value.replace(',', '.'))}
+                value={formatarMoedaBRL(salario)}
+                onChange={(e) => setSalario(formatarMoedaBRL(e.target.value))}
                 maxLength={12}
                 disabled={!permiteEditar}
                 required
