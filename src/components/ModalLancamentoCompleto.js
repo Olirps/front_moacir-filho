@@ -4,6 +4,7 @@ import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // 
 import { cpfCnpjMask } from './utils';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+import { formatarMoedaBRL } from '../utils/functions';
 import Toast from '../components/Toast';
 
 
@@ -69,7 +70,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                 <div className="lancamento-detalhes">
                     <h3>Detalhes do Lançamento</h3>
                     <p><strong>Descrição:</strong> {lancamentoCompleto.descricao}</p>
-                    <p><strong>Valor:</strong> R$ {lancamentoCompleto.valor.toFixed(2)}</p>
+                    <p><strong>Valor:</strong> {formatarMoedaBRL(lancamentoCompleto.valor)}</p>
                     <p><strong>Data de Vencimento:</strong> {formatarData(lancamentoCompleto.data_vencimento)}</p>
                     <p><strong>Data de Lançamento:</strong> {formatarData(lancamentoCompleto.data_lancamento)}</p>
                     <p><strong>Tipo:</strong> {lancamentoCompleto.tipo}</p>
@@ -93,7 +94,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                         <p><strong>Nome:</strong> {lancamentoCompleto.funcionario.cliente.nome}</p>
                         <p><strong>CPF:</strong> {cpfCnpjMask(lancamentoCompleto.funcionario.cliente.cpfCnpj)}</p>
                         <p><strong>Cargo:</strong> {lancamentoCompleto.funcionario.cargo}</p>
-                        <p><strong>Salário:</strong> R$ {lancamentoCompleto.funcionario.salario.toFixed(2)}</p>
+                        <p><strong>Salário:</strong> {formatarMoedaBRL(lancamentoCompleto.funcionario.salario)}</p>
                     </div>
                 )}
 
@@ -125,7 +126,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                                 {lancamentoCompleto.parcelas.map((parcela) => (
                                     <tr key={parcela.id}>
                                         <td>{parcela.descricao}</td>
-                                        <td>R$ {parcela.valor_parcela.toFixed(2)}</td>
+                                        <td>{formatarMoedaBRL(parcela.valor_parcela)}</td>
                                         <td>{formatarData(parcela.vencimento)}</td>
                                         <td>{parcela.status}</td>
                                     </tr>
@@ -141,7 +142,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                     <div className="nota-fiscal-detalhes">
                         <h3>Nota Fiscal</h3>
                         <p><strong>Número:</strong> {lancamentoCompleto.notaFiscal.nNF}</p>
-                        <p><strong>Valor Total:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lancamentoCompleto.notaFiscal.vNF)}</p>
+                        <p><strong>Valor Total:</strong> {formatarMoedaBRL(lancamentoCompleto.notaFiscal.vNF)}</p>
                         <p><strong>Data de Emissão:</strong> {formatarData(lancamentoCompleto.notaFiscal.dhEmi)}</p>
                         <p><strong>Status:</strong> {lancamentoCompleto.notaFiscal.status}</p>
                     </div>
