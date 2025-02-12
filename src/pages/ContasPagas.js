@@ -105,7 +105,7 @@ function ContasPagas() {
                     if (data.pageNumber === data.pageCount) {
                         doc.setFontSize(12);
                         doc.setFont('helvetica', 'bold');
-                        doc.text(`Total (${metodo}): ${formatarMoedaBRL(valorTotalGrupo)}`, 14, data.cursor.y + 10);
+                        doc.text(`Total (${metodo}): ${formatarMoedaBRL(valorTotalGrupo.toFixed(2))}`, 14, data.cursor.y + 10);
                     }
                 }
             });
