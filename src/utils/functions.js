@@ -81,11 +81,17 @@ const formatarMoedaBRL = (valor) => {
   if (!valor) return "";
   let numeroConvertido = Number(valor);
   let numeroLimpo = 0;
+  let valorNovo = valor;
   if (Number.isInteger(valor)) {
     numeroConvertido = numeroConvertido.toFixed(2);
     numeroLimpo = String(numeroConvertido).replace(/\D/g, "");
   } else {
-    numeroLimpo = String(valor).replace(/\D/g, "");
+    const vlrNovo = String(valor)
+    const casasDecimais = vlrNovo.split(".")[1]?.length || 0;
+    if (casasDecimais === 1){
+      valorNovo = valor.toFixed(2)
+    }
+    numeroLimpo = String(valorNovo).replace(/\D/g, "");
   }
 
 

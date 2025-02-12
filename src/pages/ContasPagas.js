@@ -123,7 +123,7 @@ function ContasPagas() {
         // Adiciona o valor geral total no final do PDF
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal)}`, 14, doc.lastAutoTable.finalY + 20);
+        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal.toFixed(2))}`, 14, doc.lastAutoTable.finalY + 20);
 
         // Salva o PDF
         doc.save("contas_pagas.pdf");
