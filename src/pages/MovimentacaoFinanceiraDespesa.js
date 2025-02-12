@@ -161,6 +161,7 @@ function MovimentacaoFinanceiraDespesa() {
       pagamento,
       lancarParcelas: formData.get('lancarParcelas'),
       valorEntradaDespesa: converterMoedaParaNumero(valorEntrada),
+      tipo_parcelamento: formData.get('tipoParcelamento'),
       tipo: formData.get('tipo')
     };
 

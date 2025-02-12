@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ModalMovimentacaoFinanceiraDespesa.css';
 import Toast from '../components/Toast';
-import {formatarMoedaBRL,converterMoedaParaNumero } from '../utils/functions';
+import { formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
 import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importando o modal de pesquisa
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 
-const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edit, onClose, movimentacao, onSuccess }) => {
+const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar, onSubmit, edit, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
     const [tipoCredor, setTipoCredor] = useState('');
@@ -18,6 +18,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState({ message: '', type: '' });
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [tipoParcelamento, setTipoParcelamento] = useState('mensal');
     const [mensagem, setMensagem] = useState('');
     const [isModalPesquisaOpen, setIsModalPesquisaOpen] = useState(false);  // Controle do Modal de Pesquisa
     const [credorSelecionado, setCredorSelecionado] = useState(null);  // Crédito selecionado do Modal de Pesquisa
@@ -104,7 +105,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
     const handleCredor = (e) => {
         const { value } = e.target;
         setCredor(value);
-      };
+    };
     if (!isOpen) return null;
 
     return (
@@ -227,82 +228,115 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                 {/* Exibe campos de despesa parcelada */}
                                 {despesaRecorrente === 'parcelada' && (
                                     <>
-                                        <div>
-                                            <label>Quantidade de Parcelas</label>
-                                            <input
-                                                className='input-geral'
-                                                type="number"
-                                                name='lancarParcelas'
-                                                value={lancarParcelas}
-                                                onChange={(e) => {
-                                                    // Remove qualquer caractere que não seja um número inteiro
-                                                    const value = e.target.value.replace(/[^0-9]/g, '');
-                                                    // Converte o valor para número inteiro
-                                                    const intValue = parseInt(value, 10);
-                                                    // Define o valor mínimo como 1
-                                                    setLancarParcelas(Math.max(1, intValue || 0));
-                                                }}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label>Vencimento da Primeira Parcela</label>
-                                            <input
-                                                className='input-geral'
-                                                type="date"
-                                                name='dataVencimento'
-                                                value={dataVencimento}
-                                                onChange={(e) => setDataVencimento(e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label>Valor de Entrada</label>
-                                            <input
-                                                className='input-geral'
-                                                type="text"
-                                                name='valorEntradaDespesa'
-                                                value={valorEntradaDespesa}
-                                                onChange={(e) => setValorEntradaDespesa(formatarMoedaBRL(e.target.value))}
-                                                required
-                                            />
+                                        <div id='form-parcelas'>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    value="mensal"
+                                                    name='tipoParcelamento'
+                                                    checked={tipoParcelamento === 'mensal'}
+                                                    onChange={() => {
+                                                        setTipoParcelamento('mensal')
+                                                    }
+                                                    }
+                                                />
+                                                Mensal
+                                            </label>
+                                            <label>
+                                                <input
+                                                    type="radio"
+                                                    value="anual"
+                                                    name='tipoParcelamento'
+                                                    checked={tipoParcelamento === 'anual'}
+                                                    onChange={() => {
+                                                        setTipoParcelamento('anual')
+                                                    }
+                                                    }
+                                                />
+                                                Anual
+                                            </label>
+                                            <div>
+                                                <label>Quantidade de Parcelas</label>
+                                                <input
+                                                    className='input-geral'
+                                                    type="number"
+                                                    name='lancarParcelas'
+                                                    value={lancarParcelas}
+                                                    onChange={(e) => {
+                                                        // Remove qualquer caractere que não seja um número inteiro
+                                                        const value = e.target.value.replace(/[^0-9]/g, '');
+                                                        // Converte o valor para número inteiro
+                                                        const intValue = parseInt(value, 10);
+                                                        // Define o valor mínimo como 1
+                                                        setLancarParcelas(Math.max(1, intValue || 0));
+                                                    }}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label>Vencimento da Primeira Parcela</label>
+                                                <input
+                                                    className='input-geral'
+                                                    type="date"
+                                                    name='dataVencimento'
+                                                    value={dataVencimento}
+                                                    onChange={(e) => setDataVencimento(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label>Valor de Entrada</label>
+                                                <input
+                                                    className='input-geral'
+                                                    type="text"
+                                                    name='valorEntradaDespesa'
+                                                    value={valorEntradaDespesa}
+                                                    onChange={(e) => setValorEntradaDespesa(formatarMoedaBRL(e.target.value))}
+                                                    required
+                                                />
+                                            </div>
                                         </div>
                                     </>
                                 )}
                                 {/* Exibir parcelas em tela após inserção */}
-                                {despesaRecorrente === 'parcelada' && lancarParcelas && dataLancamento && (
+                                {despesaRecorrente === 'parcelada' && lancarParcelas && dataVencimento && (
                                     <div>
                                         <h3>Parcelas</h3>
                                         <div className="parcelas-container">
                                             {(() => {
-                                                // Ensure valorEntrada is initialized with a default value if not provided
-                                                const valorEntrada = converterMoedaParaNumero(valorEntradaDespesa || '0'); // Default to 0 if undefined
-                                                const valorTotal = converterMoedaParaNumero(valor); // Valor total da despesa
-                                                const valorRestante = valorTotal - valorEntrada; // Calcula o valor restante após a entrada
+                                                // Valores iniciais
+                                                const valorEntrada = converterMoedaParaNumero(valorEntradaDespesa || '0');
+                                                const valorTotal = converterMoedaParaNumero(valor);
+                                                const valorRestante = valorTotal - valorEntrada;
+                                                const valorParcela = valorRestante / parseInt(lancarParcelas);
+                                                const valorParcelaArredondado = parseFloat(valorParcela.toFixed(2));
 
-                                                const valorParcela = valorRestante / parseInt(lancarParcelas); // Dividimos o valor restante pelas parcelas
-                                                const valorParcelaArredondado = parseFloat(valorParcela.toFixed(2)); // Arredondamos para 2 casas decimais
+                                                // Função para calcular a data de vencimento com base no tipo de parcelamento
+                                                const calcularDataVencimento = (dataBase, index, tipoParcelamento) => {
+                                                    const dataVencimentoParcela = new Date(dataBase);
+
+                                                    if (tipoParcelamento === 'anual') {
+                                                        // Incrementa o ano
+                                                        dataVencimentoParcela.setFullYear(dataVencimentoParcela.getFullYear() + index);
+                                                    } else {
+                                                        // Incrementa o mês (padrão: mensal)
+                                                        dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + index);
+                                                    }
+
+                                                    return dataVencimentoParcela;
+                                                };
+
+                                                // Validação do tipo de parcelamento (padrão: mensal)
+                                                const tipoParcelamentoValido = tipoParcelamento === 'anual' ? 'anual' : 'mensal';
 
                                                 return Array.from({ length: parseInt(lancarParcelas) }, (_, index) => {
-                                                    // Ensure dataLancamento is a valid date
-                                                    const dataLancamentoDate = new Date(dataLancamento);
-                                                    if (isNaN(dataLancamentoDate.getTime())) {
-                                                        console.error('Invalid dataLancamento:', dataLancamento);
-                                                        return null; // or handle the error appropriately
-                                                    }
+                                                    // Calcula a data de vencimento com base no tipo de parcelamento
+                                                    const dataVencimentoParcela = calcularDataVencimento(dataVencimento, index, tipoParcelamentoValido);
 
-                                                    // Calculando a data de vencimento de cada parcela (acrescentando 30 dias para cada uma)
-                                                    const dataVencimentoParcela = new Date(dataVencimento);
-                                                    dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + index); // Para aumentar um mês para cada parcela
-
-                                                    // Handle month overflow
-                                                    if (dataVencimentoParcela.getMonth() !== (dataLancamentoDate.getMonth() + index) % 12) {
-                                                        dataVencimentoParcela.setFullYear(dataLancamentoDate.getFullYear() + Math.floor((dataLancamentoDate.getMonth() + index) / 12));
-                                                    }
-
+                                                    // Ajusta o valor da última parcela para cobrir possíveis diferenças de arredondamento
                                                     const valorRestanteNaUltima = index === parseInt(lancarParcelas) - 1
                                                         ? (valorRestante - valorParcelaArredondado * (parseInt(lancarParcelas) - 1))
-                                                        : 0; // Calculando o "resto" para a última parcela
+                                                        : 0;
 
                                                     return (
                                                         <div key={index} className="parcela">
@@ -312,7 +346,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                                                 <input
                                                                     type="date"
                                                                     name='dataVencimentoParcela'
-                                                                    value={dataVencimentoParcela.toISOString().split('T')[0]} // Formata a data para o padrão YYYY-MM-DD
+                                                                    value={dataVencimentoParcela.toISOString().split('T')[0]} // Formata a data para YYYY-MM-DD
                                                                     readOnly
                                                                 />
                                                             </span>
@@ -321,7 +355,9 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar ,onSubmit, edi
                                                                 <input
                                                                     type="text"
                                                                     name='lancarParcelas'
-                                                                    value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0 ? formatarMoedaBRL(valorRestanteNaUltima.toFixed(2)) : formatarMoedaBRL(valorParcelaArredondado)} // Valor da parcela com o "resto" adicionado
+                                                                    value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0
+                                                                        ? formatarMoedaBRL(valorRestanteNaUltima.toFixed(2))
+                                                                        : formatarMoedaBRL(valorParcelaArredondado)}
                                                                     readOnly
                                                                 />
                                                             </span>

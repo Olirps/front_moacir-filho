@@ -31,3 +31,7 @@
     font-size: 12px;
 }
 
+#form-parcelas > *{
+    margin-bottom: 10px; /* Adiciona um espaçamento de 10px abaixo de cada elemento */
+}
+
