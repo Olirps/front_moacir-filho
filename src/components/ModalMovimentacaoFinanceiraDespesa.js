@@ -127,7 +127,7 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar, onSubmit, edi
                                 <div>
                                     <label>Credor</label>
                                     <input type="hidden" name="tipoCredor" value={tipoCredor} />
-                                    <input type="hidden" name="credorSelecionado" value={credorSelecionado?.id} />
+                                    <input type="hidden" name="credorSelecionado" value={credorSelecionado?.id || credor} />
                                     <input
                                         type="text"
                                         className="input-geral"

@@ -55,13 +55,35 @@ function ContasPagas() {
 
     // Função para gerar PDF
     const gerarPDF = () => {
-        const doc = new jsPDF();
+        // Cria o documento em orientação paisagem
+        const doc = new jsPDF({
+            orientation: 'landscape', // Define a orientação como paisagem
+            unit: 'mm', // Unidade de medida (milímetros)
+            format: 'a4' // Formato do papel (A4)
+        });
+
         const columns = [
             { title: "Descrição", dataKey: "descricao" },
             { title: "Valor Pago", dataKey: "valor_pago" },
             { title: "Data de Pagamento", dataKey: "data_pagamento" },
-            { title: "Status", dataKey: "status" }
+            { title: "Origem", dataKey: "status" }
         ];
+
+        // Cabeçalho com os dados do cliente
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Fazenda Aparecida do Norte", 14, 20);
+
+        // Informações de contato
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text("Rodovia MT 129 - KM 10 - Paranatinga - MT", 14, 30);
+        doc.text("Tel: (67) 98124-7654", 14, 36);
+        doc.text("Email: faz.aparecidadonorte@gmail.com", 14, 42);
+
+        // Informações sobre os filtros utilizados
+        doc.setFontSize(12);
+        doc.text(`Período: ${dataInicio ? formatarData(dataInicio) : 'Início'} a ${dataFim ? formatarData(dataFim) : 'Fim'}`, 14, 52);
 
         // Agrupa os lançamentos por método de pagamento
         const grupos = contasFiltradas.reduce((acc, conta) => {
@@ -74,16 +96,16 @@ function ContasPagas() {
         }, {});
 
         let valorGeralTotal = 0; // Valor total geral de todos os grupos
-        let startY = 20; // Posição inicial Y para a primeira tabela
+        let startY = 60; // Posição inicial Y para a primeira tabela (ajustada para acomodar as informações de contato)
 
         // Itera sobre os grupos e adiciona tabelas ao PDF
         Object.keys(grupos).forEach((metodo, index) => {
             const contasDoGrupo = grupos[metodo];
             const rows = contasDoGrupo.map((conta) => ({
-                descricao: conta.descricao,
+                descricao: conta.credor_nome + ' - ' + conta.descricao,
                 valor_pago: formatarMoedaBRL(conta.valor_pago),
                 data_pagamento: formatarData(conta.data_pagamento),
-                status: conta.status
+                status: conta.conta_bancaria_nome
             }));
 
             // Calcula o valor total do grupo
@@ -114,8 +136,8 @@ function ContasPagas() {
             startY = doc.lastAutoTable.finalY + 20;
 
             // Adiciona uma nova página se o próximo grupo não couber na página atual
-            if (startY > 280 && index < Object.keys(grupos).length - 1) {
-                doc.addPage();
+            if (startY > 190 && index < Object.keys(grupos).length - 1) { // Ajustado para orientação paisagem
+                doc.addPage('landscape'); // Adiciona uma nova página em paisagem
                 startY = 20; // Reinicia a posição Y para a nova página
             }
         });
@@ -182,7 +204,7 @@ function ContasPagas() {
                                 <th>Valor Pago</th>
                                 <th>Data de Pagamento</th>
                                 <th>Método de Pagamento</th>
-                                <th>Status</th>
+                                <th>Origem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,7 +214,7 @@ function ContasPagas() {
                                     <td>{formatarMoedaBRL(conta.valor_pago)}</td>
                                     <td>{formatarData(conta.data_pagamento)}</td>
                                     <td>{conta.metodo_pagamento}</td>
-                                    <td>{conta.status}</td>
+                                    <td>{conta.conta_bancaria_nome}</td>
                                 </tr>
                             ))}
                         </tbody>

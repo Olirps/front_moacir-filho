@@ -29,6 +29,8 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
   // Lista fixa de tipos de fornecedor
   const tiposFornecedor = [
     { id: 'maquinario', nome: 'Maquinário' },
+    { id: 'bancario', nome: 'Bancário' },
+    { id: 'combustivel', nome: 'Combustível' },
     { id: 'peça', nome: 'Peça' },
     { id: 'servico', nome: 'Serviço' },
     { id: 'suplemento', nome: 'Suplemento' },
@@ -230,7 +232,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 value={fornecedorContato}
                 onChange={handleFornecedorContatoChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
-                required
               />
             </div>
             <div>
@@ -243,7 +244,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 value={cpfCnpjMask(cpfCnpj)} // Controlado pelo estado
                 onChange={handleCpfChange}
                 disabled={isEdit}
-                required
               />
               {isEdit && <input type="hidden" name="cpfCnpj" value={cpfCnpj} />}
 
@@ -269,7 +269,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 value={email}
                 onChange={handleEmailChange} // Adiciona o onChange para atualizar o estado
                 maxLength="50"
-                required
               />
             </div>
             <div>
@@ -282,7 +281,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 value={formatarCelular(celular)}
                 onChange={handleCelularChange} // Adiciona o onChange para atualizar o estado
                 maxLength="150"
-                required
               />
             </div>
             <div>
@@ -294,7 +292,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 name="logradouro"
                 value={logradouro}
                 onChange={handleLogradouroChange}
-                required
               />
             </div>
             <div>
@@ -306,7 +303,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 name="numero"
                 value={numero}
                 onChange={handleNumeroChange}
-                required
               />
             </div>
             <div>
@@ -318,7 +314,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 name="bairro"
                 value={bairro}
                 onChange={handleBairroChange}
-                required
               />
             </div>
             <div>
@@ -370,7 +365,6 @@ const ModalCadastroFornecedor = ({ isOpen, onClose, isEdit, onSubmit, fornecedor
                 name="cep"
                 value={cep}
                 onChange={handleCepChange}
-                required
               />
             </div>
             <div id='botao-salva'>

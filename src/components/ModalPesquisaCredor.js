@@ -216,7 +216,7 @@ const ModalPesquisaCredor = ({ isOpen,onTipoCredor, onClose, onSelectCredor }) =
                                     <tr key={item.id}>
                                         <td>{item.id}</td>
                                         <td>{item.nome || item.cliente.nome}</td>
-                                        <td>{item.cpfCnpj || item.cliente.cpfCnpj}</td>
+                                        <td>{item?.cpfCnpj || item.cliente?.cpfCnpj}</td>
                                         <td>
                                             <button className='button-geral' onClick={() => {
                                                 handleSelect(item)

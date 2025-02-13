@@ -140,6 +140,12 @@ function MovimentacaoFinanceiraDespesa() {
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const credor = formData.get('credorSelecionado');
+    let credorNom = '';
+
+    if (isNaN(credor)) {
+      credorNom = credor
+    }
 
     const tipoCredor = formData.get('tipoCredor');
     const credorId = formData.get('credorSelecionado'); // Supondo que o campo 'credor' contenha o ID
@@ -152,6 +158,7 @@ function MovimentacaoFinanceiraDespesa() {
     const newMovimentacao = {
       descricao: formData.get('descricao'),
       valor: converterMoedaParaNumero(valorLancamento),
+      credor_nome: credorNom,
       fornecedor_id: tipoCredor === 'fornecedor' ? credorId : null,
       funcionario_id: tipoCredor === 'funcionario' ? credorId : null,
       cliente_id: tipoCredor === 'cliente' ? credorId : null,
@@ -492,7 +499,12 @@ function MovimentacaoFinanceiraDespesa() {
                           </button>
                         </td>
                         <td>{movimentacao.id}</td>
-                        <td>{movimentacao.descricao}</td>
+                        <td>
+                          {
+                            (movimentacao.fornecedor ? movimentacao.fornecedor?.nomeFantasia : movimentacao.fornecedor?.nome ||
+                              movimentacao.cliente?.nome ||
+                              movimentacao.funcionario?.nome || movimentacao.credor_nome|| '') + ' / ' + movimentacao.descricao}
+                        </td>
                         <td>{
                           new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
