@@ -5,13 +5,13 @@ import { formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
 import ConfirmarLancarParcelas from '../components/ConfirmarLancarParcelas'; // Importando o novo modal
 import ModalPesquisaCredor from '../components/ModalPesquisaCredor'; // Importando o modal de pesquisa
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
+import { calcularParcelas, atualizarValorParcela, atualizarDataVencimentoParcela } from '../utils/parcelasUtils'; // Importando a função de cálculo de parcelas
 
 const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar, onSubmit, edit, onClose, movimentacao, onSuccess }) => {
     const [descricao, setDescricao] = useState('');
     const [valor, setValor] = useState('');
     const [tipoCredor, setTipoCredor] = useState('');
     const [credor, setCredor] = useState('');
-    const [dataLancamento, setDataLancamento] = useState(new Date().toISOString().split('T')[0]);
     const [dataVencimento, setDataVencimento] = useState('');
     const [tipo, setTipo] = useState('debito');  // Tipo de movimentação (crédito ou débito)
     const [despesaAdicionada, setDespesaAdicionada] = useState('');  // Tipo de movimentação (crédito ou débito)
@@ -24,11 +24,58 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar, onSubmit, edi
     const [credorSelecionado, setCredorSelecionado] = useState(null);  // Crédito selecionado do Modal de Pesquisa
     const [lancarParcelas, setLancarParcelas] = useState(''); // Estado para controlar a opção de parcelamento
     const [isModalParcelasOpen, setIsModalParcelasOpen] = useState(false); // Estado para controlar o modal de parcelas
+    const [disabledSalvar, setDisabledSalvar] = useState(false); // Estado para controlar o modal de parcelas
     const [cancelarLancto, setCancelarLancto] = useState(false); // Estado para controlar o modal de parcelas
     const [despesaRecorrente, setDespesaRecorrente] = useState('cotaunica'); // Estado para controlar o modal de parcelas
     const [valorEntradaDespesa, setValorEntradaDespesa] = useState(0); // Estado para controlar o modal de parcelas
-    //  const [valorRestante, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
-    //  const [valorParcelaArredondado, setValorParcelaArredondado] = useState(''); // Estado para controlar o modal de parcelas
+    const [parcelas, setParcelas] = useState([]); // Estado para armazenar as parcelas
+    const [parcelas_old, setParcelas_old] = useState([]); // Estado para armazenar as parcelas
+
+
+    const handleAlterarParcela = (index, e) => {
+        const parcelasOldCopia = JSON.parse(JSON.stringify(parcelas_old));
+
+        const novasParcelas = atualizarValorParcela(index, parcelas, e);
+
+        // Função para lidar com a resposta de erro e retorno das parcelas antigas
+        const handleError = (message) => {
+            setParcelas(parcelasOldCopia);
+            setDisabledSalvar(true);
+            setToast({ message, type: "error" });
+        };
+
+        // Verificações de erro
+        if (novasParcelas === 'Valor das Parcelas não pode ser Maior que o Valor do Lançamento.') {
+            handleError("A Somatória das Parcelas não pode ser maior que o valor do lançamento");
+        } else if (novasParcelas === 'Valor da Parcelas não pode ser Maior/Menor ou Igual ao Valor do Lançamento.') {
+            setParcelas(parcelasOldCopia);
+            setToast({ message: "Valor da Parcelas não pode ser Maior ou Igual ao Valor do Lançamento.", type: "error" });
+            setDisabledSalvar(false);
+        } else if (novasParcelas === 'A parcela não pode ser editada.') {
+            setParcelas(parcelasOldCopia);
+            setDisabledSalvar(false);
+        } else {
+            setParcelas(novasParcelas);
+            setParcelas_old(novasParcelas);
+            setDisabledSalvar(false);
+        }
+    };
+
+
+    const handleAlterarVencimentoParcela = (index, e) => {
+        const novasParcelas = atualizarDataVencimentoParcela(index, parcelas, e)
+        setParcelas(novasParcelas)
+    }
+
+    // Gerar parcelas iniciais quando os dados mudarem
+    useEffect(() => {
+        if (despesaRecorrente === 'parcelada' && lancarParcelas && dataVencimento) {
+            const novasParcelas = calcularParcelas(valor, valorEntradaDespesa, lancarParcelas, dataVencimento, tipoParcelamento);
+            setParcelas(novasParcelas);
+            setParcelas_old(novasParcelas); // Atualiza o estado das parcelas originais
+
+        }
+    }, [valor, valorEntradaDespesa, lancarParcelas, dataVencimento, tipoParcelamento, despesaRecorrente]);
 
     useEffect(() => {
         if (toast.message) {
@@ -302,75 +349,38 @@ const ModalMovimentacaoFinanceiraDespesa = ({ isOpen, onConfirmar, onSubmit, edi
                                 {despesaRecorrente === 'parcelada' && lancarParcelas && dataVencimento && (
                                     <div>
                                         <h3>Parcelas</h3>
+                                        <input type="hidden" name="parcelas" value={parcelas} />
                                         <div className="parcelas-container">
-                                            {(() => {
-                                                // Valores iniciais
-                                                const valorEntrada = converterMoedaParaNumero(valorEntradaDespesa || '0');
-                                                const valorTotal = converterMoedaParaNumero(valor);
-                                                const valorRestante = valorTotal - valorEntrada;
-                                                const valorParcela = valorRestante / parseInt(lancarParcelas);
-                                                const valorParcelaArredondado = parseFloat(valorParcela.toFixed(2));
-
-                                                // Função para calcular a data de vencimento com base no tipo de parcelamento
-                                                const calcularDataVencimento = (dataBase, index, tipoParcelamento) => {
-                                                    const dataVencimentoParcela = new Date(dataBase);
-
-                                                    if (tipoParcelamento === 'anual') {
-                                                        // Incrementa o ano
-                                                        dataVencimentoParcela.setFullYear(dataVencimentoParcela.getFullYear() + index);
-                                                    } else {
-                                                        // Incrementa o mês (padrão: mensal)
-                                                        dataVencimentoParcela.setMonth(dataVencimentoParcela.getMonth() + index);
-                                                    }
-
-                                                    return dataVencimentoParcela;
-                                                };
-
-                                                // Validação do tipo de parcelamento (padrão: mensal)
-                                                const tipoParcelamentoValido = tipoParcelamento === 'anual' ? 'anual' : 'mensal';
-
-                                                return Array.from({ length: parseInt(lancarParcelas) }, (_, index) => {
-                                                    // Calcula a data de vencimento com base no tipo de parcelamento
-                                                    const dataVencimentoParcela = calcularDataVencimento(dataVencimento, index, tipoParcelamentoValido);
-
-                                                    // Ajusta o valor da última parcela para cobrir possíveis diferenças de arredondamento
-                                                    const valorRestanteNaUltima = index === parseInt(lancarParcelas) - 1
-                                                        ? (valorRestante - valorParcelaArredondado * (parseInt(lancarParcelas) - 1))
-                                                        : 0;
-
-                                                    return (
-                                                        <div key={index} className="parcela">
-                                                            <span>{`Parcela ${index + 1}`}</span>
-                                                            <span>
-                                                                <label>Vencimento</label>
-                                                                <input
-                                                                    type="date"
-                                                                    name='dataVencimentoParcela'
-                                                                    value={dataVencimentoParcela.toISOString().split('T')[0]} // Formata a data para YYYY-MM-DD
-                                                                    readOnly
-                                                                />
-                                                            </span>
-                                                            <span>
-                                                                <label>Valor</label>
-                                                                <input
-                                                                    type="text"
-                                                                    name='lancarParcelas'
-                                                                    value={index === parseInt(lancarParcelas) - 1 && valorRestanteNaUltima > 0
-                                                                        ? formatarMoedaBRL(valorRestanteNaUltima.toFixed(2))
-                                                                        : formatarMoedaBRL(valorParcelaArredondado)}
-                                                                    readOnly
-                                                                />
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                });
-                                            })()}
+                                            {parcelas.map((parcela, index) => (
+                                                <div key={index} className="parcela">
+                                                    <span>{`Parcela ${parcela.numeroParcela}`}</span>
+                                                    <span>
+                                                        <label>Vencimento</label>
+                                                        <input
+                                                            type="date"
+                                                            name={`parcelas[${index}].dataVencimento`}  // Aqui estamos usando um nome único para cada parcela
+                                                            value={parcela.dataVencimento}
+                                                            onChange={(e) => handleAlterarVencimentoParcela(index, e.target.value)}
+                                                        />
+                                                    </span>
+                                                    <span>
+                                                        <label>Valor</label>
+                                                        <input
+                                                            type="text"
+                                                            name={`parcelas[${index}].valor`}  // Aqui também estamos fazendo a mesma coisa para o valor
+                                                            value={formatarMoedaBRL(parcela.valor)}
+                                                            onChange={(e) => handleAlterarParcela(index, e.target.value)}
+                                                        />
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
                                 <div id='button-group'>
                                     <button type="submit"
                                         className="button-geral"
+                                        disabled={disabledSalvar}
                                     >
                                         Salvar
                                     </button>

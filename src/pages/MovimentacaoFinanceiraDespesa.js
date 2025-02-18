@@ -155,6 +155,22 @@ function MovimentacaoFinanceiraDespesa() {
     const valorEntrada = formData.get('valorEntradaDespesa');
     const data_lancamento = new Date().toISOString().split('T')[0]; // Define a data atual
 
+    // Converte para um objeto
+    const dados = Object.fromEntries(formData.entries());
+
+    // A FormData agora vai gerar um objeto com as parcelas separadas
+    // Vamos fazer o parse adequado
+    const parcelas = [];
+    Object.keys(dados).forEach(key => {
+      if (key.startsWith('parcelas')) {
+        const [_, index, field] = key.match(/^parcelas\[(\d+)\]\.(\w+)$/) || [];
+        if (index && field) {
+          if (!parcelas[index]) parcelas[index] = {}; // Cria o objeto para a parcela, se não existir
+          parcelas[index][field] = dados[key];
+        }
+      }
+    });
+
     const newMovimentacao = {
       descricao: formData.get('descricao'),
       valor: converterMoedaParaNumero(valorLancamento),
@@ -166,13 +182,17 @@ function MovimentacaoFinanceiraDespesa() {
       data_lancamento,
       data_vencimento: formData.get('dataVencimento'),
       pagamento,
-      lancarParcelas: formData.get('lancarParcelas'),
+      lancarParcelas: parcelas,
       valorEntradaDespesa: converterMoedaParaNumero(valorEntrada),
       tipo_parcelamento: formData.get('tipoParcelamento'),
       tipo: formData.get('tipo')
     };
 
     try {
+      const valorTotalOriginal = parcelas.reduce((total, parcela) => total + converterMoedaParaNumero(parcela.valor), 0);
+      if (valorTotalOriginal !== converterMoedaParaNumero(valorLancamento)) {
+        throw new Error('Somatória das Parcelas devem ser o mesmo do valor do Lançamento');
+      }
       await addMovimentacaofinanceiraDespesa(newMovimentacao);
       setToast({ message: "Movimentação financeira cadastrada com sucesso!", type: "success" });
       setIsModalOpen(false);
@@ -206,6 +226,24 @@ function MovimentacaoFinanceiraDespesa() {
   const handleSaveParcelas = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+
+
+    // Converte para um objeto
+    const dados = Object.fromEntries(formData.entries());
+
+    // A FormData agora vai gerar um objeto com as parcelas separadas
+    // Vamos fazer o parse adequado
+    const parcelas = [];
+    Object.keys(dados).forEach(key => {
+      if (key.startsWith('parcelas')) {
+        const [_, index, field] = key.match(/^parcelas\[(\d+)\]\.(\w+)$/) || [];
+        if (index && field) {
+          if (!parcelas[index]) parcelas[index] = {}; // Cria o objeto para a parcela, se não existir
+          parcelas[index][field] = dados[key];
+        }
+      }
+    });
+
     const valorEntrada = formData.get('valorEntrada');
 
     const lancaParcelas = {
@@ -214,7 +252,9 @@ function MovimentacaoFinanceiraDespesa() {
       quantidadeParcelas: formData.get('quantidadeParcelas'),
       valor: selectedMovimentacao.valor,
       vencimento: formData.get('vencimento'),
-      valorEntrada: converterMoedaParaNumero(valorEntrada)
+      valorEntrada: converterMoedaParaNumero(valorEntrada),
+      tipo_parcelamento: formData.get('tipoParcelamento'),
+      parcelas: parcelas
     };
 
     try {
@@ -501,9 +541,9 @@ function MovimentacaoFinanceiraDespesa() {
                         <td>{movimentacao.id}</td>
                         <td>
                           {
-                            (movimentacao.fornecedor ? movimentacao.fornecedor?.nomeFantasia : movimentacao.fornecedor?.nome ||
+                            (movimentacao.fornecedor ? (movimentacao.fornecedor.nomeFantasia ? movimentacao.fornecedor.nomeFantasia : movimentacao.fornecedor.nome) : '' ||
                               movimentacao.cliente?.nome ||
-                              movimentacao.funcionario?.nome || movimentacao.credor_nome|| '') + ' / ' + movimentacao.descricao}
+                              movimentacao.funcionario?.nome || movimentacao.credor_nome || '') + ' / ' + movimentacao.descricao}
                         </td>
                         <td>{
                           new Intl.NumberFormat('pt-BR', {
