@@ -313,9 +313,10 @@ function MovimentacaoFinanceiraDespesa() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const valor =  converterMoedaParaNumero(formData.get('valor'));
     const updatedMovimentacao = {
       descricao: formData.get('descricao'),
-      valor: formData.get('valor'),
+      valor: valor,
       fornecedor_id: formData.get('fornecedor'),
       funcionario_id: formData.get('funcionario'),
       nota_id: formData.get('notaId'),

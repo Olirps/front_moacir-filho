@@ -53,7 +53,11 @@ function decodeJWT(token) {
 
 
 function formatarCelular(value) {
-  value = value.replace(/\D/g, '');
+  if (!value) {
+    return null
+  } else {
+    value = value.replace(/\D/g, '') || 0;
+  }
   if (value.length > 10) {
     value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
   } else {
