@@ -239,8 +239,8 @@ export const getFuncionariosByFiltro = async (filtro) => {
 
 
 //Movimentacao Financeira
-export const getAllMovimentacaofinanceiraDespesa = async () => {
-  return api.get('/movimentacaofinanceiradespesa');
+export const getAllMovimentacaofinanceiraDespesa = async (filters = {}) => {
+  return api.get('/movimentacaofinanceiradespesa', { params: filters });
 };
 
 export const getContaPagarSemana = async () => {
@@ -255,8 +255,9 @@ export const getLancamentoCompletoById = async (id) => {
   return api.get(`/despesa/${id}`);
 };
 
-export const getParcelasDespesa = async (id) => {
-  return api.get(`/parcelasmovimentacao/${id}`);
+export const getParcelasDespesa = async (id, filtro = {}) => {
+  // Passando os parâmetros de filtro como query params
+  return api.get(`/parcelasmovimentacao/${id}`, { params: filtro });
 };
 
 export const getParcelaByID = async (id) => {

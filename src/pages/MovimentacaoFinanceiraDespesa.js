@@ -13,9 +13,6 @@ import { hasPermission } from '../utils/hasPermission'; // Certifique-se de impo
 
 function MovimentacaoFinanceiraDespesa() {
   const [movimentacoes, setMovimentacoes] = useState([]);
-  const [descricao, setDescricao] = useState('');
-  const [fornecedor, setFornecedor] = useState('');
-  const [funcionario, setFuncionario] = useState('');
   const [filteredMovimentacoes, setFilteredMovimentacoes] = useState([]);
   const [valor, setValor] = useState('');
   const [notaId, setNotaId] = useState('');
@@ -36,10 +33,13 @@ function MovimentacaoFinanceiraDespesa() {
   const { permissions } = useAuth();
 
   ////handleSearch
+  const [descricao, setDescricao] = useState('');
+  const [fornecedor, setFornecedor] = useState('');
+  const [funcionario, setFuncionario] = useState('');
+  const [cliente, setCliente] = useState('');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [pagamento, setPagamento] = useState('');
-  const [cliente, setCliente] = useState('');
   ////handleSearch - Final
 
 
@@ -68,51 +68,31 @@ function MovimentacaoFinanceiraDespesa() {
 
 
 
-  const handleSearch = () => {
-    // Verifica quais filtros estão preenchidos
-    const filtrosAtivos = {
-      descricao: !!descricao, // true se descricao estiver preenchida
-      fornecedor: !!fornecedor, // true se fornecedor estiver preenchido
-      funcionario: !!funcionario, // true se funcionario estiver preenchido
-      cliente: !!cliente, // true se cliente estiver preenchido
-      dataVencimento: !!dataInicio && !!dataFim, // true se dataInicio e dataFim estiverem preenchidos
-      pagamento: !!pagamento, // true se pagamento estiver preenchido
-    };
+  const handleSearch = async () => {
+    // Cria um objeto para armazenar os filtros apenas se estiverem preenchidos
+    const filtros = {};
 
-    // Aplica os filtros dinamicamente
-    const results = movimentacoes.filter(movimentacao => {
-      // Filtro por descrição (se ativo)
-      const descricaoMatch = !filtrosAtivos.descricao
-        || movimentacao.descricao?.toLowerCase().includes(descricao.trim().toLowerCase());
+    if (descricao) filtros.descricao = descricao.trim();
+    if (fornecedor) filtros.fornecedor = fornecedor;
+    if (funcionario) filtros.funcionario = funcionario;
+    if (cliente) filtros.cliente = cliente;
+    if (dataInicio) filtros.dataInicio = dataInicio;
+    if (dataFim) filtros.dataFim = dataFim;
+    if (pagamento) filtros.pagamento = pagamento;
 
-      // Filtro por fornecedor (se ativo)
-      const fornecedorMatch = !filtrosAtivos.fornecedor
-        || movimentacao.fornecedor?.nomeFantasia?.toLowerCase().includes(fornecedor.toLowerCase());
+    try {
+      // Chama a função para buscar as movimentações com os filtros aplicados
+      const results = await getAllMovimentacaofinanceiraDespesa(filtros);
 
-      // Filtro por funcionário (se ativo)
-      const funcionarioMatch = !filtrosAtivos.funcionario
-        || movimentacao.funcionario?.nome?.toLowerCase().includes(funcionario.toLowerCase());
-
-      // Filtro por cliente (se ativo)
-      const clienteMatch = !filtrosAtivos.cliente
-        || movimentacao.cliente?.nome?.toLowerCase().includes(cliente.toLowerCase());
-
-      // Filtro por data de vencimento (se ativo)
-      const dataVencimentoMatch = !filtrosAtivos.dataVencimento
-        || (new Date(movimentacao.data_vencimento) >= new Date(dataInicio)
-          && new Date(movimentacao.data_vencimento) <= new Date(dataFim));
-
-      // Filtro por tipo de pagamento (se ativo)
-      const pagamentoMatch = !filtrosAtivos.pagamento
-        || movimentacao.pagamento === pagamento;
-
-      // Retorna true apenas se todos os filtros ativos forem atendidos
-      return descricaoMatch && fornecedorMatch && funcionarioMatch && clienteMatch && dataVencimentoMatch && pagamentoMatch;
-    });
-
-    setFilteredMovimentacoes(results);
-    setCurrentPage(1);
+      // Atualiza o estado com os resultados filtrados
+      setFilteredMovimentacoes(results.data);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('Erro ao buscar movimentações:', error);
+      // Trate o erro conforme necessário (ex: exibir uma mensagem para o usuário)
+    }
   };
+
 
   const handleClear = () => {
     setDescricao('');
@@ -120,6 +100,10 @@ function MovimentacaoFinanceiraDespesa() {
     setFuncionario('');
     setFilteredMovimentacoes(movimentacoes);
     setCurrentPage(1);
+    setDataInicio('');
+    setDataFim('');
+    setExpandedRows({});
+    setParcelas({});
   };
 
   const handleRowsChange = (e) => {
@@ -410,9 +394,15 @@ function MovimentacaoFinanceiraDespesa() {
       return { ...prev, [movimentacaoId]: isExpanded };
     });
 
+    const filtros = {};
+
+
+    if (dataInicio) filtros.dataInicio = dataInicio;
+    if (dataFim) filtros.dataFim = dataFim;
+
     // Se está expandindo, busca novamente as parcelas
     try {
-      const response = await getParcelasDespesa(movimentacaoId);
+      const response = await getParcelasDespesa(movimentacaoId,filtros);
       setParcelas((prev) => ({ ...prev, [movimentacaoId]: response.data }));
     } catch (err) {
       console.error('Erro ao buscar parcelas', err);
@@ -592,7 +582,7 @@ function MovimentacaoFinanceiraDespesa() {
                         parcelas[movimentacao.id].map((parcela) => (
                           <tr key={parcela.id} className="parcela-row">
                             <td></td>
-                            <td colspan="2">Parcela {parcela.numero} - {parcela.descricao}</td>
+                            <td colSpan="2">Parcela {parcela.numero} - {parcela.descricao}</td>
                             <td>{new Intl.NumberFormat('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
