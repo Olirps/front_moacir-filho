@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
-import { converterMoedaParaNumero } from '../utils/functions';
+import { converterMoedaParaNumero,formatarData } from '../utils/functions';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
@@ -407,14 +407,6 @@ function MovimentacaoFinanceiraDespesa() {
     } catch (err) {
       console.error('Erro ao buscar parcelas', err);
     }
-  };
-
-  //responsavel por expandir a linha - final
-
-  const formatarData = (data) => {
-    const dataCorrigida = new Date(data);
-    dataCorrigida.setMinutes(dataCorrigida.getMinutes() + dataCorrigida.getTimezoneOffset()); // Ajuste de fuso horário
-    return dataCorrigida.toLocaleDateString('pt-BR');
   };
 
   return (

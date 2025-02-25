@@ -114,6 +114,4 @@ const formatarData = (data) => {
   return dataCorrigida.toLocaleDateString('pt-BR');
 };
 
-
-
 module.exports = { converterData, formatarDataResumida, formatarData, formatPlaca, decodeJWT, formatarCelular, converterMoedaParaNumero, formatarNumero, formatarMoedaBRL };
