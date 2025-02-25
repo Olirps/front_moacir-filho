@@ -189,10 +189,15 @@ function MovimentacaoFinanceiraDespesa() {
     };
 
     try {
-      const valorTotalOriginal = parcelas.reduce((total, parcela) => total + converterMoedaParaNumero(parcela.valor), 0);
-      if (valorTotalOriginal !== converterMoedaParaNumero(valorLancamento)) {
-        throw new Error('Somatória das Parcelas devem ser o mesmo do valor do Lançamento');
+      let valorTotalOriginal;
+      if (parcelas.length > 1) {
+        valorTotalOriginal = parcelas.reduce((total, parcela) => total + converterMoedaParaNumero(parcela.valor), 0);
+
+        if (valorTotalOriginal !== converterMoedaParaNumero(valorLancamento)) {
+          throw new Error('Somatória das Parcelas devem ser o mesmo do valor do Lançamento');
+        }
       }
+
       await addMovimentacaofinanceiraDespesa(newMovimentacao);
       setToast({ message: "Movimentação financeira cadastrada com sucesso!", type: "success" });
       setIsModalOpen(false);
@@ -313,7 +318,7 @@ function MovimentacaoFinanceiraDespesa() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const valor =  converterMoedaParaNumero(formData.get('valor'));
+    const valor = converterMoedaParaNumero(formData.get('valor'));
     const updatedMovimentacao = {
       descricao: formData.get('descricao'),
       valor: valor,
