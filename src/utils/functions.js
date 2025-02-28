@@ -1,4 +1,36 @@
 
+function dataAtual() {
+  const agora = new Date();
+
+  // Formata a data diretamente no fuso horário correto
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Cuiaba",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  const [
+    { value: dia },
+    ,
+    { value: mes },
+    ,
+    { value: ano },
+    ,
+    { value: hora },
+    ,
+    { value: minuto },
+    ,
+    { value: segundo }
+  ] = formatter.formatToParts(agora);
+
+  // Retorna a data formatada no padrão `YYYY-MM-DD HH:MM:SS`
+  return `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
+}
+
 function converterData(dataString) {
   const partes = dataString.split(/[\/ :]/); // Divide a string em dia, mês, ano, hora, minuto e segundo
   const dia = partes[0];
@@ -92,7 +124,7 @@ const formatarMoedaBRL = (valor) => {
   } else {
     const vlrNovo = String(valor)
     const casasDecimais = vlrNovo.split(".")[1]?.length || 0;
-    if (casasDecimais === 1){
+    if (casasDecimais === 1) {
       valorNovo = valor.toFixed(2)
     }
     numeroLimpo = String(valorNovo).replace(/\D/g, "");
@@ -114,4 +146,15 @@ const formatarData = (data) => {
   return dataCorrigida.toLocaleDateString('pt-BR');
 };
 
-module.exports = { converterData, formatarDataResumida, formatarData, formatPlaca, decodeJWT, formatarCelular, converterMoedaParaNumero, formatarNumero, formatarMoedaBRL };
+module.exports = {
+  converterData,
+  formatarDataResumida,
+  formatarData,
+  formatPlaca,
+  decodeJWT,
+  formatarCelular,
+  converterMoedaParaNumero,
+  formatarNumero,
+  formatarMoedaBRL,
+  dataAtual
+};

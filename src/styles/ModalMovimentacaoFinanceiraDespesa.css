@@ -7,23 +7,21 @@
 }
 
 .parcela {
-    display: flex;
-    justify-content: space-between;
-    /* Distribui os elementos de forma igual entre a linha */
-    align-items: center;
-    /* Alinha os itens verticalmente ao centro */
-    gap: 10px;
-    /* Espaçamento entre os campos na linha */
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 5px;
+    display: flex; /* Define o layout como flexível */
+    justify-content: space-between; /* Distribui os elementos igualmente ao longo da linha */
+    align-items: center; /* Centraliza os elementos verticalmente */
+    gap: 10px; /* Adiciona um espaçamento entre os elementos */
+    border: 1px solid #ddd; /* Adiciona uma borda sutil */
+    padding: 10px; /* Adiciona um espaçamento interno */
+    border-radius: 5px; /* Arredonda os cantos da borda */
+    background-color: #f9f9f9; /* Adiciona um fundo claro para melhorar a visibilidade */
+    margin-bottom: 10px; /* Adiciona um espaçamento entre as parcelas */
 }
 
 .parcela span {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    /* Alinha os inputs e labels no centro */
+    align-items: center;    /* Alinha os inputs e labels no centro */
     gap: 5px;
 }
 

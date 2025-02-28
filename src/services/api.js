@@ -25,7 +25,7 @@ export { api, setAuthToken };
 export const login = async (username, password) => {
   try {
     const response = await api.post('/auth/login', { username, password });
-    return response.data;  
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -74,8 +74,8 @@ export const getContasBancariaById = async (id) => {
   return api.get(`/contasbancarias/${id}`);
 };
 
-export const updateContaBancaria = async (id,conta) => {
-  return api.put(`/contasbancarias/${id}`,conta);
+export const updateContaBancaria = async (id, conta) => {
+  return api.put(`/contasbancarias/${id}`, conta);
 };
 
 export const getAllBancos = async () => {
@@ -268,24 +268,24 @@ export const getParcelaByID = async (id) => {
   return api.get(`/parcelas/${id}`);
 };
 
-export const pagamentoParcela = async (id,pagamento) => {
-  return api.put(`/parcelas/${id}`,pagamento);
+export const pagamentoParcela = async (id, pagamento) => {
+  return api.put(`/parcelas/${id}`, pagamento);
 };
 
 export const addMovimentacaofinanceiraDespesa = async (lancamento) => {
-  return api.post('/movimentacaofinanceiradespesa',lancamento);
+  return api.post('/movimentacaofinanceiradespesa', lancamento);
 };
 
 export const addParcelasDespesa = async (parcelas) => {
-  return api.post('/lancamentoparcelas',parcelas);
+  return api.post('/lancamentoparcelas', parcelas);
 };
 
 export const updateMovimentacaofinanceiraDespesa = async (id) => {
   return api.put(`/movimentacaofinanceiradespesa/${id}`);
 };
 
-export const updateLancamentoDespesa = async (id,dados) => {
-  return api.put(`/lancamentos/${id}`,dados);
+export const updateLancamentoDespesa = async (id, dados) => {
+  return api.put(`/lancamentos/${id}`, dados);
 };
 
 export const cancelarMovimentacaofinanceiraDespesa = async (id) => {
@@ -296,7 +296,15 @@ export const getContasPagas = async () => {
   return api.get('/contaspagas/');
 };
 
-
+export const getLancamentoUnificar = async (filtro) => {
+  try {
+    const response = await api.get('/lancamentos-unificar/', { params: filtro });
+    return response;
+  } catch (error) {
+    console.error('Erro ao buscar lancamentos com filtro:', error);
+    throw error;
+  }
+};
 
 // Nota Fiscal Eletronica
 export const getNotafiscal = async () => {
@@ -343,7 +351,7 @@ export const getGrupoProdutos = async () => {
   return api.get('/grupoproduto');
 };
 
-export const addGrupoProdutos = async(produto) => {
+export const addGrupoProdutos = async (produto) => {
   return api.post('/grupoproduto', produto);
 };
 
@@ -351,7 +359,7 @@ export const updateGrupoProduto = (id, produto) => {
   return api.put(`/grupoproduto/${id}`, produto);
 };
 
-export const getGrupoProdutoById = async(id) => {
+export const getGrupoProdutoById = async (id) => {
   return api.get(`/grupoproduto/${id}`);
 };
 
@@ -364,7 +372,7 @@ export const getSubGrupoProdutos = async () => {
   return api.get('/subgrupoproduto');
 };
 
-export const addSubGrupoProdutos = async(produto) => {
+export const addSubGrupoProdutos = async (produto) => {
   return api.post('/subgrupoproduto', produto);
 };
 
@@ -372,7 +380,7 @@ export const updateSubGrupoProduto = (id, produto) => {
   return api.put(`/subgrupoproduto/${id}`, produto);
 };
 
-export const getSubGrupoProdutoById = async(id) => {
+export const getSubGrupoProdutoById = async (id) => {
   return api.get(`/subgrupoproduto/${id}`);
 };
 
@@ -388,7 +396,7 @@ export const getProdutos = async (filters = {}) => {
   return response;
 };
 
-export const addProdutos = async(produto) => {
+export const addProdutos = async (produto) => {
   return api.post('/produtos', produto);
 };
 
@@ -396,20 +404,20 @@ export const updateProduto = (id, produto) => {
   return api.put(`/produtos/${id}`, produto);
 };
 
-export const getProdutoById = async(id) => {
+export const getProdutoById = async (id) => {
   return api.get(`/produtos/${id}`);
 };
 
 // UFs e Municípios
-export const getUfs =async () => {
+export const getUfs = async () => {
   return api.get('/uf');
 };
 
-export const getMunicipiosUfId = async(id) => {
+export const getMunicipiosUfId = async (id) => {
   return api.get(`/municipios/${id}`);
 };
 
-export const getMunicipios = async(id) => {
+export const getMunicipios = async (id) => {
   return api.get(`/municipios/${id}`);
 };
 

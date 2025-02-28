@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
-import { converterMoedaParaNumero,formatarData } from '../utils/functions';
+import { converterMoedaParaNumero, formatarData, dataAtual } from '../utils/functions';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
+import ModalUnificaLancamentos from '../components/ModalUnificaLancamentos';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
 import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
 import Toast from '../components/Toast';
@@ -15,14 +16,13 @@ function MovimentacaoFinanceiraDespesa() {
   const [movimentacoes, setMovimentacoes] = useState([]);
   const [filteredMovimentacoes, setFilteredMovimentacoes] = useState([]);
   const [valor, setValor] = useState('');
-  const [notaId, setNotaId] = useState('');
-  const [dataLancamento, setDataLancamento] = useState('');
-  const [tipo, setTipo] = useState('');
+  const [boleto, setBoleto] = useState('');
   const [loading, setLoading] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalLancaParcelasOpen, setIsModalLancaParcelasOpen] = useState(false);
+  const [isModalUnificaLancamentosOpen, setIsModalUnificaLancamentosOpen] = useState(false);
   const [isModalPagarLancamentosOpen, setIsModalPagarLancamentosOpen] = useState(false);
   const [isModalLancamentoCompletoOpen, setIsModalLancamentoCompletoOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
@@ -78,6 +78,7 @@ function MovimentacaoFinanceiraDespesa() {
     if (cliente) filtros.cliente = cliente;
     if (dataInicio) filtros.dataInicio = dataInicio;
     if (dataFim) filtros.dataFim = dataFim;
+    if (boleto) filtros.boleto = boleto;
     if (pagamento) filtros.pagamento = pagamento;
 
     try {
@@ -121,6 +122,10 @@ function MovimentacaoFinanceiraDespesa() {
     setSelectedMovimentacao(null);
   };
 
+  const handleUnificarModal = () => {
+    setIsModalUnificaLancamentosOpen(true);
+  };
+
   const handleAddMovimentacao = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -155,6 +160,12 @@ function MovimentacaoFinanceiraDespesa() {
       }
     });
 
+    const lanctoSelecionados = formData.get('selectedLancamentos') // "67,69"
+      ?.split(',') // Divide a string em um array ["67", "69"]
+      .map(Number) // Converte para números [67, 69]
+      .filter(num => !isNaN(num));
+
+
     const newMovimentacao = {
       descricao: formData.get('descricao'),
       valor: converterMoedaParaNumero(valorLancamento),
@@ -165,19 +176,24 @@ function MovimentacaoFinanceiraDespesa() {
       nota_id: formData.get('notaId'),
       data_lancamento,
       data_vencimento: formData.get('dataVencimento'),
+      boleto: formData.get('boleto'),
       pagamento,
       lancarParcelas: parcelas,
       valorEntradaDespesa: converterMoedaParaNumero(valorEntrada),
       tipo_parcelamento: formData.get('tipoParcelamento'),
-      tipo: formData.get('tipo')
+      tipo: formData.get('tipo'),
+      lanctoSelecionados
     };
 
     try {
       let valorTotalOriginal;
       if (parcelas.length > 1) {
-        valorTotalOriginal = parcelas.reduce((total, parcela) => total + converterMoedaParaNumero(parcela.valor), 0);
+        valorTotalOriginal = (parcelas.reduce((total, parcela) => total + converterMoedaParaNumero(parcela.valor), 0)).toFixed(2);
+        const valorEntradaSum = converterMoedaParaNumero(valorEntrada);
+        valorTotalOriginal = Number((Number(valorTotalOriginal) + Number(valorEntradaSum)));
+        const valorLancamentoLimpo = converterMoedaParaNumero(valorLancamento);
 
-        if (valorTotalOriginal !== converterMoedaParaNumero(valorLancamento)) {
+        if (Number(valorTotalOriginal) !== valorLancamentoLimpo) {
           throw new Error('Somatória das Parcelas devem ser o mesmo do valor do Lançamento');
         }
       }
@@ -185,6 +201,7 @@ function MovimentacaoFinanceiraDespesa() {
       await addMovimentacaofinanceiraDespesa(newMovimentacao);
       setToast({ message: "Movimentação financeira cadastrada com sucesso!", type: "success" });
       setIsModalOpen(false);
+      setIsModalUnificaLancamentosOpen(false);
       const response = await getAllMovimentacaofinanceiraDespesa();
       setMovimentacoes(response.data);
       setFilteredMovimentacoes(response.data);
@@ -240,6 +257,7 @@ function MovimentacaoFinanceiraDespesa() {
       financeiro_id: selectedMovimentacao.id,
       quantidadeParcelas: formData.get('quantidadeParcelas'),
       valor: selectedMovimentacao.valor,
+      boleto: formData.get('boleto'),
       vencimento: formData.get('vencimento'),
       valorEntrada: converterMoedaParaNumero(valorEntrada),
       tipo_parcelamento: formData.get('tipoParcelamento'),
@@ -257,12 +275,14 @@ function MovimentacaoFinanceiraDespesa() {
 
 
     } catch (error) {
-
+      const errorMessage = error.response?.data?.error || "Erro ao cadastrar movimentação financeira.";
+      setToast({ message: errorMessage, type: "error" });
     }
   };
 
   const handleSavePagamento = async (e) => {
     e.preventDefault();
+    const dataEfetivaPgto = dataAtual();
     const formData = new FormData(e.target);
     const valorPago = formData.get('valorPago');
     const pagamento = {
@@ -270,7 +290,7 @@ function MovimentacaoFinanceiraDespesa() {
       valor_pago: converterMoedaParaNumero(valorPago),
       conta_id: formData.get('contabancaria'),
       metodo_pagamento: formData.get('formaPagamento'),
-      data_efetiva_pg: new Date().toISOString().split('T')[0],
+      data_efetiva_pg: dataEfetivaPgto,
       status: 'liquidado'
     };
 
@@ -402,7 +422,7 @@ function MovimentacaoFinanceiraDespesa() {
 
     // Se está expandindo, busca novamente as parcelas
     try {
-      const response = await getParcelasDespesa(movimentacaoId,filtros);
+      const response = await getParcelasDespesa(movimentacaoId, filtros);
       setParcelas((prev) => ({ ...prev, [movimentacaoId]: response.data }));
     } catch (err) {
       console.error('Erro ao buscar parcelas', err);
@@ -478,6 +498,15 @@ function MovimentacaoFinanceiraDespesa() {
                 />
               </div>
               <div>
+                <label htmlFor="boleto">Boleto</label>
+                <input
+                  type="text"
+                  id="boleto"
+                  value={boleto}
+                  onChange={(e) => setBoleto(e.target.value)}
+                />
+              </div>
+              <div>
                 <label htmlFor="pagamento">Tipo de Pagamento</label>
                 <select
                   id="pagamento"
@@ -498,6 +527,9 @@ function MovimentacaoFinanceiraDespesa() {
                 <button onClick={() => {
                   handleCadastrarModal();
                 }} className="button">Cadastrar</button>
+                <button onClick={() => {
+                  handleUnificarModal();
+                }} className="button">Unificar Lançamentos</button>
               </div>
             </div>
           </div>
@@ -574,7 +606,7 @@ function MovimentacaoFinanceiraDespesa() {
                         parcelas[movimentacao.id].map((parcela) => (
                           <tr key={parcela.id} className="parcela-row">
                             <td></td>
-                            <td colSpan="2">Parcela {parcela.numero} - {parcela.descricao}</td>
+                            <td colSpan="2">Parcela {parcela.numero} - {parcela.descricao} - Boleto: {parcela.boleto}</td>
                             <td>{new Intl.NumberFormat('pt-BR', {
                               style: 'currency',
                               currency: 'BRL',
@@ -658,6 +690,13 @@ function MovimentacaoFinanceiraDespesa() {
           onClose={() => setIsModalLancamentoCompletoOpen(false)}
           lancamento={selectedLancamentoCompleto}
           onConfirmar={handleConfirmacaoParcelas}
+        />
+      )}
+      {isModalUnificaLancamentosOpen && (
+        <ModalUnificaLancamentos
+          isOpen={isModalUnificaLancamentosOpen}
+          onClose={() => setIsModalUnificaLancamentosOpen(false)}
+          onSubmit={handleAddMovimentacao}
         />
       )}
     </div>

@@ -13,9 +13,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
     const [tipoParcelamento, setTipoParcelamento] = useState('mensal');
     const [parcelas_old, setParcelas_old] = useState([]); // Estado para armazenar as parcelas
     const [disabledSalvar, setDisabledSalvar] = useState(false); // Estado para controlar o modal de parcelas
-
-
-
+    const [boleto, setBoleto] = useState([]); // Estado para controlar o modal de parcelas
     const [toast, setToast] = useState({ message: '', type: '' });
 
     useEffect(() => {
@@ -23,7 +21,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
         setParcelas(novasParcelas);
         setParcelas_old(novasParcelas); // Atualiza o estado das parcelas originais
 
-    }, [quantidadeParcelas, vencimento, valorEntrada, tipoParcelamento,valorTotal]);
+    }, [quantidadeParcelas, vencimento, valorEntrada, tipoParcelamento, valorTotal]);
 
     useEffect(() => {
         if (toast.message) {
@@ -65,27 +63,14 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
         const novasParcelas = atualizarDataVencimentoParcela(index, parcelas, e)
         setParcelas(novasParcelas)
     }
+    const handleAlterarBoletoParcela = (index, value) => {
+        setParcelas((prevParcelas) =>
+            prevParcelas.map((parcela, i) =>
+                i === index ? { ...parcela, boleto: value } : parcela
+            )
+        );
+    };
 
-
-    /*const calcularParcelas = () => {
-        const entrada = converterMoedaParaNumero(valorEntrada) || 0;
-        const restante = valorTotal - entrada;
-        const valorBaseParcela = Math.floor((restante / quantidadeParcelas) * 100) / 100;
-        let somaParcelas = valorBaseParcela * (quantidadeParcelas - 1);
-        const valorAjustadoUltimaParcela = restante - somaParcelas;
-
-        const novasParcelas = Array.from({ length: quantidadeParcelas }, (_, i) => {
-            const dataVenc = new Date(vencimento);
-            dataVenc.setMonth(dataVenc.getMonth() + i);
-            return {
-                numero: i + 1,
-                valor: i === quantidadeParcelas - 1 ? valorAjustadoUltimaParcela : valorBaseParcela,
-                dataVencimento: dataVenc.toISOString().split('T')[0],
-            };
-        });
-
-        setParcelas(novasParcelas);
-    };*/
 
     if (!isOpen) return null;
 
@@ -144,6 +129,16 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                             />
                         </div>
                         <div className="form-group">
+                            <label>Boleto:</label>
+                            <input
+                                className='input-geral'
+                                type="text"
+                                name='boleto'
+                                value={boleto}
+                                onChange={(e) => setBoleto(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
                             <label>Valor de Entrada:</label>
                             <input
                                 className='input-geral'
@@ -166,7 +161,7 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                                     <div key={index} className="parcela">
                                         <span>{`Parcela ${parcela.numeroParcela}`}</span>
                                         <span>
-                                            <label>Vencimento</label>
+                                            <label>Vencimento: </label>
                                             <input
                                                 type="date"
                                                 name={`parcelas[${index}].dataVencimento`}  // Aqui estamos usando um nome único para cada parcela
@@ -175,7 +170,16 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                                             />
                                         </span>
                                         <span>
-                                            <label>Valor</label>
+                                            <label>Boleto: </label>
+                                            <input
+                                                type="text"
+                                                name={`parcelas[${index}].boleto`} // Garante que cada parcela tenha seu campo único
+                                                value={parcela.boleto || ''} // Evita erro caso `boleto` esteja undefined
+                                                onChange={(e) => handleAlterarBoletoParcela(index, e.target.value)}
+                                            />
+                                        </span>
+                                        <span>
+                                            <label>Valor: </label>
                                             <input
                                                 type="text"
                                                 name={`parcelas[${index}].valor`}  // Aqui também estamos fazendo a mesma coisa para o valor
@@ -190,8 +194,8 @@ const ModalLancamentoParcelas = ({ isOpen, onSubmit, onClose, valorTotal, despes
                     )}
                     <button type='submit' className="button-geral">Salvar Parcelas</button>
                 </form>
-                {toast.message && <Toast message={toast.message} type={toast.type} />}
             </div>
+            {toast.message && <Toast message={toast.message} type={toast.type} />}
         </div>
     );
 };

@@ -113,7 +113,7 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                 <div className="parcelas-detalhes">
                     <h3>Parcelas</h3>
                     {lancamentoCompleto.parcelas.length > 0 ? (
-                        <table className="parcelas-tabela">
+                        <table id='grid-padrao'>
                             <thead>
                                 <tr>
                                     <th>Descrição</th>
@@ -138,13 +138,29 @@ const ModalLancamentoCompleto = ({ isOpen, onClose, onConfirmar, lancamento }) =
                     )}
                 </div>
                 {/* Detalhes da Nota Fiscal */}
-                {lancamentoCompleto.notaFiscal && (
+                {lancamentoCompleto.notaFiscal && lancamentoCompleto.notaFiscal.length > 0 && (
                     <div className="nota-fiscal-detalhes">
-                        <h3>Nota Fiscal</h3>
-                        <p><strong>Número:</strong> {lancamentoCompleto.notaFiscal.nNF}</p>
-                        <p><strong>Valor Total:</strong> {formatarMoedaBRL(lancamentoCompleto.notaFiscal.vNF)}</p>
-                        <p><strong>Data de Emissão:</strong> {formatarData(lancamentoCompleto.notaFiscal.dhEmi)}</p>
-                        <p><strong>Status:</strong> {lancamentoCompleto.notaFiscal.status}</p>
+                        <h3>Notas Fiscais</h3>
+                        <table id='grid-padrao'>
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Valor Total</th>
+                                    <th>Data de Emissão</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {lancamentoCompleto.notaFiscal.map((notaFiscal, index) => (
+                                    <tr key={index}>
+                                        <td>{notaFiscal.nNF}</td>
+                                        <td>{formatarMoedaBRL(notaFiscal.vNF)}</td>
+                                        <td>{formatarData(notaFiscal.dhEmi)}</td>
+                                        <td>{notaFiscal.status}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )}
                 <div id='button-group'>
