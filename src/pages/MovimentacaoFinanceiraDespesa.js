@@ -123,6 +123,10 @@ function MovimentacaoFinanceiraDespesa() {
   };
 
   const handleUnificarModal = () => {
+    if (!hasPermission(permissions, 'unificar-lancamentos', 'insert')) {
+      setToast({ message: "Você não tem permissão para unificar despesas.", type: "error" });
+      return; // Impede a abertura do modal
+    }
     setIsModalUnificaLancamentosOpen(true);
   };
 
