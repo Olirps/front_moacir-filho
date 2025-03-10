@@ -105,6 +105,8 @@ function MovimentacaoFinanceiraDespesa() {
     setDataFim('');
     setExpandedRows({});
     setParcelas({});
+    setPagamento('');
+    setBoleto('');
   };
 
   const handleRowsChange = (e) => {

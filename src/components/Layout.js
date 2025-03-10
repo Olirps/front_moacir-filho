@@ -109,21 +109,22 @@ function Layout() {
             ) : null}
 
             {/* Gestão Financeira menu item with a submenu */}
-            {canViewMenuItem('contaspagar')|| canViewMenuItem('movimentacaofinanceiradespesas') || canViewMenuItem('contasliquidadas') ? (
+            {canViewMenuItem('contaspagar')|| canViewMenuItem('movimentacaofinanceiradespesas') ? (
               <div id="gestao-financeira" className="menu-item" onClick={toggleGestaoFinanceira}>
                 <span>Gestão Financeira</span>
                 <div id="gestao-financeira-submenu" className={isGestaoFinanceiraOpen ? 'submenu' : ''}>
                   {canViewMenuItem('movimentacaofinanceiradespesas') && <Link to="/movimentacaofinanceiradespesas" className="submenu-item">Contas a Pagar</Link>}
-                  {canViewMenuItem('contasliquidadas') && <Link to="/contasliquidadas" className="submenu-item">Contas/Parcelas Liquidadas</Link>}
                 </div>
               </div>
             ) : null}
             {/* Relatórios */}
-            {canViewMenuItem('relatorios') ? (
+            {canViewMenuItem('relatorios') || canViewMenuItem('contasliquidadas') ? (
               <div id="relatorios" className="menu-item" onClick={toggleRelatorios}>
                 <span>Relatórios</span>
                 <div id="relatorios-submenu" className={isRelatoriosOpen ? 'submenu' : ''}>
                   {canViewMenuItem('contaspendentes') && <Link to="/contaspendentes" className="submenu-item">Contas Pendentes</Link>}
+                  {canViewMenuItem('contasliquidadas') && <Link to="/contasliquidadas" className="submenu-item">Contas/Parcelas Liquidadas</Link>}
+
                 </div>
               </div>
             ) : null}
