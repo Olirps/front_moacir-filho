@@ -188,7 +188,7 @@ const ModalUnificaLancamentos = ({ isOpen, onConfirmar, onSubmit, edit, onClose,
             // Calcula a soma dos valores dos lançamentos selecionados
             const total = lancamentos
                 .filter((lancamento) => newSelected.includes(lancamento.id))
-                .reduce((sum, lancamento) => sum + lancamento.valor, 0).toFixed(2);
+                .reduce((sum, lancamento) => sum + Number(lancamento.valor), 0);
 
 
             // Atualiza o estado com o valor total formatado

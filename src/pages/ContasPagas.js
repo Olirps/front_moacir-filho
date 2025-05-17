@@ -131,8 +131,9 @@ function ContasPagas() {
             }));
 
             // Calcula o valor total do grupo
-            const valorTotalGrupo = contasDoGrupo.reduce((total, conta) => total + conta.valor_pago, 0);
-            valorGeralTotal += valorTotalGrupo; // Soma ao valor geral
+            const valorTotalGrupo = contasDoGrupo.reduce((total, conta) => Number(total) + Number(conta.valor_pago), 0);
+
+            valorGeralTotal += Number(valorTotalGrupo.toFixed(2)); // Soma ao valor geral
 
             // Adiciona o título do grupo (método de pagamento)
             doc.setFontSize(14);
