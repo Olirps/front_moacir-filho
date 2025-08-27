@@ -146,6 +146,15 @@ const formatarData = (data) => {
   return dataCorrigida.toLocaleDateString('pt-BR');
 };
 
+// Função para somar valores monetários com precisão
+const somarValoresMonetarios = (valores) => {
+  return valores.reduce((total, valor) => {
+    // Converte para número, multiplica por 100 para trabalhar com centavos
+    // Math.round garante que não haja decimais perdidos
+    return total + Math.round(parseFloat(valor) * 100);
+  }, 0) / 100; // Divide por 100 para voltar ao formato normal
+}
+
 module.exports = {
   converterData,
   formatarDataResumida,
@@ -156,5 +165,6 @@ module.exports = {
   converterMoedaParaNumero,
   formatarNumero,
   formatarMoedaBRL,
-  dataAtual
+  dataAtual,
+  somarValoresMonetarios
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getContasPagas } from '../services/api';
-import { formatarData, formatarMoedaBRL } from '../utils/functions';
+import { formatarData, formatarMoedaBRL, somarValoresMonetarios } from '../utils/functions';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -77,101 +77,103 @@ function ContasPagas() {
 
     // Função para gerar PDF
     const gerarPDF = () => {
-        // Cria o documento em orientação paisagem
         const doc = new jsPDF({
-            orientation: 'landscape', // Define a orientação como paisagem
-            unit: 'mm', // Unidade de medida (milímetros)
-            format: 'a4' // Formato do papel (A4)
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
         });
 
         const columns = [
             { title: "Descrição", dataKey: "descricao" },
+            { title: "Boleto", dataKey: "boleto" }, // 🔹 nova coluna
             { title: "Valor Pago", dataKey: "valor_pago" },
             { title: "Data de Pagamento", dataKey: "data_pagamento" },
             { title: "Origem", dataKey: "status" }
         ];
 
-        // Cabeçalho com os dados do cliente
+        // Cabeçalho
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.text("Fazenda Aparecida do Norte", 14, 20);
 
-        // Informações de contato
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text("Rodovia MT 129 - KM 10 - Paranatinga - MT", 14, 30);
         doc.text("Tel: (67) 98124-7654", 14, 36);
         doc.text("Email: faz.aparecidadonorte@gmail.com", 14, 42);
 
-        // Informações sobre os filtros utilizados
         doc.setFontSize(12);
         doc.text(`Período: ${dataInicio ? formatarData(dataInicio) : 'Início'} a ${dataFim ? formatarData(dataFim) : 'Fim'}`, 14, 52);
 
-        // Agrupa os lançamentos por método de pagamento
+        // Agrupa os lançamentos
         const grupos = contasFiltradas.reduce((acc, conta) => {
             const metodo = conta.metodo_pagamento;
-            if (!acc[metodo]) {
-                acc[metodo] = [];
-            }
+            if (!acc[metodo]) acc[metodo] = [];
             acc[metodo].push(conta);
             return acc;
         }, {});
 
-        let valorGeralTotal = 0; // Valor total geral de todos os grupos
-        let startY = 60; // Posição inicial Y para a primeira tabela (ajustada para acomodar as informações de contato)
+        let valorGeralTotal = 0;
+        let startY = 60;
 
-        // Itera sobre os grupos e adiciona tabelas ao PDF
         Object.keys(grupos).forEach((metodo, index) => {
             const contasDoGrupo = grupos[metodo];
-            const rows = contasDoGrupo.map((conta) => ({
-                descricao: conta.credor_nome + ' - ' + conta.descricao,
-                valor_pago: formatarMoedaBRL(conta.valor_pago),
-                data_pagamento: formatarData(conta.data_pagamento),
-                status: conta.conta_bancaria_nome
-            }));
 
-            // Calcula o valor total do grupo
-            const valorTotalGrupo = contasDoGrupo.reduce((total, conta) => total + conta.valor_pago, 0);
-            valorGeralTotal += valorTotalGrupo; // Soma ao valor geral
+            // No seu código:
+            const rows = contasDoGrupo.map((conta) => {
+                return {
+                    descricao: conta.credor_nome + ' - ' + conta.descricao,
+                    boleto: conta.boleto || "-",
+                    valor_pago: formatarMoedaBRL(conta.valor_pago),
+                    data_pagamento: formatarData(conta.data_pagamento),
+                    status: conta.conta_bancaria_nome
+                };
+            });
 
-            // Adiciona o título do grupo (método de pagamento)
+            // Calcula o total fora do map para melhor performance
+            const valores = contasDoGrupo.map(conta => conta.valor_pago);
+            const valorTotalGrupo = somarValoresMonetarios(valores);
+
+            valorGeralTotal += valorTotalGrupo;
+
+            // 🔹 adiciona linha final com total do grupo
+            rows.push({
+                descricao: "",
+                boleto: "",
+                valor_pago: `Total (${metodo}): ${formatarMoedaBRL(valorTotalGrupo)}`,
+                data_pagamento: "",
+                status: ""
+            });
+
+            // Título do grupo
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text(`Método de Pagamento: ${metodo}`, 14, startY);
 
-            // Adiciona a tabela do grupo
+            // Tabela
             doc.autoTable({
-                startY: startY + 10, // Ajusta a posição Y para começar abaixo do título
+                startY: startY + 8,
                 head: [columns.map(col => col.title)],
                 body: rows.map(row => columns.map(col => row[col.dataKey])),
-                didDrawPage: (data) => {
-                    // Adiciona o valor total do grupo ao final da tabela
-                    if (data.pageNumber === data.pageCount) {
-                        doc.setFontSize(12);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(`Total (${metodo}): ${formatarMoedaBRL(valorTotalGrupo.toFixed(2))}`, 14, data.cursor.y + 10);
-                    }
-                }
             });
 
-            // Atualiza a posição Y para o próximo grupo
-            startY = doc.lastAutoTable.finalY + 20;
+            startY = doc.lastAutoTable.finalY + 15;
 
-            // Adiciona uma nova página se o próximo grupo não couber na página atual
-            if (startY > 190 && index < Object.keys(grupos).length - 1) { // Ajustado para orientação paisagem
-                doc.addPage('landscape'); // Adiciona uma nova página em paisagem
-                startY = 20; // Reinicia a posição Y para a nova página
+            // Quebra de página se necessário
+            if (startY > 190 && index < Object.keys(grupos).length - 1) {
+                doc.addPage('landscape');
+                startY = 20;
             }
         });
 
-        // Adiciona o valor geral total no final do PDF
+        // 🔹 total geral no final
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal.toFixed(2))}`, 14, doc.lastAutoTable.finalY + 20);
+        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal)}`, 14, doc.lastAutoTable.finalY + 20);
 
-        // Salva o PDF
         doc.save("contas_pagas.pdf");
     };
+
 
     if (loading) {
         return <div className="spinner-container"><div className="spinner"></div></div>;

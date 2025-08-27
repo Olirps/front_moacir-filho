@@ -35,7 +35,7 @@ function Home() {
           <h2 className="quadro-titulo">Contas à Pagar (Semana)</h2>
 
           {loading ? (
-            <p>Carregando...</p>
+            <div className="spinner-container"><div className="spinner"></div></div>
           ) : contas.length > 0 ? (
             <ContasPagarSemana contas={contas} />
           ) : (

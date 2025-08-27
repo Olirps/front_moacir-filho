@@ -92,6 +92,15 @@ function ContasPendentes() {
         // Adicionar um título ao PDF
         doc.setFontSize(18);
         doc.text('Contas à Pagar', 10, 10);
+        doc.setFontSize(12);
+
+        if (dataInicio && dataFim) {
+            doc.text(`Período: ${formatarData(dataInicio)} - ${formatarData(dataFim)}`, 10, 18);
+        } else if (dataInicio) {
+            doc.text(`A partir de: ${formatarData(dataInicio)}`, 10, 18);
+        } else if (dataFim) {
+            doc.text(`Até: ${formatarData(dataFim)}`, 10, 18);
+        }
 
         // Definir as colunas da tabela
         const columns = [
