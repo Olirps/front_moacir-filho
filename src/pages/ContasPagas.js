@@ -302,7 +302,7 @@ function ContasPagas() {
 
             const valores = contasDoGrupo.map(conta => conta.valor_pago);
             const valorTotalGrupo = somarValoresMonetarios(valores);
-            valorGeralTotal += valorTotalGrupo;
+            valorGeralTotal = Math.round((valorGeralTotal + valorTotalGrupo) * 100) / 100;
 
             // linha total do grupo
             rows.push({
