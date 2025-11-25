@@ -1,22 +1,17 @@
 {
   "files": {
-    "main.css": "/static/css/main.58cc1aaa.css",
-    "main.js": "/static/js/main.bb402ce0.js",
-    "static/js/239.b23ff597.chunk.js": "/static/js/239.b23ff597.chunk.js",
-    "static/js/213.ed8347e6.chunk.js": "/static/js/213.ed8347e6.chunk.js",
-    "static/js/455.d69e5cc6.chunk.js": "/static/js/455.d69e5cc6.chunk.js",
-    "static/js/453.87cd2500.chunk.js": "/static/js/453.87cd2500.chunk.js",
+    "main.css": "/static/css/main.905913c4.css",
+    "main.js": "/static/js/main.7e72ecdb.js",
+    "static/js/52.b936343a.chunk.js": "/static/js/52.b936343a.chunk.js",
+    "static/js/760.1b589793.chunk.js": "/static/js/760.1b589793.chunk.js",
+    "static/js/239.69775195.chunk.js": "/static/js/239.69775195.chunk.js",
+    "static/js/206.6400c014.chunk.js": "/static/js/206.6400c014.chunk.js",
+    "static/media/LogoMoacir.png": "/static/media/LogoMoacir.6ee7fcc9ffe8b94b774c.png",
     "static/media/S&S.png": "/static/media/S&S.4bab83a0af8b75db7d5f.png",
-    "index.html": "/index.html",
-    "main.58cc1aaa.css.map": "/static/css/main.58cc1aaa.css.map",
-    "main.bb402ce0.js.map": "/static/js/main.bb402ce0.js.map",
-    "239.b23ff597.chunk.js.map": "/static/js/239.b23ff597.chunk.js.map",
-    "213.ed8347e6.chunk.js.map": "/static/js/213.ed8347e6.chunk.js.map",
-    "455.d69e5cc6.chunk.js.map": "/static/js/455.d69e5cc6.chunk.js.map",
-    "453.87cd2500.chunk.js.map": "/static/js/453.87cd2500.chunk.js.map"
+    "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/css/main.58cc1aaa.css",
-    "static/js/main.bb402ce0.js"
+    "static/css/main.905913c4.css",
+    "static/js/main.7e72ecdb.js"
   ]
 }
