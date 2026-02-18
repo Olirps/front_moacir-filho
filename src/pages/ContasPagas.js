@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getContasPagas } from '../services/api';
+import { getContasPagas, updateDataPagamento } from '../services/api';
 import { formatarData, formatarMoedaBRL, somarValoresMonetarios } from '../utils/functions';
 import { cpfCnpjMask, removeMaks } from '../components/utils';
 import LogoMoacir from '../img/LogoMoacir.png';
+import ModalEditarDataPagamento from '../components/ModalEditarDataPagamento';
+import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/hasPermission';
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -17,6 +21,10 @@ function ContasPagas() {
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
     const [contasFiltradas, setContasFiltradas] = useState([]);
+    const [isModalEditarDataOpen, setIsModalEditarDataOpen] = useState(false);
+    const [contaSelecionada, setContaSelecionada] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: '' });
+    const { permissions } = useAuth();
 
     // Busca as contas pagas ao carregar o componente
     useEffect(() => {
@@ -34,6 +42,39 @@ function ContasPagas() {
 
         fetchContasPagas();
     }, []);
+
+    useEffect(() => {
+        if (toast.message) {
+            const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
+    const handleEditarData = (conta) => {
+        if (!hasPermission(permissions, 'pagamentosparcelas', 'edit')) {
+            setToast({ message: "Você não tem permissão para editar a data de pagamento.", type: "error" });
+            return;
+        }
+        setContaSelecionada(conta);
+        setIsModalEditarDataOpen(true);
+    };
+
+    const handleSalvarNovaData = async (novaData) => {
+        try {
+            await updateDataPagamento(contaSelecionada.id, novaData);
+            setToast({ message: "Data de pagamento atualizada com sucesso!", type: "success" });
+            setIsModalEditarDataOpen(false);
+            setContaSelecionada(null);
+            
+            // Recarrega as contas pagas
+            const data = await getContasPagas();
+            setContasPagas(data.data);
+            aplicarFiltro();
+        } catch (err) {
+            const errorMessage = err.response?.data?.error || "Erro ao atualizar data de pagamento.";
+            setToast({ message: errorMessage, type: "error" });
+        }
+    };
 
     // Função para aplicar o filtro de data e outros critérios
     const aplicarFiltro = () => {
@@ -454,9 +495,15 @@ function ContasPagas() {
                                     <td>
                                         <button
                                             className="edit-button"
-                                            onClick={() => emitirRecibo(conta)} // 🔹 gera recibo individual
+                                            onClick={() => emitirRecibo(conta)}
                                         >
                                             Recibo
+                                        </button>
+                                        <button
+                                            className="edit-button"
+                                            onClick={() => handleEditarData(conta)}
+                                        >
+                                            Editar Data
                                         </button>
                                     </td>
                                 </tr>
@@ -465,6 +512,17 @@ function ContasPagas() {
                     </table>
                 </div>
             </div>
+
+            <ModalEditarDataPagamento
+                isOpen={isModalEditarDataOpen}
+                onClose={() => {
+                    setIsModalEditarDataOpen(false);
+                    setContaSelecionada(null);
+                }}
+                onSubmit={handleSalvarNovaData}
+                conta={contaSelecionada}
+            />
+            {toast.message && <Toast message={toast.message} type={toast.type} />}
         </div>
 
     );

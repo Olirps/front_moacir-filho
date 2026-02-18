@@ -274,6 +274,10 @@ export const pagamentoParcela = async (id, pagamento) => {
   return api.put(`/parcelas/${id}`, pagamento);
 };
 
+export const updateDataPagamento = async (parcelaId, dataPagamento) => {
+  return api.put(`/movimentacao-despesa/${parcelaId}/data-pagamento`, { data_pagamento: dataPagamento });
+};
+
 export const addMovimentacaofinanceiraDespesa = async (lancamento) => {
   return api.post('/movimentacaofinanceiradespesa', lancamento);
 };
