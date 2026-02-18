@@ -8,43 +8,19 @@ function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchContasPagar = async () => {
-      try {
-        const data = await getContaPagarSemana();
-        setContas(data.data);
-      } catch (error) {
-        console.error("Erro ao buscar contas a pagar:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContasPagar();
+    getContaPagarSemana()
+      .then(res => setContas(res.data))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">
+        Contas a pagar esta semana
+      </h1>
 
-      <div className="homeCenter" id="home-container">
-        <div className="watermark">
-        </div>
-      </div>
-      <div>
-        {/* Quadro de Contas a Pagar */}
-        <div className="contas-pagar-wrapper">
-          <h2 className="quadro-titulo">Contas à Pagar (Semana)</h2>
-
-          {loading ? (
-            <div className="spinner-container"><div className="spinner"></div></div>
-          ) : contas.length > 0 ? (
-            <ContasPagarSemana contas={contas} />
-          ) : (
-            <p className="sem-contas">Nenhuma conta a pagar nesta semana.</p>
-          )}
-        </div>
-      </div>
+      <ContasPagarSemana contas={contas} loading={loading} />
     </div>
-
   );
 }
 

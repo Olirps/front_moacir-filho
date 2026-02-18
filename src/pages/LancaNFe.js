@@ -7,7 +7,7 @@ import ModalImportacaoXML from '../components/ModalImportacaoXML'; // Ajuste o c
 import ModalProdutosNF from '../components/ModalProdutosNF'; // Ajuste o caminho conforme necessário
 import ModalCadastroNFe from '../components/ModalCadastroNFe'; // Ajuste o caminho conforme necessário
 import { cpfCnpjMask } from '../components/utils';
-import { converterMoedaParaNumero,formatarNumero } from '../utils/functions';
+import { converterMoedaParaNumero, formatarNumero } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
 
@@ -96,11 +96,15 @@ function LancaNFe() {
 
 
   const handleSearch = () => {
-    const lowerNNF = nNF.toLowerCase();
+    const lowerNNF = nNF.toLowerCase().trim();
     const lowerCodFornecedor = codFornecedor.toLowerCase();
     const lowerCnpjFornecedor = cnpjFornecedor.toLowerCase();
     const lowerNomeFornecedor = nomeFornecedor.toLowerCase();
 
+    if (!lowerNNF && !lowerCodFornecedor && !lowerCnpjFornecedor && !lowerNomeFornecedor) {
+      setImportSuccess(true);
+      return;
+    }
     const results = notasFiscais.filter(notaFiscal => {
       // Acessa diretamente os dados do fornecedor dentro de notaFiscal
       const fornecedorNome = notaFiscal.nomeFornecedor ? notaFiscal.nomeFornecedor.toLowerCase() : '';

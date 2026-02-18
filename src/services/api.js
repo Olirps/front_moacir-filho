@@ -348,6 +348,17 @@ export const desvinculaProdutoNF = async (id, produto) => {
   return api.put(`/produtosnf/desvincular/${id}`, produto);
 };
 
+export const deleteNFe = async (id) => {
+  try {
+    const response = await api.put(`/excluir-notafiscal/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao deletar NFe:", error);
+    throw error; // deixa o front tratar a mensagem
+  }
+};
+
+
 // Funções para gerenciar grupoprodutos
 export const getGrupoProdutos = async () => {
   return api.get('/grupoproduto');

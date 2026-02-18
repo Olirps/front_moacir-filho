@@ -90,6 +90,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                             <option value="PIX">PIX</option>
                             <option value="TED">TED</option>
                             <option value="TRFCC">Transf. Entre CC</option>
+                            <option value="QR-Code">QR-Code</option>
                         </select>
                     </div>
                     <button type='submit' className="button-geral">Efetuar Pagamento</button>

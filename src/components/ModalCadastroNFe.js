@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ModalCadastroNFe.css';
 import ModalPesquisaFornecedor from './ModalPesquisaFornecedor';
-import { getUfs, getMunicipios, getUFIBGE } from '../services/api';
-import {formatarMoedaBRL } from '../utils/functions';
+import { getUfs, getMunicipios, getUFIBGE, deleteNFe } from '../services/api';
+import { formatarMoedaBRL } from '../utils/functions';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
+import Toast from '../components/Toast';
+
 
 
 const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfChange, isReadOnly }) => {
@@ -21,19 +23,21 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
     const [dataSaida, setDataSaida] = useState('');
     const [cNF, setCNF] = useState('');
     const [tpNF, setTPNF] = useState('');
-
+    const [nfStatus, setNFStatus] = useState('');
     const [ufs, setUfs] = useState([]);
     const [estados, setEstados] = useState([]);
     const [municipios, setMunicipios] = useState([]);
     const [selectedUfCodIBGE, setSelectedUfCodIBGE] = useState(null);
     const [selectedMunicipioCodIBGE, setSelectedMunicipioCodIBGE] = useState(null);
     const [permiteEditar, setPermiteEditar] = useState(true);
+    const [permiteDeletar, setPermiteDeletar] = useState(true);
     const { permissions } = useAuth();
+    const [toast, setToast] = useState({ message: '', type: '' });
 
     useEffect(() => {
         if (isOpen && isEdit) {
             const canEdit = hasPermission(permissions, 'notafiscal', isEdit ? 'edit' : 'insert');
-            setPermiteEditar(canEdit)
+            setPermiteEditar(canEdit);
         }
     }, [isOpen, isEdit, permissions]);
 
@@ -53,11 +57,21 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
     }, []);
 
     useEffect(() => {
+        if (toast.message) {
+            const timer = setTimeout(() => setToast({ message: '', type: '' }), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
+    useEffect(() => {
         const loadNotaFiscalData = async () => {
             if (notaFiscal && (isEdit || isReadOnly)) {
                 try {
                     const ufResponse = await getUFIBGE(notaFiscal.cUF);
                     const ufData = ufResponse?.data;
+                    const canDelete = hasPermission(permissions, 'notafiscal', 'delete');
+                    setPermiteDeletar(canDelete);
+
 
                     if (ufData) {
                         setUF(ufData.sigla);
@@ -89,6 +103,7 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                 setDataSaida(formatDate(notaFiscal.dhSaiEnt) || '');
                 setCNF(notaFiscal.cNF || '');
                 setTPNF(notaFiscal.tpNF || '');
+                setNFStatus(notaFiscal.status || '');
             } else if (!isEdit) {
                 // Limpar os campos quando for cadastro
                 setFornecedor('');
@@ -171,11 +186,32 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
 
     if (!isOpen) return null;
 
+    const handleExcluir = () => {
+        if (window.confirm("Tem certeza que deseja excluir esta Nota Fiscal?")) {
+            deleteNFe(notaFiscal.id)
+                .then(() => {
+                    setToast({ message: "Nota Fiscal excluída com sucesso!", type: "success" });
+                    onClose(); // Fecha o modal após a exclusão
+                })
+                .catch((error) => {
+                    console.error("Erro ao excluir a Nota Fiscal:", error);
+
+                    // Se o backend retornou 409, exibimos a mensagem adequada
+                    if (error?.response?.status === 409) {
+
+                        setToast({ message: "Não é possível excluir: há pagamento liquidado vinculado à Nota Fiscal.", type: "error" });
+                    } else {
+                        setToast({ message: "Ocorreu um erro ao tentar excluir a Nota Fiscal.", type: "error" });
+                    }
+                });
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        
-        const valorNF = formData.get('vNF'); 
+
+        const valorNF = formData.get('vNF');
         const today = new Date(); // Data atual
         const dataEmissaoDate = new Date(dataEmissao); // Converter string para objeto Date
         const dataSaidaDate = new Date(dataSaida);
@@ -326,17 +362,34 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                             ))}
                         </div>
                         <div id='botao-salva'>
-                            {permiteEditar && !isReadOnly? (
-                                <button
-                                    type="submit"
-                                    id="btnsalvar"
-                                    className="button"
-                                >
-                                    Salvar
-                                </button>
-                            ) : ''}
-                        </div>
+                            {/* Botão Salvar */}
+                            {permiteEditar && (!isReadOnly) && (
+                                <div>
+                                    <button
+                                        type="submit"
+                                        id="btnsalvar"
+                                        className="button"
+                                    >
+                                        Salvar
+                                    </button>
+                                </div>
+                            )}
 
+                            {/* Botão Excluir – aparece somente se pode deletar */}
+                            {permiteDeletar && (
+                                <div>
+                                    <button
+                                        type="button"
+                                        id="btnexcluir"
+                                        className="button-excluir"
+                                        onClick={() => handleExcluir(notaFiscal.id)} // se tiver um handler
+                                    >
+                                        Excluir
+                                    </button>
+                                </div>
+                            )}
+
+                        </div>
                     </div>
                 </form>
             </div>
@@ -347,6 +400,8 @@ const ModalCadastroNFe = ({ isOpen, onClose, onSubmit, notaFiscal, isEdit, onUfC
                     onSelectFornecedor={handleSelectFornecedor}
                 />
             )}
+            {toast.message && <Toast type={toast.type} message={toast.message} />}
+
         </div>
     );
 };

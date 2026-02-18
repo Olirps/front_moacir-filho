@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-
-import "../styles/ContasPagarSemana.css"; // Arquivo de estilos
-import { formatarData, formatarMoedaBRL } from '../utils/functions';
-import { getParcelaByID, pagamentoParcela, getContaPagarSemana } from '../services/api';
-import ModalPagarLancamentos from '../components/ModalPagarLancamentos'; // Importe o novo modal
+import { formatarData, formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
+import { getParcelaByID, pagamentoParcela } from '../services/api';
+import ModalPagarLancamentos from '../components/ModalPagarLancamentos';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../utils/hasPermission'; // Certifique-se de importar corretamente a função
-import { converterMoedaParaNumero } from '../utils/functions';
+import { hasPermission } from '../utils/hasPermission';
+import '../styles/ContasPagarSemana.css';
+const LIMITE_INICIAL = 5;
 
 
-const ContasPagarSemana = ({ contas }) => {
+const ContasPagarSemana = ({ contas, loading }) => {
   const [selectedParcela, setSelectedParcela] = useState(null);
-  const [isModalPagarLancamentosOpen, setIsModalPagarLancamentosOpen] = useState(false);
-  const { permissions } = useAuth();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
+  const { permissions } = useAuth();
+  const [expandido, setExpandido] = useState(false);
+
 
   useEffect(() => {
     if (toast.message) {
@@ -23,23 +24,29 @@ const ContasPagarSemana = ({ contas }) => {
     }
   }, [toast]);
 
-  const handlePagarParcelas = async (parcela) => {
+  const contasVisiveis = expandido
+    ? contas
+    : contas.slice(0, LIMITE_INICIAL);
+
+  const handlePagar = async (conta) => {
     if (!hasPermission(permissions, 'pagamentosparcelas', 'insert')) {
-      setToast({ message: "Você não tem permissão para realizar pagamentos.", type: "error" });
-      return; // Impede a abertura do modal
+      setToast({ message: 'Você não tem permissão para pagar.', type: 'error' });
+      return;
     }
-    const response = await getParcelaByID(parcela.id);
+
+    const response = await getParcelaByID(conta.id);
     setSelectedParcela(response.data);
-    setIsModalPagarLancamentosOpen(true);
+    setIsModalOpen(true);
   };
+
 
   const handleSavePagamento = async (e) => {
     e.preventDefault();
+
     const formData = new FormData(e.target);
-    const valorPago = formData.get('valorPago');
     const pagamento = {
       data_pagamento: formData.get('datapagamento'),
-      valor_pago: converterMoedaParaNumero(valorPago),
+      valor_pago: converterMoedaParaNumero(formData.get('valorPago')),
       conta_id: formData.get('contabancaria'),
       metodo_pagamento: formData.get('formaPagamento'),
       data_efetiva_pg: new Date().toISOString().split('T')[0],
@@ -47,62 +54,87 @@ const ContasPagarSemana = ({ contas }) => {
     };
 
     try {
-      const parcelaPaga = await pagamentoParcela(selectedParcela.id, pagamento);
-      window.location.reload(); // Recarrega a página
-
-      // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
-      setToast({ message: "Parcelas Liquidada com sucesso!", type: "success" });
-      setIsModalPagarLancamentosOpen(false);
-    } catch (error) {
-
+      await pagamentoParcela(selectedParcela.id, pagamento);
+      setToast({ message: 'Conta paga com sucesso!', type: 'success' });
+      setIsModalOpen(false);
+    } catch {
+      setToast({ message: 'Erro ao realizar pagamento.', type: 'error' });
     }
   };
 
+  if (!contas.length) {
+    return (
+      <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
+        <p className="text-green-700">
+          🎉 Nenhuma conta a pagar nesta semana!
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="contas-container">
-      {contas.length === 0 ? (
-        <p>Nenhuma conta a pagar nesta semana.</p>
-      ) : (
-        <table className="contas-tabela">
-          <thead>
-            <tr>
-              <th>Descrição</th>
-              <th>Vencimento</th>
-              <th>Valor (R$)</th>
-              <th>Pagar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contas.map((conta) => (
-              <tr key={conta.id} className={conta.status}>
-                <td>{conta.descricao}</td>
-                <td>{formatarData(conta.vencimento)}</td>
-                <td>{formatarMoedaBRL(conta.valor_parcela)}</td>
-                <td>
-                  <button
-                    className="edit-button"
-                    onClick={() => {
-                      handlePagarParcelas(conta);
-                    }}
-                  >
-                    Pagar
-                  </button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <>
+      <div className="contas-container">
+        <div className="contas-grid">
+          {contasVisiveis.map(conta => (
+            <ContaSemanaCard
+              key={conta.id}
+              conta={conta}
+              onPagar={() => handlePagar(conta)}
+            />
+          ))}
+        </div>
+        {contas.length > LIMITE_INICIAL && (
+          <button
+            className="btn-expandir"
+            onClick={() => setExpandido(!expandido)}
+          >
+            {expandido ? 'Mostrar menos' : 'Ver mais contas'}
+          </button>
+        )}
+      </div>
+
       {toast.message && <Toast type={toast.type} message={toast.message} />}
-      {isModalPagarLancamentosOpen && (
+
+      {isModalOpen && (
         <ModalPagarLancamentos
-          isOpen={isModalPagarLancamentosOpen}
-          onClose={() => setIsModalPagarLancamentosOpen(false)}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
           onSubmit={handleSavePagamento}
           parcela={selectedParcela}
         />
       )}
+    </>
+  );
+};
+
+const ContaSemanaCard = ({ conta, onPagar }) => {
+  const statusClass =
+    conta.status === 'atrasado'
+      ? 'status-atrasado'
+      : conta.status === 'vence_hoje'
+        ? 'status-hoje'
+        : 'status-normal';
+
+  return (
+    <div className={`conta-card ${statusClass}`}>
+      <div className="conta-card-header">
+        <div>
+          <h3>{conta.descricao}</h3>
+          <span>
+            Vence em {formatarData(conta.vencimento)}
+          </span>
+        </div>
+
+        <strong>{formatarMoedaBRL(conta.valor_parcela)}</strong>
+      </div>
+
+      <button className="btn-pagar" onClick={onPagar}>
+        Pagar agora
+      </button>
     </div>
   );
 };
+
 
 export default ContasPagarSemana;
