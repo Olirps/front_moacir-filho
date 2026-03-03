@@ -7,6 +7,7 @@ import ModalEditarDataPagamento from '../components/ModalEditarDataPagamento';
 import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { hasPermission } from '../utils/hasPermission';
+import '../styles/ContasPagas.css';
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -406,6 +407,10 @@ function ContasPagas() {
 
 
 
+    // Resumo: total de registros e valor total pago
+    const totalRegistros = contasFiltradas.length;
+    const totalValorPago = somarValoresMonetarios(contasFiltradas.map(c => c.valor_pago));
+
     if (loading) {
         return <div className="spinner-container"><div className="spinner"></div></div>;
     }
@@ -415,32 +420,42 @@ function ContasPagas() {
     }
 
     return (
-        <div>
+        <div className="contas-pagas-page">
             <h1 className="title-page">Contas Pagas</h1>
+            <p className="page-subtitle">
+                Visualize, filtre e exporte os pagamentos já realizados.
+            </p>
 
-            {/* Filtros de data */}
-            <div id="search-container">
+            {/* Filtros */}
+            <div id="search-container" className="contas-pagas-filters-card">
                 <div id="search-fields">
-                    <label htmlFor="descricao">Descrição</label>
-                    <input
-                        className="input-geral"
-                        type="text"
-                        id="descricao"
-                        value={descricao}
-                        onChange={(e) => setDescricao(e.target.value)}
-                        maxLength="150"
-                    />
-                    <label htmlFor="credorNome">Nome Credor</label>
-                    <input
-                        className="input-geral"
-                        type="text"
-                        id="credorNome"
-                        value={credorNome}
-                        onChange={(e) => setCredorNome(e.target.value)}
-                        maxLength="150"
-                    />
+                    <div className="filter-field">
+                        <label htmlFor="descricao">Descrição</label>
+                        <input
+                            className="input-geral"
+                            type="text"
+                            id="descricao"
+                            value={descricao}
+                            onChange={(e) => setDescricao(e.target.value)}
+                            maxLength="150"
+                            placeholder="Ex.: Energia, aluguel..."
+                        />
+                    </div>
 
-                    <div>
+                    <div className="filter-field">
+                        <label htmlFor="credorNome">Nome Credor</label>
+                        <input
+                            className="input-geral"
+                            type="text"
+                            id="credorNome"
+                            value={credorNome}
+                            onChange={(e) => setCredorNome(e.target.value)}
+                            maxLength="150"
+                            placeholder="Nome do credor"
+                        />
+                    </div>
+
+                    <div className="filter-field">
                         <label htmlFor="credorCpfCnpj">CPF/CNPJ</label>
                         <input
                             className="input-geral"
@@ -449,33 +464,32 @@ function ContasPagas() {
                             value={cpfCnpjMask(credorCpfCnpj)}
                             onChange={(e) => setCredorCpfCnpj(removeMaks(e.target.value))}
                             maxLength="18"
+                            placeholder="Somente números"
                         />
                     </div>
-                    <div>
-                        <label>
-                            Data de Início:
-                            <input
-                                className='input-geral'
-                                type="date"
-                                value={dataInicio}
-                                onChange={(e) => setDataInicio(e.target.value)}
-                            />
-                        </label>
+
+                    <div className="filter-field">
+                        <label>Data de Início</label>
+                        <input
+                            className="input-geral"
+                            type="date"
+                            value={dataInicio}
+                            onChange={(e) => setDataInicio(e.target.value)}
+                        />
                     </div>
-                    <div>
-                        <label>
-                            Data de Fim:
-                            <input
-                                className='input-geral'
-                                type="date"
-                                value={dataFim}
-                                onChange={(e) => setDataFim(e.target.value)}
-                            />
-                        </label>
+
+                    <div className="filter-field">
+                        <label>Data de Fim</label>
+                        <input
+                            className="input-geral"
+                            type="date"
+                            value={dataFim}
+                            onChange={(e) => setDataFim(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                <div id='button-group'>
+                <div id='button-group' className="filters-actions">
                     <button className="button" onClick={aplicarFiltro}>Filtrar</button>
                     <button className="button" onClick={limparFiltros}>Limpar</button>
                     <button className="button" onClick={gerarPDF}>Imprimir</button>
@@ -483,46 +497,70 @@ function ContasPagas() {
             </div>
             <div id="separator-bar"></div>
 
+            {/* Resumo acima da tabela */}
+            <div className="resume-bar">
+                <span>{totalRegistros} registro(s) encontrado(s)</span>
+                <span>Total pago: {formatarMoedaBRL(totalValorPago)}</span>
+            </div>
+
             {/* Tabela de contas pagas */}
             <div id="results-container">
-                <div id="grid-padrao-container">
-                    <table id="grid-padrao">
+                <div id="grid-padrao-container" className="contas-pagas-grid-wrapper">
+                    <table id="grid-padrao" className="contas-pagas-grid">
                         <thead>
                             <tr>
                                 <th>Credor</th>
                                 <th>Descrição</th>
                                 <th>Valor Pago</th>
                                 <th>Data de Pagamento</th>
-                                <th>Método de Pagamento</th>
+                                <th>Método</th>
                                 <th>Origem</th>
-                                <th>Ações</th> {/* 🔹 nova coluna */}
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {contasFiltradas.map((conta) => (
-                                <tr key={conta.id}>
-                                    <td>{conta.credor_nome}</td>
-                                    <td>{conta.descricao}</td>
-                                    <td>{formatarMoedaBRL(conta.valor_pago)}</td>
-                                    <td>{formatarData(conta.data_pagamento)}</td>
-                                    <td>{conta.metodo_pagamento}</td>
-                                    <td>{conta.conta_bancaria_nome}</td>
-                                    <td>
-                                        <button
-                                            className="edit-button"
-                                            onClick={() => emitirRecibo(conta)}
-                                        >
-                                            Recibo
-                                        </button>
-                                        <button
-                                            className="edit-button"
-                                            onClick={() => handleEditarData(conta)}
-                                        >
-                                            Editar Data
-                                        </button>
+                            {contasFiltradas.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="empty-message">
+                                        Nenhuma conta paga encontrada com os filtros atuais.
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                contasFiltradas.map((conta) => (
+                                    <tr key={conta.id}>
+                                        <td className="col-credor">{conta.credor_nome}</td>
+                                        <td className="col-descricao">{conta.descricao}</td>
+                                        <td className="col-valor">{formatarMoedaBRL(conta.valor_pago)}</td>
+                                        <td>{formatarData(conta.data_pagamento)}</td>
+                                        <td>
+                                            <span className="badge badge-metodo">
+                                                {conta.metodo_pagamento}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="badge badge-origem">
+                                                {conta.conta_bancaria_nome}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="acoes-buttons">
+                                                <button
+                                                    className="edit-button"
+                                                    onClick={() => emitirRecibo(conta)}
+                                                >
+                                                    Recibo
+                                                </button>
+                                                <button
+                                                    className="edit-button"
+                                                    onClick={() => handleEditarData(conta)}
+                                                >
+                                                    Editar Data
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
