@@ -382,7 +382,22 @@ function ContasPagas() {
         // valor geral total
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal)}`, margin, doc.lastAutoTable.finalY + 20);
+
+        // Garante que o texto fique dentro da página, mesmo em relatórios de 1 página
+        const finalY = doc.lastAutoTable && doc.lastAutoTable.finalY
+            ? doc.lastAutoTable.finalY
+            : startY;
+        const maxY = pageH - margin;
+        let textoY = finalY + 5;
+
+        if (textoY > maxY) {
+            doc.addPage('landscape');
+            // adiciona marca d'água também nesta nova página
+            drawWatermark();
+            textoY = margin + 5;
+        }
+
+        doc.text(`Valor Geral Total: ${formatarMoedaBRL(valorGeralTotal)}`, margin, textoY);
 
         doc.save("contas_pagas.pdf");
     };
