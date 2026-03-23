@@ -111,117 +111,123 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content pagamento-modal">
                 <button className="modal-close" onClick={onClose}>X</button>
-                <h2>Pagamento de Parcelas</h2>
-                <form onSubmit={handleSubmit}>
-                    <div id='cadastro-padrao' className='resumo-parcela'>
-                        <div>
-                            <label>Valor original da parcela</label>
-                            <input className='input-geral' type="text" value={formatarMoedaBRL(valorOriginalParcela)} readOnly />
+                <h2 className="pagamento-modal-title">Pagamento de Parcela</h2>
+                <form onSubmit={handleSubmit} className="pagamento-form">
+                    <section className="resumo-strip">
+                        <div className="resumo-box">
+                            <span className="resumo-label">Valor original</span>
+                            <strong>{formatarMoedaBRL(valorOriginalParcela)}</strong>
                         </div>
-                        <div>
-                            <label>Acrescimo</label>
+                        <div className="resumo-box">
+                            <span className="resumo-label">Acrescimo</span>
                             <input
-                                className='input-geral'
+                                className='input-geral campo-acrescimo'
                                 type="text"
                                 name='acrescimo'
                                 value={acrescimo}
                                 onChange={(e) => setAcrescimo(formatarMoedaBRL(e.target.value))}
                             />
                         </div>
-                        <div>
-                            <label>Desconto</label>
+                        <div className="resumo-box">
+                            <span className="resumo-label">Desconto</span>
                             <input
-                                className='input-geral'
+                                className='input-geral campo-desconto'
                                 type="text"
                                 name='desconto'
                                 value={desconto}
                                 onChange={(e) => setDesconto(formatarMoedaBRL(e.target.value))}
                             />
                         </div>
-                        <div>
-                            <label>Valor final</label>
-                            <input className='input-geral' type="text" value={formatarMoedaBRL(valorFinal)} readOnly />
+                        <div className="resumo-box resumo-box-final">
+                            <span className="resumo-label">Valor final</span>
+                            <strong>{formatarMoedaBRL(valorFinal)}</strong>
                         </div>
-                    </div>
-                    <div>
-                        <label htmlFor="contabancaria">Origem Pagamento</label>
-                        <select
-                            className='input-geral'
-                            id="contabancaria"
-                            name="contabancaria"
-                            value={contabancaria}
-                            onChange={(e) => setContaBancaria(e.target.value)}
-                            required
-                        >
-                            <option value="">Selecione a Conta Bancaria</option>
-                            {contas.map((conta) => (
-                                <option key={conta.id} value={conta.id}>
-                                    {conta.nome + ' ' + conta.agencia + ' ' + conta.conta}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Data do Pagamento</label>
-                        <input
-                            className='input-geral'
-                            type='date'
-                            value={datapagamento}
-                            name='datapagamento'
-                            onChange={(e) => setDataPagamento(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Valor Pago</label>
-                        <input
-                            className='input-geral'
-                            type="text"
-                            name='valorPago'
-                            value={formatarMoedaBRL(valorPago)}
-                            onChange={(e) => {
-                                setValorPagoAlteradoManualmente(true);
-                                setValorPago(formatarMoedaBRL(e.target.value));
-                            }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Boleto</label>
-                        <input
-                            className='input-geral'
-                            type="text"
-                            name='boleto'
-                            value={boleto}
-                            onChange={(e) => setBoleto(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label>Forma de Pagamento</label>
-                        <select
-                            className='input-geral'
-                            value={formaPagamento}
-                            name='formaPagamento'
-                            onChange={(e) => setFormaPagamento(e.target.value)}
-                            required>
-                            <option value="transferencia">Transferencia</option>
-                            <option value="boleto">Boleto</option>
-                            <option value="credito">Cartao de Credito</option>
-                            <option value="debito">Cartao de Debito</option>
-                            <option value="cheque">Cheque</option>
-                            <option value="DA">Debito Automatico</option>
-                            <option value="dinheiro">Dinheiro</option>
-                            <option value="PIX">PIX</option>
-                            <option value="TED">TED</option>
-                            <option value="TRFCC">Transf. Entre CC</option>
-                        </select>
-                    </div>
+                    </section>
+
+                    <section className="pagamento-grid">
+                        <div>
+                            <label htmlFor="contabancaria">Origem Pagamento</label>
+                            <select
+                                className='input-geral campo-conta'
+                                id="contabancaria"
+                                name="contabancaria"
+                                value={contabancaria}
+                                onChange={(e) => setContaBancaria(e.target.value)}
+                                required
+                            >
+                                <option value="">Selecione a Conta Bancaria</option>
+                                {contas.map((conta) => (
+                                    <option key={conta.id} value={conta.id}>
+                                        {conta.nome + ' ' + conta.agencia + ' ' + conta.conta}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Data do Pagamento</label>
+                            <input
+                                className='input-geral campo-data'
+                                type='date'
+                                value={datapagamento}
+                                name='datapagamento'
+                                onChange={(e) => setDataPagamento(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Valor Pago</label>
+                            <input
+                                className='input-geral campo-valor-pago'
+                                type="text"
+                                name='valorPago'
+                                value={formatarMoedaBRL(valorPago)}
+                                onChange={(e) => {
+                                    setValorPagoAlteradoManualmente(true);
+                                    setValorPago(formatarMoedaBRL(e.target.value));
+                                }}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Boleto</label>
+                            <input
+                                className='input-geral campo-boleto'
+                                type="text"
+                                name='boleto'
+                                value={boleto}
+                                onChange={(e) => setBoleto(e.target.value)}
+                            />
+                        </div>
+                        <div className="full-width">
+                            <label>Forma de Pagamento</label>
+                            <select
+                                className='input-geral campo-metodo'
+                                value={formaPagamento}
+                                name='formaPagamento'
+                                onChange={(e) => setFormaPagamento(e.target.value)}
+                                required>
+                                <option value="transferencia">Transferencia</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="credito">Cartao de Credito</option>
+                                <option value="debito">Cartao de Debito</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="DA">Debito Automatico</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="PIX">PIX</option>
+                                <option value="TED">TED</option>
+                                <option value="TRFCC">Transf. Entre CC</option>
+                            </select>
+                        </div>
+                    </section>
                     {pagamentoParcial && (
                         <p className="parcial-alerta">
                             Pagamento parcial detectado. Sera gerada nova parcela para o proximo mes com o valor restante.
                         </p>
                     )}
-                    <button type='submit' className="button-geral">Efetuar Pagamento</button>
+                    <div className="pagamento-acoes">
+                        <button type='button' className="button-secundario" onClick={onClose}>Cancelar</button>
+                        <button type='submit' className="button-geral">Efetuar Pagamento</button>
+                    </div>
                 </form>
                 {toast.message && <Toast message={toast.message} type={toast.type} />}
             </div>

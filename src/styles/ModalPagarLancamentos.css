@@ -1,13 +1,149 @@
-.resumo-parcela {
-  margin-bottom: 12px;
+.pagamento-modal {
+  max-width: 840px;
+  border-radius: 10px;
+}
+
+.pagamento-modal-title {
+  margin: 0 0 14px;
+  font-size: 1.3rem;
+  color: #1f2937;
+}
+
+.pagamento-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.resumo-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.resumo-box {
+  padding: 10px;
+  border: 1px solid #d6dde5;
+  border-radius: 8px;
+  background: #f9fbfd;
+}
+
+.resumo-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.resumo-box strong {
+  display: block;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.resumo-box-final {
+  background: #eef6ff;
+  border-color: #bed6ef;
+}
+
+.pagamento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pagamento-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.pagamento-modal label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.campo-acrescimo,
+.campo-desconto,
+.campo-data,
+.campo-valor-pago {
+  width: 160px;
+}
+
+.campo-boleto {
+  width: 240px;
+}
+
+.campo-conta {
+  width: min(100%, 380px);
+}
+
+.campo-metodo {
+  width: min(100%, 280px);
 }
 
 .parcial-alerta {
-  margin: 10px 0 14px;
+  margin: 0;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #f7c948;
+  border: 1px solid #f0c544;
   background-color: #fff7df;
-  color: #7c5c00;
+  color: #6a4a00;
   font-size: 14px;
+}
+
+.pagamento-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.button-secundario {
+  padding: 10px 18px;
+  border: 1px solid #c8d0da;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.button-secundario:hover {
+  background: #f6f7f9;
+}
+
+.pagamento-acoes .button-geral {
+  min-width: 180px;
+}
+
+@media (max-width: 900px) {
+  .resumo-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pagamento-grid,
+  .resumo-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .campo-acrescimo,
+  .campo-desconto,
+  .campo-data,
+  .campo-valor-pago,
+  .campo-boleto,
+  .campo-conta,
+  .campo-metodo {
+    width: 100%;
+  }
+
+  .pagamento-acoes {
+    flex-direction: column-reverse;
+  }
+
+  .pagamento-acoes .button-geral,
+  .button-secundario {
+    width: 100%;
+  }
 }
