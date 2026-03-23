@@ -7,9 +7,13 @@ function Home() {
   const [contas, setContas] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const carregarContasSemana = async () => {
+    const res = await getContaPagarSemana();
+    setContas(res.data);
+  };
+
   useEffect(() => {
-    getContaPagarSemana()
-      .then(res => setContas(res.data))
+    carregarContasSemana()
       .finally(() => setLoading(false));
   }, []);
 
@@ -19,7 +23,11 @@ function Home() {
         Contas a pagar esta semana
       </h1>
 
-      <ContasPagarSemana contas={contas} loading={loading} />
+      <ContasPagarSemana
+        contas={contas}
+        loading={loading}
+        onPagamentoSucesso={carregarContasSemana}
+      />
     </div>
   );
 }

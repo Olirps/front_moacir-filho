@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAllMovimentacaofinanceiraDespesa, addMovimentacaofinanceiraDespesa, getLancamentoCompletoById, updateLancamentoDespesa, getLancamentoDespesaById, getParcelaByID, pagamentoParcela, updateMovimentacaofinanceiraDespesa, addParcelasDespesa, getParcelasDespesa } from '../services/api';
 import '../styles/MovimentacaoFinanceiraDespesa.css';
 import ModalMovimentacaoFinanceiraDespesa from '../components/ModalMovimentacaoFinanceiraDespesa';
-import { converterMoedaParaNumero, formatarData, dataAtual } from '../utils/functions';
+import { converterMoedaParaNumero, formatarData } from '../utils/functions';
 import ModalLancamentoCompleto from '../components/ModalLancamentoCompleto';
 import ModalUnificaLancamentos from '../components/ModalUnificaLancamentos';
 import ModalLancamentoParcelas from '../components/ModalLancamentoParcelas'; // Importe o novo modal
@@ -286,32 +286,25 @@ function MovimentacaoFinanceiraDespesa() {
     }
   };
 
-  const handleSavePagamento = async (e) => {
-    e.preventDefault();
-    const dataEfetivaPgto = dataAtual();
-    const formData = new FormData(e.target);
-    const valorPago = formData.get('valorPago');
-    const pagamento = {
-      data_pagamento: formData.get('datapagamento'),
-      valor_pago: converterMoedaParaNumero(valorPago),
-      conta_id: formData.get('contabancaria'),
-      metodo_pagamento: formData.get('formaPagamento'),
-      data_efetiva_pg: dataEfetivaPgto,
-      status: 'liquidado'
-    };
-
+  const handleSavePagamento = async (pagamento, contextoPagamento) => {
     try {
-      const parcelaPaga = await pagamentoParcela(selectedParcela.id, pagamento);
-      // Aqui você pode enviar as parcelas para o backend ou processá-las conforme necessário
-      setToast({ message: "Parcelas Liquidada com sucesso!", type: "success" });
+      await pagamentoParcela(selectedParcela.id, pagamento);
+      if (contextoPagamento?.pagamentoParcial) {
+        setToast({
+          message: "Pagamento parcial detectado. Sera gerada nova parcela para o proximo mes com o valor restante.",
+          type: "success"
+        });
+      } else {
+        setToast({ message: "Parcela liquidada com sucesso!", type: "success" });
+      }
       setIsModalPagarLancamentosOpen(false);
       const response = await getAllMovimentacaofinanceiraDespesa();
       setMovimentacoes(response.data);
       setFilteredMovimentacoes(response.data);
-      toggleExpand(selectedParcela.financeiro_id)
-
+      toggleExpand(selectedParcela.financeiro_id);
     } catch (error) {
-
+      const errorMessage = error.response?.data?.error || "Erro ao atualizar movimentacao financeira";
+      setToast({ message: errorMessage, type: "error" });
     }
   };
   const handlePagarParcelas = async (parcela) => {

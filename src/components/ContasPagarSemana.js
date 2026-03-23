@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatarData, formatarMoedaBRL, converterMoedaParaNumero } from '../utils/functions';
+import { formatarData, formatarMoedaBRL } from '../utils/functions';
 import { getParcelaByID, pagamentoParcela } from '../services/api';
 import ModalPagarLancamentos from '../components/ModalPagarLancamentos';
 import Toast from '../components/Toast';
@@ -9,7 +9,7 @@ import '../styles/ContasPagarSemana.css';
 const LIMITE_INICIAL = 5;
 
 
-const ContasPagarSemana = ({ contas, loading }) => {
+const ContasPagarSemana = ({ contas, loading, onPagamentoSucesso }) => {
   const [selectedParcela, setSelectedParcela] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '' });
@@ -40,25 +40,29 @@ const ContasPagarSemana = ({ contas, loading }) => {
   };
 
 
-  const handleSavePagamento = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const pagamento = {
-      data_pagamento: formData.get('datapagamento'),
-      valor_pago: converterMoedaParaNumero(formData.get('valorPago')),
-      conta_id: formData.get('contabancaria'),
-      metodo_pagamento: formData.get('formaPagamento'),
-      data_efetiva_pg: new Date().toISOString().split('T')[0],
-      status: 'liquidado'
-    };
-
+  const handleSavePagamento = async (pagamento, contextoPagamento) => {
     try {
       await pagamentoParcela(selectedParcela.id, pagamento);
-      setToast({ message: 'Conta paga com sucesso!', type: 'success' });
+      if (contextoPagamento?.pagamentoParcial) {
+        setToast({
+          message: 'Pagamento parcial detectado. Sera gerada nova parcela para o proximo mes com o valor restante.',
+          type: 'success'
+        });
+      } else {
+        setToast({ message: 'Conta paga com sucesso!', type: 'success' });
+      }
+      if (typeof onPagamentoSucesso === 'function') {
+        try {
+          await onPagamentoSucesso(selectedParcela?.financeiro_id);
+        } catch (refreshError) {
+          console.error('Erro ao recarregar contas apos pagamento:', refreshError);
+        }
+      }
+      setSelectedParcela(null);
       setIsModalOpen(false);
-    } catch {
-      setToast({ message: 'Erro ao realizar pagamento.', type: 'error' });
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Erro ao atualizar movimentacao financeira';
+      setToast({ message: errorMessage, type: 'error' });
     }
   };
 
