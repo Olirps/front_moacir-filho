@@ -213,6 +213,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
                                 <option value="cheque">Cheque</option>
                                 <option value="DA">Debito Automatico</option>
                                 <option value="dinheiro">Dinheiro</option>
+                                <option value="QR-Code">QR-Code</option>
                                 <option value="PIX">PIX</option>
                                 <option value="TED">TED</option>
                                 <option value="TRFCC">Transf. Entre CC</option>
