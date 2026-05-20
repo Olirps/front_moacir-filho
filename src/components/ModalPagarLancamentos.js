@@ -19,7 +19,7 @@ const ModalPagarLancamentos = ({ isOpen, onSubmit, onClose, parcela }) => {
     const valorOriginalParcela = (Number(parcela?.valor_parcela || '0'));
     const acrescimoNumero = converterMoedaParaNumero(String(acrescimo || '0'));
     const descontoNumero = converterMoedaParaNumero(String(desconto || '0'));
-    const valorFinal = valorOriginalParcela + acrescimoNumero - descontoNumero;
+    const valorFinal = Math.round((valorOriginalParcela + acrescimoNumero - descontoNumero) * 100) / 100;
     const valorPagoNumero = converterMoedaParaNumero(String(valorPago || '0'));
     const pagamentoParcial = valorPagoNumero > 0 && valorPagoNumero < valorFinal;
 
