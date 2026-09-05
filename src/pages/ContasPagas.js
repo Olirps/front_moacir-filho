@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { getContasPagas, updateDataPagamento } from '../services/api';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { getContasPagas, updateDataPagamento, getAllContas } from '../services/api';
 import { formatarData, formatarMoedaBRL, somarValoresMonetarios } from '../utils/functions';
-import { cpfCnpjMask, removeMaks } from '../components/utils'; // mantive a ortografia original
+import { cpfCnpjMask, removeMaks } from '../components/utils';
 import LogoMoacir from '../img/LogoMoacir.png';
 import ModalEditarDataPagamento from '../components/ModalEditarDataPagamento';
 import Toast from '../components/Toast';
@@ -14,6 +14,7 @@ import 'jspdf-autotable';
 
 function ContasPagas() {
     const [contasPagas, setContasPagas] = useState([]);
+    const [contasBancarias, setContasBancarias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -21,34 +22,60 @@ function ContasPagas() {
     const [descricao, setDescricao] = useState('');
     const [credorNome, setCredorNome] = useState('');
     const [credorCpfCnpj, setCredorCpfCnpj] = useState('');
-    const [origem, setOrigem] = useState(''); // NOVO: Filtro de Origem
     const [dataInicio, setDataInicio] = useState('');
     const [dataFim, setDataFim] = useState('');
 
+    // NOVO: Filtro Multi-select de Origem
+    const [origensSelecionadas, setOrigensSelecionadas] = useState([]);
+    const [showOrigemDropdown, setShowOrigemDropdown] = useState(false);
+    const dropdownRef = useRef(null);
+
     const [contasFiltradas, setContasFiltradas] = useState([]);
-    const [itensVisiveis, setItensVisiveis] = useState(50); // NOVO: Controle de paginação (Infinite Scroll)
+
+    // Controle de Paginação (Infinite Scroll)
+    const [itensVisiveis, setItensVisiveis] = useState(50);
+    const observer = useRef();
 
     const [isModalEditarDataOpen, setIsModalEditarDataOpen] = useState(false);
     const [contaSelecionada, setContaSelecionada] = useState(null);
     const [toast, setToast] = useState({ message: '', type: '' });
     const { permissions } = useAuth();
 
-    // Busca as contas pagas ao carregar o componente
+    // Fecha o dropdown se o usuário clicar fora dele
     useEffect(() => {
-        async function fetchContasPagas() {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowOrigemDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Busca os dados iniciais
+    useEffect(() => {
+        async function fetchInitialData() {
             try {
-                const data = await getContasPagas();
-                setContasPagas(data.data);
-                setContasFiltradas(data.data); // Inicialmente, exibe todas as contas
-                setItensVisiveis(50); // Garante início com 50 itens
+                const [pagasReq, bancariasReq] = await Promise.all([
+                    getContasPagas(),
+                    getAllContas()
+                ]);
+
+                setContasPagas(pagasReq.data);
+                setContasFiltradas(pagasReq.data);
+                setItensVisiveis(50);
+
+                const listaContas = bancariasReq.data?.data || bancariasReq.data || bancariasReq;
+                setContasBancarias(listaContas);
+
             } catch (err) {
-                setError(err.message);
+                setError(err.message || "Erro ao carregar os dados.");
             } finally {
                 setLoading(false);
             }
         }
 
-        fetchContasPagas();
+        fetchInitialData();
     }, []);
 
     useEffect(() => {
@@ -57,6 +84,19 @@ function ContasPagas() {
             return () => clearTimeout(timer);
         }
     }, [toast]);
+
+    const lastElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && itensVisiveis < contasFiltradas.length) {
+                setItensVisiveis(prev => prev + 50);
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [loading, contasFiltradas.length, itensVisiveis]);
 
     const handleEditarData = (conta) => {
         if (!hasPermission(permissions, 'pagamentosparcelas', 'edit')) {
@@ -74,9 +114,8 @@ function ContasPagas() {
             setIsModalEditarDataOpen(false);
             setContaSelecionada(null);
 
-            // Recarrega as contas pagas
-            const data = await getContasPagas();
-            setContasPagas(data.data);
+            const pagasReq = await getContasPagas();
+            setContasPagas(pagasReq.data);
             aplicarFiltro();
         } catch (err) {
             const errorMessage = err.response?.data?.error || "Erro ao atualizar data de pagamento.";
@@ -84,64 +123,56 @@ function ContasPagas() {
         }
     };
 
-    // Função para aplicar o filtro de data e outros critérios
+    // NOVO: Função para marcar/desmarcar origem no array
+    const toggleOrigem = (nomeOrigem) => {
+        setOrigensSelecionadas(prev =>
+            prev.includes(nomeOrigem)
+                ? prev.filter(o => o !== nomeOrigem)
+                : [...prev, nomeOrigem]
+        );
+    };
+
     const aplicarFiltro = () => {
         const filtradas = contasPagas.filter((conta) => {
             const dataPagamento = new Date(conta.data_pagamento);
             const inicio = dataInicio ? new Date(dataInicio) : null;
             const fim = dataFim ? new Date(dataFim) : null;
 
-            // Converte os filtros de texto para minúsculas
             const filtroCredorCpfCnpj = credorCpfCnpj ? credorCpfCnpj.toLowerCase() : "";
             const filtroCredorNome = credorNome ? credorNome.toLowerCase() : "";
             const filtroDescricao = descricao ? descricao.toLowerCase() : "";
-            const filtroOrigem = origem ? origem.toLowerCase() : ""; // NOVO
 
-            // Dados da conta em minúsculas
             const credorCpfCnpjConta = conta.credor_cpfcnpj ? conta.credor_cpfcnpj.toLowerCase() : "";
             const credorNomeConta = conta.credor_nome ? conta.credor_nome.toLowerCase() : "";
             const descricaoConta = conta.descricao ? conta.descricao.toLowerCase() : "";
-            const origemConta = conta.conta_bancaria_nome ? conta.conta_bancaria_nome.toLowerCase() : ""; // NOVO
+            const origemConta = conta.conta_bancaria_nome || "";
 
             const dataValida = (!inicio || dataPagamento >= inicio) && (!fim || dataPagamento <= fim);
             const credorCpfCnpjValido = !filtroCredorCpfCnpj || credorCpfCnpjConta.includes(filtroCredorCpfCnpj);
             const credorNomeValido = !filtroCredorNome || credorNomeConta.includes(filtroCredorNome);
             const descricaoValida = !filtroDescricao || descricaoConta.includes(filtroDescricao);
-            const origemValida = !filtroOrigem || origemConta.includes(filtroOrigem); // NOVO
+
+            // NOVO: Verifica se a conta está no array de selecionados (ou se o array tá vazio)
+            const origemValida = origensSelecionadas.length === 0 || origensSelecionadas.includes(origemConta);
 
             return dataValida && credorCpfCnpjValido && credorNomeValido && descricaoValida && origemValida;
         });
 
         setContasFiltradas(filtradas);
-        setItensVisiveis(50); // NOVO: Reseta a paginação ao filtrar
+        setItensVisiveis(50);
     };
 
-    // Função para limpar os filtros
     const limparFiltros = () => {
         setDataInicio('');
         setDataFim('');
         setDescricao('');
         setCredorNome('');
         setCredorCpfCnpj('');
-        setOrigem(''); // NOVO
+        setOrigensSelecionadas([]); // Reseta o multi-select
         setContasFiltradas(contasPagas);
-        setItensVisiveis(50); // NOVO: Reseta a paginação ao limpar filtros
+        setItensVisiveis(50);
     };
 
-    // NOVO: Handler do Infinite Scroll
-    const handleScroll = (e) => {
-        const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-        // Se chegou no final da rolagem (margem de 10px por segurança)
-        if (scrollHeight - scrollTop <= clientHeight + 10) {
-            if (itensVisiveis < contasFiltradas.length) {
-                setItensVisiveis((prev) => prev + 50);
-            }
-        }
-    };
-
-    /**
-     * Gera recibo compacto confirmando que o EMITENTE pagou o CREDOR.
-     */
     const emitirRecibo = (conta, options = {}) => {
         // ... (Mantido exatamente igual ao seu código original)
         const {
@@ -378,12 +409,9 @@ function ContasPagas() {
         doc.save("contas_pagas.pdf");
     };
 
-    // Resumo e Paginação local
+    const contasRenderizadas = contasFiltradas.slice(0, itensVisiveis);
     const totalRegistros = contasFiltradas.length;
     const totalValorPago = somarValoresMonetarios(contasFiltradas.map(c => c.valor_pago));
-
-    // NOVO: Array fragmentado para não estourar o DOM (Lazy Render)
-    const contasRenderizadas = contasFiltradas.slice(0, itensVisiveis);
 
     if (loading) return <div className="spinner-container"><div className="spinner"></div></div>;
     if (error) return <div>Erro: {error}</div>;
@@ -407,11 +435,36 @@ function ContasPagas() {
                         <label htmlFor="credorCpfCnpj">CPF/CNPJ</label>
                         <input className="input-geral" type="text" id="credorCpfCnpj" value={cpfCnpjMask(credorCpfCnpj)} onChange={(e) => setCredorCpfCnpj(removeMaks(e.target.value))} maxLength="18" placeholder="Somente números" />
                     </div>
-                    {/* NOVO: Filtro Origem */}
-                    <div className="filter-field">
-                        <label htmlFor="origem">Origem</label>
-                        <input className="input-geral" type="text" id="origem" value={origem} onChange={(e) => setOrigem(e.target.value)} maxLength="150" placeholder="Ex.: Bradesco, Caixa..." />
+
+                    {/* NOVO: Custom Multi-Select de Origem */}
+                    <div className="filter-field custom-multi-select" ref={dropdownRef}>
+                        <label>Origem</label>
+                        <div
+                            className="input-geral multi-select-header"
+                            onClick={() => setShowOrigemDropdown(!showOrigemDropdown)}
+                        >
+                            {origensSelecionadas.length === 0
+                                ? "Todas as origens"
+                                : `${origensSelecionadas.length} selecionada(s)`}
+                            <span className={`arrow ${showOrigemDropdown ? 'up' : 'down'}`}></span>
+                        </div>
+
+                        {showOrigemDropdown && (
+                            <div className="multi-select-dropdown">
+                                {contasBancarias.map((cb) => (
+                                    <div  key={cb.id} className="multi-select-option">
+                                        <input
+                                            type="checkbox"
+                                            checked={origensSelecionadas.includes(cb.nome)}
+                                            onChange={() => toggleOrigem(cb.nome)}
+                                        />
+                                        <span className="option-text">{cb.nome}</span>
+                                    </div >
+                                ))}
+                            </div>
+                        )}
                     </div>
+
                     <div className="filter-field">
                         <label>Data de Início</label>
                         <input className="input-geral" type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
@@ -437,8 +490,7 @@ function ContasPagas() {
             </div>
 
             <div id="results-container">
-                {/* NOVO: Evento onScroll adicionado aqui */}
-                <div id="grid-padrao-container" className="contas-pagas-grid-wrapper" onScroll={handleScroll}>
+                <div id="grid-padrao-container" className="contas-pagas-grid-wrapper">
                     <table id="grid-padrao" className="contas-pagas-grid">
                         <thead>
                             <tr>
@@ -452,28 +504,31 @@ function ContasPagas() {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* NOVO: Agora mapeamos contasRenderizadas, não contasFiltradas inteira */}
                             {contasRenderizadas.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="empty-message">Nenhuma conta paga encontrada com os filtros atuais.</td>
                                 </tr>
                             ) : (
-                                contasRenderizadas.map((conta) => (
-                                    <tr key={conta.id}>
-                                        <td className="col-credor">{conta.credor_nome}</td>
-                                        <td className="col-descricao">{conta.descricao}</td>
-                                        <td className="col-valor">{formatarMoedaBRL(conta.valor_pago)}</td>
-                                        <td>{formatarData(conta.data_pagamento)}</td>
-                                        <td><span className="badge badge-metodo">{conta.metodo_pagamento}</span></td>
-                                        <td><span className="badge badge-origem">{conta.conta_bancaria_nome}</span></td>
-                                        <td>
-                                            <div className="acoes-buttons">
-                                                <button className="edit-button" onClick={() => emitirRecibo(conta)}>Recibo</button>
-                                                <button className="edit-button" onClick={() => handleEditarData(conta)}>Editar Data</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                contasRenderizadas.map((conta, index) => {
+                                    const isLastElement = contasRenderizadas.length === index + 1;
+
+                                    return (
+                                        <tr key={conta.id} ref={isLastElement ? lastElementRef : null}>
+                                            <td className="col-credor">{conta.credor_nome}</td>
+                                            <td className="col-descricao">{conta.descricao}</td>
+                                            <td className="col-valor">{formatarMoedaBRL(conta.valor_pago)}</td>
+                                            <td>{formatarData(conta.data_pagamento)}</td>
+                                            <td><span className="badge badge-metodo">{conta.metodo_pagamento}</span></td>
+                                            <td><span className="badge badge-origem">{conta.conta_bancaria_nome}</span></td>
+                                            <td>
+                                                <div className="acoes-buttons">
+                                                    <button className="edit-button" onClick={() => emitirRecibo(conta)}>Recibo</button>
+                                                    <button className="edit-button" onClick={() => handleEditarData(conta)}>Editar Data</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
