@@ -5,6 +5,7 @@ import { formatarData } from '../utils/functions';
 
 const ModalEditarDataPagamento = ({ isOpen, onClose, onSubmit, conta }) => {
     const [dataPagamento, setDataPagamento] = useState('');
+    const [descricao, setDescricao] = useState('');
     const [toast, setToast] = useState({ message: '', type: '' });
 
     useEffect(() => {
@@ -14,6 +15,7 @@ const ModalEditarDataPagamento = ({ isOpen, onClose, onSubmit, conta }) => {
                 ? new Date(conta.data_pagamento).toISOString().split('T')[0]
                 : '';
             setDataPagamento(dataFormatada);
+            setDescricao(conta.descricao || '');
         }
     }, [conta, isOpen]);
 
@@ -44,7 +46,7 @@ const ModalEditarDataPagamento = ({ isOpen, onClose, onSubmit, conta }) => {
             return;
         }
 
-        onSubmit(dataPagamento);
+        onSubmit({ dataPagamento, descricao });
     };
 
     return (
@@ -60,7 +62,16 @@ const ModalEditarDataPagamento = ({ isOpen, onClose, onSubmit, conta }) => {
                         </div>
                         <div>
                             <label>Descrição:</label>
-                            <p className="info-text">{conta?.descricao || '-'}</p>
+                            <input
+                                className="input-geral"
+                                type="text"
+                                id="descricaoPagamento"
+                                name="descricaoPagamento"
+                                value={descricao}
+                                onChange={(e) => setDescricao(e.target.value)}
+                                maxLength="150"
+                                required
+                            />
                         </div>
                         <div>
                             <label>Data de Pagamento Atual:</label>

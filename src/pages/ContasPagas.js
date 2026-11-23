@@ -107,10 +107,10 @@ function ContasPagas() {
         setIsModalEditarDataOpen(true);
     };
 
-    const handleSalvarNovaData = async (novaData) => {
+    const handleSalvarNovaData = async ({ dataPagamento, descricao }) => {
         try {
-            await updateDataPagamento(contaSelecionada.id, novaData);
-            setToast({ message: "Data de pagamento atualizada com sucesso!", type: "success" });
+            await updateDataPagamento(contaSelecionada.id, dataPagamento, descricao);
+            setToast({ message: "Descrição e data de pagamento atualizadas com sucesso!", type: "success" });
             setIsModalEditarDataOpen(false);
             setContaSelecionada(null);
 
